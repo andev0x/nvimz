@@ -7,6 +7,7 @@ A minimalist, high-performance Neovim configuration optimized for **Neovim 0.12+
 - **Blazing Fast:** Startup time < 15ms thanks to `mini.deps` and asynchronous loading.
 - **Pure Minimalism:** Replaces heavy plugins with native APIs and the `mini.nvim` suite.
 - **Native Treesitter:** Uses Neovim 0.12's native Treesitter triggering (no `nvim-treesitter` plugin needed).
+- **Dashboard:** Interactive startup screen with recent files and quick commands via `mini.starter`.
 - **Integrated Git:** Full Git integration with status, diff, blame, and commit browsing via `mini.git` and `mini.diff`.
 - **Floating Terminal:** Quick-access floating terminal for workflow efficiency.
 - **Clipboard Sync:** Seamless synchronization with the operating system clipboard.
@@ -38,7 +39,7 @@ A minimalist, high-performance Neovim configuration optimized for **Neovim 0.12+
 
 2. **Clone this repository:**
    ```bash
-   git clone <your-repo-url> ~/.config/nvim
+   git clone https://github.com/andev0x/nvimz.git ~/.config/nvim
    ```
 
 3. **Launch Neovim:**
@@ -47,6 +48,7 @@ A minimalist, high-performance Neovim configuration optimized for **Neovim 0.12+
 ##  Keymaps
 
 ### Navigation & UI
+- `<leader>ds`: Open Dashboard (`mini.starter`)
 - `<leader>e`: Toggle File Explorer (`mini.files`)
 - `<leader>ff`: Find Files
 - `<leader>fg`: Live Grep

@@ -4,6 +4,10 @@ map("n", "<leader>w", "<cmd>write<cr>", { desc = "Write buffer", silent = true }
 map("n", "<leader>q", "<cmd>quit<cr>", { desc = "Quit window", silent = true })
 map("n", "<leader>h", "<cmd>nohlsearch<cr>", { desc = "Clear search highlight", silent = true })
 
+map("n", "<leader>ds", function()
+	require("core.startup").open()
+end, { desc = "Open dashboard", silent = true })
+
 map("n", "<leader>xx", "<cmd>bdelete<cr>", { desc = "Close buffer", silent = true })
 map("n", "<leader>bn", "<cmd>bnext<cr>", { desc = "Next buffer", silent = true })
 map("n", "<leader>bp", "<cmd>bprevious<cr>", { desc = "Previous buffer", silent = true })
