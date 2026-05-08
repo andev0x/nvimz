@@ -33,6 +33,18 @@ function M.setup()
 		add({ source = "stevearc/conform.nvim" })
 		require("plugins.format").setup()
 	end)
+
+	later(function()
+		add({
+			source = "nvim-treesitter/nvim-treesitter",
+			hooks = {
+				post_checkout = function()
+					vim.cmd("TSUpdate")
+				end,
+			},
+		})
+		require("plugins.treesitter").setup()
+	end)
 end
 
 return M
