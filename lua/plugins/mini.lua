@@ -20,6 +20,20 @@ function M.setup()
 	vim.keymap.set("n", "<leader>fg", "<cmd>Pick grep_live<cr>", { desc = "Live grep" })
 	vim.keymap.set("n", "<leader>fb", "<cmd>Pick buffers<cr>", { desc = "Buffers" })
 	vim.keymap.set("n", "<leader>fh", "<cmd>Pick help<cr>", { desc = "Help tags" })
+	vim.keymap.set("n", "<leader>gc", "<cmd>Pick git_commits<cr>", { desc = "Git commits" })
+	vim.keymap.set("n", "<leader>gh", "<cmd>Pick git_hunks<cr>", { desc = "Git hunks" })
+
+	-- mini.extra: Extra pickers and more
+	require("mini.extra").setup()
+
+	-- mini.git: Git integration
+	require("mini.git").setup()
+	vim.keymap.set({ "n", "x" }, "<leader>gs", "<cmd>Git<cr>", { desc = "Git status" })
+	vim.keymap.set({ "n", "x" }, "<leader>gb", "<cmd>lua MiniGit.show_at_cursor()<cr>", { desc = "Git blame" })
+
+	-- mini.diff: Diff integration
+	require("mini.diff").setup()
+	vim.keymap.set("n", "<leader>gd", "<cmd>lua MiniDiff.toggle_overlay()<cr>", { desc = "Toggle diff overlay" })
 
 	-- mini.statusline: Minimalist status bar
 	require("mini.statusline").setup({ set_vim_settings = false })
