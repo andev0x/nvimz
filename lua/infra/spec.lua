@@ -1,5 +1,15 @@
 local M = {}
 
+M.lsp_icons = {
+	gopls = " ",
+	pyright = " ",
+	ts_ls = " ",
+	rust_analyzer = " ",
+	terraformls = "󱁢 ",
+	yamlls = " ",
+	lua_ls = " ",
+}
+
 M.lsp_servers = {
 	{
 		name = "gopls",

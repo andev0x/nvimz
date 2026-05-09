@@ -172,10 +172,24 @@ function M.setup()
 
 	local function brand()
 		local hour = tonumber(vim.fn.strftime("%H"))
-		if hour >= 6 and hour < 18 then
+
+		if hour >= 0 and hour < 5 then
+			return "󰼱 nvimz"
+		elseif hour >= 5 and hour < 7 then
+			return "󰖔 nvimz"
+		elseif hour >= 7 and hour < 11 then
+			return "󰛕 nvimz"
+		elseif hour >= 11 and hour < 13 then
+			return "󰶎 nvimz"
+		elseif hour >= 13 and hour < 16 then
 			return "󰖨 nvimz"
+		elseif hour >= 16 and hour < 18 then
+			return "󰖚 nvimz"
+		elseif hour >= 18 and hour < 22 then
+			return "󰖔 nvimz"
+		else
+			return "󰖤 nvimz"
 		end
-		return "󰼱 nvimz"
 	end
 
 	local function lsp()
@@ -183,7 +197,9 @@ function M.setup()
 		if #clients == 0 then
 			return ""
 		end
-		return "󰒋 " .. clients[1].name
+		local name = clients[1].name
+		local icon = require("infra.spec").lsp_icons[name] or "󰒋 "
+		return icon .. name
 	end
 
 	local function diagnostics()
