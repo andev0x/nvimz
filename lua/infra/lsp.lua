@@ -55,42 +55,27 @@ local function on_attach(_, bufnr)
 end
 
 function M.setup()
+	local servers = vim.tbl_keys(spec.lsp_servers)
+
 	require("mason").setup()
 	require("mason-lspconfig").setup({
-		ensure_installed = { "gopls", "pyright", "ts_ls", "rust_analyzer" },
+		ensure_installed = servers,
 	})
 
-	-- Improve cursor hold reaction time (Default is 4000ms which makes popups feel broken)
+	-- Improve cursor hold reaction time
 	vim.opt.updatetime = 300
 
-	local servers = { "gopls", "pyright", "ts_ls", "rust_analyzer" }
-
-	for _, server in ipairs(servers) do
+	for name, s_spec in pairs(spec.lsp_servers) do
 		local config = {
 			on_attach = on_attach,
+			cmd = s_spec.cmd,
+			filetypes = s_spec.filetypes,
+			settings = s_spec.settings,
+			root_dir = get_root_dir(name, s_spec),
 		}
 
-		-- Find matching spec settings
-		local s_spec = nil
-		for _, s in ipairs(spec.lsp_servers) do
-			if s.name == server then
-				s_spec = s
-				break
-			end
-		end
-
-		-- Apply configs if spec exists
-		if s_spec then
-			config.cmd = s_spec.cmd
-			config.filetypes = s_spec.filetypes
-			config.settings = s_spec.settings
-		end
-
-		-- FIX: Ensure root_dir is never nil so the server is forced to launch successfully
-		config.root_dir = get_root_dir(server, s_spec)
-
-		vim.lsp.config(server, config)
-		vim.lsp.enable(server)
+		vim.lsp.config(name, config)
+		vim.lsp.enable(name)
 	end
 
 	vim.diagnostic.config({

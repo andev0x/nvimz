@@ -23,21 +23,14 @@ function M.setup()
 
 	-- Create a scratch buffer with minimalist interface settings
 	local bufnr = vim.api.nvim_create_buf(false, true)
-	vim.api.nvim_buf_set_option(bufnr, "bufhidden", "wipe")
-	vim.api.nvim_buf_set_option(bufnr, "buftype", "nofile")
-	vim.api.nvim_buf_set_option(bufnr, "swapfile", false)
-	vim.api.nvim_buf_set_option(bufnr, "filetype", "dashboard")
+	local opts = { scope = "local" }
+	vim.api.nvim_set_option_value("bufhidden", "wipe", opts)
+	vim.api.nvim_set_option_value("buftype", "nofile", opts)
+	vim.api.nvim_set_option_value("swapfile", false, opts)
+	vim.api.nvim_set_option_value("filetype", "dashboard", opts)
 
 	-- Loaded
-	local startup_time = 0
-
-	if _G.nvimz_start_time then
-		startup_time = (vim.uv.hrtime() - _G.nvimz_start_time) / 1e6
-	else
-		-- Fallback
-
-		startup_time = 0.00
-	end
+	local startup_time = _G.nvimz_start_time and ((vim.uv.hrtime() - _G.nvimz_start_time) / 1e6) or 0
 
 	-- Raw ASCII Art representation of 'nvimz'
 	local logo = {
@@ -46,6 +39,7 @@ function M.setup()
 		[[    /    / \ \ / / ' \/_ /  ]],
 		[[   /_/|_/ \___/_/_/_/_//__/_]],
 		[[      designed by andev0x   ]],
+		string.format("    ⚡ Loaded in %.2fms", startup_time),
 	}
 
 	-- Actionable single-key shortcut menu
@@ -55,10 +49,6 @@ function M.setup()
 		"   [e]  File Explorer (mini.files)",
 		"   [q]  Quit Neovim               ",
 	}
-
-	-- Stats line
-	local stats = string.format("    ⚡ Loaded in %.2fms", startup_time)
-	table.insert(logo, stats)
 
 	-- Get current window dimensions
 	local win_width = vim.api.nvim_win_get_width(0)
@@ -73,86 +63,56 @@ function M.setup()
 		max_len = math.max(max_len, vim.fn.strdisplaywidth(line))
 	end
 
-	-- Calculate horizontal padding (left margin offset)
-	local left_padding = math.max(0, math.floor((win_width - max_len) / 2))
-	local pad_str = string.rep(" ", left_padding)
+	-- Calculate horizontal padding
+	local pad_str = string.rep(" ", math.max(0, math.floor((win_width - max_len) / 2)))
 
-	-- Generate horizontally-centered content payload
-	local centered_logo = {}
-	for _, line in ipairs(logo) do
-		table.insert(centered_logo, pad_str .. line)
-	end
+	-- Calculate vertical padding
+	local total_height = #logo + #menu + 1
+	local top_padding = math.max(0, math.floor((win_height - total_height) / 2))
 
-	local centered_menu = {}
-	for _, line in ipairs(menu) do
-		table.insert(centered_menu, pad_str .. line)
-	end
-
-	-- Calculate vertical padding (top margin offset)
-	local total_content_height = #logo + #menu + 1 -- Plus 1 for spacing line
-	local top_padding_size = math.max(0, math.floor((win_height - total_content_height) / 2))
-
-	-- Construct final layout with top vertical spacing
+	-- Construct final layout
 	local lines = {}
-	for _ = 1, top_padding_size do
+	for _ = 1, top_padding do
 		table.insert(lines, "")
 	end
-	for _, line in ipairs(centered_logo) do
-		table.insert(lines, line)
+	for _, line in ipairs(logo) do
+		table.insert(lines, pad_str .. line)
 	end
-	table.insert(lines, "") -- Spacer line between logo and menu
-	for _, line in ipairs(centered_menu) do
-		table.insert(lines, line)
+	table.insert(lines, "")
+	for _, line in ipairs(menu) do
+		table.insert(lines, pad_str .. line)
 	end
 
 	-- Write data to the buffer and lock editing
 	vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-	vim.api.nvim_buf_set_option(bufnr, "modifiable", false)
+	vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
 	-- Mount the configured dashboard buffer
 	vim.api.nvim_set_current_buf(bufnr)
 
-	-- Hide standard UI layout components to achieve a pristine "Zen" look
+	-- Hide standard UI layout components
 	vim.opt_local.number = false
 	vim.opt_local.relativenumber = false
 	vim.opt_local.signcolumn = "no"
 	vim.opt_local.statusline = ""
 
-	-- Map single-key navigation triggers (instant execution without Leader key)
+	-- Map single-key navigation triggers
 	local map_opts = { buffer = bufnr, nowait = true, silent = true }
-	vim.keymap.set("n", "f", function()
-		require("mini.pick").builtin.files()
-	end, map_opts)
-	vim.keymap.set("n", "g", function()
-		require("mini.pick").builtin.grep_live()
-	end, map_opts)
-	vim.keymap.set("n", "e", function()
-		require("mini.files").open()
-	end, map_opts)
+	vim.keymap.set("n", "f", function() require("mini.pick").builtin.files() end, map_opts)
+	vim.keymap.set("n", "g", function() require("mini.pick").builtin.grep_live() end, map_opts)
+	vim.keymap.set("n", "e", function() require("mini.files").open() end, map_opts)
 	vim.keymap.set("n", "q", ":qa<CR>", map_opts)
 
-	-- Apply syntax highlights dynamically targeting colored segments
+	-- Apply syntax highlights
 	local ns = vim.api.nvim_create_namespace("dashboard_colors")
-
-	-- Style the logo lines (calculated after the top padding offset)
-	local logo_start_row = top_padding_size
-	local logo_end_row = logo_start_row + #logo
-
-	for row = logo_start_row, logo_end_row - 2 do
+	for row = top_padding, top_padding + #logo - 2 do
 		vim.api.nvim_buf_add_highlight(bufnr, ns, "String", row, 0, -1)
 	end
+	vim.api.nvim_buf_add_highlight(bufnr, ns, "Comment", top_padding + #logo - 1, 0, -1)
 
-	-- Style the author subtitle line (last line of the logo block)
-	vim.api.nvim_buf_add_highlight(bufnr, ns, "Comment", logo_end_row - 1, 0, -1)
-
-	-- Highlight the single-key action brackets [f], [g], [e], [q] (positioned after logo + spacer)
-	local menu_start_row = logo_end_row + 1
+	local menu_start = top_padding + #logo + 1
 	for i = 0, #menu - 1 do
-		local row = menu_start_row + i
-		-- Dynamic slice offset to match the padded bracket index position [x]
-		local start_col = left_padding + 3
-		local end_col = left_padding + 6
-		vim.api.nvim_buf_add_highlight(bufnr, ns, "Special", row, start_col, end_col)
+		vim.api.nvim_buf_add_highlight(bufnr, ns, "Special", menu_start + i, #pad_str + 3, #pad_str + 6)
 	end
 end
 
@@ -160,8 +120,6 @@ function M.open()
 	M.setup()
 end
 
--- FIX: Only run setup ONCE during the VimEnter lifecycle event
--- This ensures window dimensions (width/height) are fully settled before layout math runs.
 vim.api.nvim_create_autocmd("VimEnter", {
 	once = true,
 	callback = function()

@@ -6,9 +6,6 @@ function M.setup()
 	-- =========================================================================
 	-- We load and register mini.icons first. This automatically provides icons
 	-- to mini.files, mini.pick, and mini.statusline.
-	local MiniDeps = require("mini.deps")
-	MiniDeps.add({ source = "echasnovski/mini.icons" })
-
 	require("mini.icons").setup({
 		-- Style: 'glyph' (standard) or 'ascii'
 		style = "glyph",
@@ -173,58 +170,41 @@ function M.setup()
 	})
 
 	-- Helpers for statusline
+	local mode_map = {
+		n = { hl = "MiniStatuslineModeNormal", name = "NORMAL" },
+		i = { hl = "MiniStatuslineModeInsert", name = "INSERT" },
+		v = { hl = "MiniStatuslineModeVisual", name = "VISUAL" },
+		V = { hl = "MiniStatuslineModeVisual", name = "VISUAL" },
+		[""] = { hl = "MiniStatuslineModeVisual", name = "V-BLOCK" },
+		c = { hl = "MiniStatuslineModeCommand", name = "COMMAND" },
+		R = { hl = "MiniStatuslineModeReplace", name = "REPLACE" },
+		t = { hl = "MiniStatuslineModeTerminal", name = "TERMINAL" },
+	}
+
 	local function mode_hl()
 		local mode = vim.fn.mode()
-		local map = {
-			n = "MiniStatuslineModeNormal",
-			i = "MiniStatuslineModeInsert",
-			v = "MiniStatuslineModeVisual",
-			V = "MiniStatuslineModeVisual",
-			[""] = "MiniStatuslineModeVisual",
-			c = "MiniStatuslineModeCommand",
-			R = "MiniStatuslineModeReplace",
-			t = "MiniStatuslineModeTerminal",
-		}
-		return map[mode] or "MiniStatuslineModeNormal"
+		return (mode_map[mode] or mode_map.n).hl
 	end
 
 	local function mode_name()
 		local mode = vim.fn.mode()
-		local map = {
-			n = "NORMAL",
-			i = "INSERT",
-			v = "VISUAL",
-			V = "VISUAL",
-			[""] = "V-BLOCK",
-			c = "COMMAND",
-			R = "REPLACE",
-			t = "TERMINAL",
-		}
-		return map[mode] or mode
+		return (mode_map[mode] or { name = mode }).name
 	end
 
 	local function brand()
 		local hour = tonumber(vim.fn.strftime("%H"))
-
-		if hour >= 0 and hour < 5 then
-			return "󰼱 nvimz"
-		elseif hour >= 5 and hour < 7 then
-			return "󰖔 nvimz"
-		elseif hour >= 7 and hour < 9 then
-			return " nvimz"
-		elseif hour >= 9 and hour < 11 then
-			return "󱍅 nvimz"
-		elseif hour >= 11 and hour < 13 then
-			return "󰪓 nvimz"
-		elseif hour >= 13 and hour < 16 then
-			return "󰖨 nvimz"
-		elseif hour >= 16 and hour < 18 then
-			return "󰖚 nvimz"
-		elseif hour >= 18 and hour < 22 then
-			return "󰖔 nvimz"
-		else
-			return "󰖤 nvimz"
-		end
+		local icons = {
+			[0] = "󰼱", [1] = "󰼱", [2] = "󰼱", [3] = "󰼱", [4] = "󰼱",
+			[5] = "󰖔", [6] = "󰖔",
+			[7] = "", [8] = "",
+			[9] = "󱍅", [10] = "󱍅",
+			[11] = "󰪓", [12] = "󰪓",
+			[13] = "󰖨", [14] = "󰖨", [15] = "󰖨",
+			[16] = "󰖚", [17] = "󰖚",
+			[18] = "󰖔", [19] = "󰖔", [20] = "󰖔", [21] = "󰖔",
+			[22] = "󰖤", [23] = "󰖤",
+		}
+		return (icons[hour] or "󰖤") .. " nvimz"
 	end
 
 	local function lsp()
