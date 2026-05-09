@@ -63,7 +63,26 @@ function M.setup()
 	-- =========================================================================
 	-- 3. MINI.PICK (Fuzzy Finder) & MINI.EXTRA
 	-- =========================================================================
-	require("mini.pick").setup()
+	require("mini.pick").setup({
+		window = {
+			config = function()
+				local height = math.floor(0.618 * vim.o.lines)
+				local width = math.floor(0.618 * vim.o.columns)
+				return {
+					anchor = "NW",
+					height = height,
+					width = width,
+					row = math.floor(0.5 * (vim.o.lines - height)),
+					col = math.floor(0.5 * (vim.o.columns - width)),
+				}
+			end,
+		},
+		options = {
+			content_from_bottom = true,
+		},
+	})
+
+	-- General Finders
 	vim.keymap.set("n", "<leader>ff", "<cmd>Pick files<cr>", { desc = "Find files" })
 	vim.keymap.set("n", "<leader>fg", "<cmd>Pick grep_live<cr>", { desc = "Live grep" })
 	vim.keymap.set("n", "<leader>fb", "<cmd>Pick buffers<cr>", { desc = "Buffers" })
@@ -72,6 +91,29 @@ function M.setup()
 	require("mini.extra").setup()
 	vim.keymap.set("n", "<leader>gc", "<cmd>lua MiniExtra.pickers.git_commits()<cr>", { desc = "Git commits" })
 	vim.keymap.set("n", "<leader>gh", "<cmd>lua MiniExtra.pickers.git_hunks()<cr>", { desc = "Git hunks" })
+
+	-- LSP Pickers (FIXED: Remapped to leader-prefixed keys to avoid conflicting with core LSP bindings)
+	vim.keymap.set("n", "<leader>lr", "<cmd>Pick lsp scope='references'<cr>", { desc = "LSP References (Picker)" })
+	vim.keymap.set("n", "<leader>ld", "<cmd>Pick lsp scope='definition'<cr>", { desc = "LSP Definition (Picker)" })
+	vim.keymap.set(
+		"n",
+		"<leader>ly",
+		"<cmd>Pick lsp scope='type_definition'<cr>",
+		{ desc = "LSP Type Definition (Picker)" }
+	)
+	vim.keymap.set(
+		"n",
+		"<leader>li",
+		"<cmd>Pick lsp scope='implementation'<cr>",
+		{ desc = "LSP Implementation (Picker)" }
+	)
+	vim.keymap.set(
+		"n",
+		"<leader>cs",
+		"<cmd>Pick lsp scope='document_symbol'<cr>",
+		{ desc = "LSP Document Symbols (Outline)" }
+	)
+	vim.keymap.set("n", "<leader>cS", "<cmd>Pick lsp scope='workspace_symbol'<cr>", { desc = "LSP Workspace Symbols" })
 
 	-- =========================================================================
 	-- 4. MINI.GIT & MINI.DIFF
@@ -89,24 +131,17 @@ function M.setup()
 	end, { desc = "Toggle diff overlay" })
 
 	-- =========================================================================
-	-- MINI.STATUSLINE
-	-- Clean Minimal Style
+	-- 5. MINI.STATUSLINE (Clean Minimal Style)
 	-- =========================================================================
-
 	local statusline = require("mini.statusline")
-
 	statusline.setup({
 		use_icons = true,
 		set_vim_settings = false,
 	})
 
-	-- -------------------------------------------------------------------------
-	-- Helpers
-	-- -------------------------------------------------------------------------
-
+	-- Helpers for statusline
 	local function mode_hl()
 		local mode = vim.fn.mode()
-
 		local map = {
 			n = "MiniStatuslineModeNormal",
 			i = "MiniStatuslineModeInsert",
@@ -117,13 +152,11 @@ function M.setup()
 			R = "MiniStatuslineModeReplace",
 			t = "MiniStatuslineModeTerminal",
 		}
-
 		return map[mode] or "MiniStatuslineModeNormal"
 	end
 
 	local function mode_name()
 		local mode = vim.fn.mode()
-
 		local map = {
 			n = "NORMAL",
 			i = "INSERT",
@@ -134,46 +167,37 @@ function M.setup()
 			R = "REPLACE",
 			t = "TERMINAL",
 		}
-
 		return map[mode] or mode
 	end
 
 	local function brand()
 		local hour = tonumber(vim.fn.strftime("%H"))
-
 		if hour >= 6 and hour < 18 then
 			return "󰖨 nvimz"
 		end
-
 		return "󰼱 nvimz"
 	end
 
 	local function lsp()
 		local clients = vim.lsp.get_clients({ bufnr = 0 })
-
 		if #clients == 0 then
 			return ""
 		end
-
 		return "󰒋 " .. clients[1].name
 	end
 
 	local function diagnostics()
 		local count = vim.diagnostic.count(0)
-
 		local errors = count[vim.diagnostic.severity.ERROR] or 0
 		local warns = count[vim.diagnostic.severity.WARN] or 0
 
 		local parts = {}
-
 		if errors > 0 then
 			table.insert(parts, " " .. errors)
 		end
-
 		if warns > 0 then
 			table.insert(parts, " " .. warns)
 		end
-
 		return table.concat(parts, " ")
 	end
 
@@ -181,90 +205,30 @@ function M.setup()
 		return "%l:%c"
 	end
 
-	-- -------------------------------------------------------------------------
-	-- Active
-	-- -------------------------------------------------------------------------
-
+	-- Active Statusline Content Configuration
 	statusline.config.content.active = function()
-		local filename = MiniStatusline.section_filename({
-			trunc_width = 140,
-		})
-
-		local git = MiniStatusline.section_git({
-			trunc_width = 40,
-		})
-
-		local fileinfo = MiniStatusline.section_fileinfo({
-			trunc_width = 120,
-		})
-
-		local location = MiniStatusline.section_location({
-			trunc_width = 75,
-		})
+		local filename = MiniStatusline.section_filename({ trunc_width = 140 })
+		local git = MiniStatusline.section_git({ trunc_width = 40 })
+		local fileinfo = MiniStatusline.section_fileinfo({ trunc_width = 120 })
+		local location = MiniStatusline.section_location({ trunc_width = 75 })
 
 		return MiniStatusline.combine_groups({
-			-- Left
-			{
-				hl = "MiniStatuslineInactive",
-				strings = {
-					" " .. brand(),
-				},
-			},
-
-			{
-				hl = mode_hl(),
-				strings = {
-					" " .. mode_name() .. " ",
-				},
-			},
-
-			{
-				hl = "MiniStatuslineDevinfo",
-				strings = {
-					git,
-				},
-			},
-
-			{
-				hl = "MiniStatuslineFilename",
-				strings = {
-					filename,
-				},
-			},
-
+			-- Left Side
+			{ hl = "MiniStatuslineInactive", strings = { " " .. brand() } },
+			{ hl = mode_hl(), strings = { " " .. mode_name() .. " " } },
+			{ hl = "MiniStatuslineDevinfo", strings = { git } },
+			{ hl = "MiniStatuslineFilename", strings = { filename } },
 			"%<",
 			"%=",
-
-			-- Right
-			{
-				hl = "MiniStatuslineDiagnostics",
-				strings = {
-					diagnostics(),
-				},
-			},
-
-			{
-				hl = "MiniStatuslineDevinfo",
-				strings = {
-					lsp(),
-				},
-			},
-
-			{
-				hl = "MiniStatuslineFileinfo",
-				strings = {
-					fileinfo,
-				},
-			},
-
-			{
-				hl = mode_hl(),
-				strings = {
-					" " .. location .. " ",
-				},
-			},
+			-- Right Side
+			{ hl = "MiniStatuslineDiagnostics", strings = { diagnostics() } },
+			{ hl = "MiniStatuslineDevinfo", strings = { lsp() } },
+			{ hl = "MiniStatuslineFileinfo", strings = { fileinfo } },
+			{ hl = mode_hl(), strings = { " " .. location .. " " } },
 		})
-	end -- =========================================================================
+	end
+
+	-- =========================================================================
 	-- 6. MINI.COMPLETION & TAB NAVIGATION
 	-- =========================================================================
 	require("mini.completion").setup({
