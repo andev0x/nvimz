@@ -1,7 +1,6 @@
--- lua/core/startup.lua
-
 local M = {}
 
+-- Track startup metrics cleanly
 function M.track(start_ns)
 	vim.api.nvim_create_autocmd("VimEnter", {
 		once = true,
@@ -29,22 +28,37 @@ function M.setup()
 	vim.api.nvim_buf_set_option(bufnr, "swapfile", false)
 	vim.api.nvim_buf_set_option(bufnr, "filetype", "dashboard")
 
-	-- Raw ASCII Art representation of 'nvimz' (Trailing spaces removed for dynamic centering)
+	-- Loaded
+	local startup_time = 0
+
+	if _G.nvimz_start_time then
+		startup_time = (vim.uv.hrtime() - _G.nvimz_start_time) / 1e6
+	else
+		-- Fallback
+
+		startup_time = 0.00
+	end
+
+	-- Raw ASCII Art representation of 'nvimz'
 	local logo = {
-		[[     _  __     _           ]],
-		[[    / |/ /_ __(_)_ _  ___  ]],
-		[[   /    / \ \ / /  ' \/_ / ]],
-		[[  /_/|_/ \___/_/_/_/_//__/_]],
-		[[     designed by andev0x   ]],
+		[[      _  __     _           ]],
+		[[     / |/ /_ __(_)_ _  ___  ]],
+		[[    /    / \ \ / / ' \/_ /  ]],
+		[[   /_/|_/ \___/_/_/_/_//__/_]],
+		[[      designed by andev0x   ]],
 	}
 
 	-- Actionable single-key shortcut menu
 	local menu = {
-		"  [f]  Find Files (mini.pick)    ",
-		"  [g]  Live Grep (mini.pick)     ",
-		"  [e]  File Explorer (mini.files)",
-		"  [q]  Quit Neovim               ",
+		"   [f]  Find Files (mini.pick)    ",
+		"   [g]  Live Grep (mini.pick)     ",
+		"   [e]  File Explorer (mini.files)",
+		"   [q]  Quit Neovim               ",
 	}
+
+	-- Stats line
+	local stats = string.format("    ⚡ Loaded in %.2fms", startup_time)
+	table.insert(logo, stats)
 
 	-- Get current window dimensions
 	local win_width = vim.api.nvim_win_get_width(0)
@@ -136,8 +150,8 @@ function M.setup()
 	for i = 0, #menu - 1 do
 		local row = menu_start_row + i
 		-- Dynamic slice offset to match the padded bracket index position [x]
-		local start_col = left_padding + 2
-		local end_col = left_padding + 5
+		local start_col = left_padding + 3
+		local end_col = left_padding + 6
 		vim.api.nvim_buf_add_highlight(bufnr, ns, "Special", row, start_col, end_col)
 	end
 end
@@ -146,8 +160,10 @@ function M.open()
 	M.setup()
 end
 
--- Initialize dashboard buffer binding via VimEnter lifecycle hook
+-- FIX: Only run setup ONCE during the VimEnter lifecycle event
+-- This ensures window dimensions (width/height) are fully settled before layout math runs.
 vim.api.nvim_create_autocmd("VimEnter", {
+	once = true,
 	callback = function()
 		M.setup()
 	end,

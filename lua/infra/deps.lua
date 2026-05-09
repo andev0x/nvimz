@@ -12,6 +12,11 @@ function M.setup()
 	end)
 
 	later(function()
+		add({ source = "catppuccin/nvim", name = "catppuccin" })
+		require("plugins.theme").setup()
+	end)
+
+	later(function()
 		add({ source = "echasnovski/mini.nvim" })
 		require("plugins.mini").setup()
 	end)
