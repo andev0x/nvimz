@@ -177,10 +177,12 @@ function M.setup()
 			return "󰼱 nvimz"
 		elseif hour >= 5 and hour < 7 then
 			return "󰖔 nvimz"
-		elseif hour >= 7 and hour < 11 then
-			return "󰛕 nvimz"
+		elseif hour >= 7 and hour < 9 then
+			return " nvimz"
+		elseif hour >= 9 and hour < 11 then
+			return "󱍅 nvimz"
 		elseif hour >= 11 and hour < 13 then
-			return "󰶎 nvimz"
+			return "󰪓 nvimz"
 		elseif hour >= 13 and hour < 16 then
 			return "󰖨 nvimz"
 		elseif hour >= 16 and hour < 18 then
