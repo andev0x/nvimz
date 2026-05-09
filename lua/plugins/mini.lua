@@ -45,18 +45,18 @@ function M.setup()
 			["}"] = { action = "close", close = "}", register = { cr = true } },
 
 			-- Auto-close double quotes (Strings)
-			['"'] = { action = "both", close = '"', register = { cr = true } },
+			['"'] = { action = "closeopen", close = '"', register = { cr = true } },
 
 			-- Avoid auto-closing single quotes on Rust lifetimes (e.g., 'a)
 			["'"] = {
-				action = "both",
+				action = "closeopen",
 				close = "'",
 				register = { cr = true },
 				neigh_pattern = "[^%a].",
 			},
 
 			-- Template literals for JS/TS/Go backticks
-			["`"] = { action = "both", close = "`", register = { cr = true } },
+			["`"] = { action = "closeopen", close = "`", register = { cr = true } },
 		},
 	})
 
