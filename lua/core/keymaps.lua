@@ -12,6 +12,30 @@ map("n", "<leader>xx", "<cmd>bdelete<cr>", { desc = "Close buffer", silent = tru
 map("n", "<leader>bn", "<cmd>bnext<cr>", { desc = "Next buffer", silent = true })
 map("n", "<leader>bp", "<cmd>bprevious<cr>", { desc = "Previous buffer", silent = true })
 
+map("n", "<leader>cp", function()
+	local path = vim.fn.expand("%:.")
+	vim.fn.setreg("+", path)
+	vim.notify("Copied relative path: " .. path)
+end, { desc = "Copy relative path", silent = true })
+
+map("n", "<leader>cP", function()
+	local path = vim.fn.expand("%:p")
+	vim.fn.setreg("+", path)
+	vim.notify("Copied absolute path: " .. path)
+end, { desc = "Copy absolute path", silent = true })
+
+map("n", "<leader>cn", function()
+	local name = vim.fn.expand("%:t")
+	vim.fn.setreg("+", name)
+	vim.notify("Copied filename: " .. name)
+end, { desc = "Copy filename", silent = true })
+
+map("n", "<leader>cd", function()
+	local dir = vim.fn.expand("%:h")
+	vim.fn.setreg("+", dir)
+	vim.notify("Copied directory path: " .. dir)
+end, { desc = "Copy directory path", silent = true })
+
 -- Window navigation
 map("n", "<C-h>", "<C-w>h", { desc = "Go to left window", silent = true })
 map("n", "<C-j>", "<C-w>j", { desc = "Go to lower window", silent = true })

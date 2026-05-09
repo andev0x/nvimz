@@ -92,6 +92,10 @@ Language servers are installed automatically via Mason.
 | `<leader>fg` | Live grep |
 | `<leader>fb` | List buffers |
 | `<leader>fh` | Help tags |
+| `<leader>cp` | Copy relative path |
+| `<leader>cP` | Copy absolute path |
+| `<leader>cn` | Copy filename |
+| `<leader>cd` | Copy directory path |
 
 ### LSP Navigation & Actions
 | Key | Action |
@@ -166,7 +170,7 @@ ollama serve
 
 ### Modifying Keybindings
 
-Edit the keymap configuration files in `lua/config/keymaps.lua` to customize shortcuts.
+Edit the keymap configuration files in `lua/core/keymaps.lua` to customize shortcuts.
 
 ## Troubleshooting
 
@@ -192,9 +196,10 @@ Edit the keymap configuration files in `lua/config/keymaps.lua` to customize sho
 ~/.config/nvim/
 ├── init.lua              # Entry point
 ├── lua/
-│   ├── config/          # Core settings
-│   ├── plugins/         # Plugin specifications
-│   └── utils/           # Helper functions
+│   ├── core/            # Core settings (keymaps, options, autocmds)
+│   ├── infra/           # Infrastructure (LSP, dependencies)
+│   ├── plugins/         # Plugin configurations
+│   └── machine/         # Machine-specific overrides
 └── README.md            # This file
 ```
 
