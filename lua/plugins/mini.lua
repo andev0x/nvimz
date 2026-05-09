@@ -2,6 +2,37 @@ local M = {}
 
 function M.setup()
 	-- =========================================================================
+	-- 0. MINI.ICONS (Setup this FIRST so other mini modules can inherit it)
+	-- =========================================================================
+	-- We load and register mini.icons first. This automatically provides icons
+	-- to mini.files, mini.pick, and mini.statusline.
+	local MiniDeps = require("mini.deps")
+	MiniDeps.add({ source = "echasnovski/mini.icons" })
+
+	require("mini.icons").setup({
+		-- Style: 'glyph' (standard) or 'ascii'
+		style = "glyph",
+		-- Customizing specific icons to fit Catppuccin Mocha palette or your preference
+		custom = {
+			-- Custom file extension icons
+			extension = {
+				lua = { glyph = "", hl = "MiniIconsAzure" },
+				md = { glyph = "", hl = "MiniIconsGreen" },
+			},
+			-- Custom system/filetype icons
+			file = {
+				[".gitignore"] = { glyph = "", hl = "MiniIconsOrange" },
+			},
+			-- Custom directory icon (if you want to override the default folder icon)
+			directory = {
+				folder = { glyph = "󰉋", hl = "MiniIconsBlue" },
+			},
+		},
+	})
+	-- Mock mini.icons as 'nvim-web-devicons' so non-mini plugins can also use it
+	MiniIcons.mock_nvim_web_devicons()
+
+	-- =========================================================================
 	-- 1. MINI.FILES (File Explorer with Custom File Creation Keymap)
 	-- =========================================================================
 	require("mini.files").setup({
@@ -9,6 +40,8 @@ function M.setup()
 			preview = true,
 			width_preview = 80,
 		},
+		-- Ensure mini.files uses the icons we setup above
+		use_icons = true,
 	})
 
 	vim.keymap.set("n", "<leader>e", function()
@@ -92,7 +125,7 @@ function M.setup()
 	vim.keymap.set("n", "<leader>gc", "<cmd>lua MiniExtra.pickers.git_commits()<cr>", { desc = "Git commits" })
 	vim.keymap.set("n", "<leader>gh", "<cmd>lua MiniExtra.pickers.git_hunks()<cr>", { desc = "Git hunks" })
 
-	-- LSP Pickers (FIXED: Remapped to leader-prefixed keys to avoid conflicting with core LSP bindings)
+	-- LSP Pickers
 	vim.keymap.set("n", "<leader>lr", "<cmd>Pick lsp scope='references'<cr>", { desc = "LSP References (Picker)" })
 	vim.keymap.set("n", "<leader>ld", "<cmd>Pick lsp scope='definition'<cr>", { desc = "LSP Definition (Picker)" })
 	vim.keymap.set(
