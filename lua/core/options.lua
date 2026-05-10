@@ -21,6 +21,10 @@ vim.opt.splitright = true
 vim.opt.timeoutlen = 300
 vim.opt.updatetime = 200
 
+vim.opt.wildmenu = true
+vim.opt.wildmode = "longest:full,full"
+vim.opt.wildchar = 9 -- <Tab>
+
 vim.opt.undofile = true
 vim.opt.swapfile = false
 vim.opt.backup = false
