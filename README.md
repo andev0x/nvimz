@@ -4,7 +4,20 @@
 
 A high-performance Neovim setup optimized for **Neovim 0.12+** that prioritizes speed, simplicity, and developer experience. With a startup time under 15ms, nvimz replaces heavy plugin ecosystems with native APIs and the lightweight `mini.nvim` suite.
 
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Neovim](https://img.shields.io/badge/Neovim-%3E=0.12.0-blueviolet?logo=neovim)
+[![Status](https://img.shields.io/badge/status-active-success.svg)](https://github.com/andev0x/nvimz)
+
+## Screenshots
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/andev0x/description-image-archive/refs/heads/main/nvimz/nvimz1.png" width="350" />
+  <img src="https://raw.githubusercontent.com/andev0x/description-image-archive/refs/heads/main/nvimz/nvimz2.png" width="350" />
+</p>
+
+
 ## Quick Start
+
 
 ### Installation
 
