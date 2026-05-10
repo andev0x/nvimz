@@ -66,7 +66,8 @@ That's it! The config self-bootstraps on first launch, automatically installing 
 | **Completion** | `mini.completion` (LSP-powered) |
 | **Formatting** | `conform.nvim` |
 | **Debugging** | `nvim-dap` + `nvim-dap-ui` |
-| **AI** | `gen.nvim` + Ollama |
+| **Treesitter** | Native `vim.treesitter` (built-in) |
+| **AI** | `gp.nvim` + Ollama |
 
 ## Requirements
 
@@ -74,7 +75,7 @@ That's it! The config self-bootstraps on first launch, automatically installing 
 - **System tools:** `git`, `rg` (ripgrep), `fd`
 - **Optional:** [Ollama](https://ollama.com/) for AI features
 
-Language servers are installed automatically via Mason.
+Language servers are installed automatically via Mason. Parsers for common languages (Go, Rust, Python, TypeScript, Markdown, C++, Java, JS) are supported natively.
 
 ## Keybindings
 
@@ -160,7 +161,10 @@ Language servers are installed automatically via Mason.
 | Key | Action |
 |-----|--------|
 | `<leader>fm` | Format buffer |
-| `<leader>a` | AI assistant (Gen) |
+| `<leader>aa` | AI Chat (New) |
+| `<leader>aq` | AI Chat Toggle |
+| `<leader>a3` | Switch to Ollama 3B |
+| `<leader>a7` | Switch to Ollama 7B |
 
 ## Customization
 
@@ -170,16 +174,25 @@ Language servers are managed through Mason. Use `:Mason` to open the interface a
 
 ### Configuring AI
 
-Edit the Ollama setup to use different models:
+The configuration uses `gp.nvim`. You can switch between models or add new ones in `lua/plugins/ai.lua`:
+
 ```lua
--- Change the model in your config
-model = "qwen2.5-coder:7b"  -- or your preferred model
+agents = {
+    {
+        name = "Ollama-7B",
+        model = { model = "qwen2.5-coder:7b" },
+    },
+}
 ```
 
 Ensure Ollama is running:
 ```bash
 ollama serve
 ```
+
+### Treesitter Support
+
+Neovim 0.12 handles highlighting and folding natively. Support for Go, Rust, Python, TypeScript, Markdown, C++, Java, and Javascript is pre-configured. Ensure parsers are available in your runtime path.
 
 ### Modifying Keybindings
 
