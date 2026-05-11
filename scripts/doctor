@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+TOOLS=(
+  git
+  rg
+  fd
+  gopls
+  lua-language-server
+  stylua
+  shfmt
+)
+
+printf "\n"
+
+for tool in "${TOOLS[@]}"; do
+  if command -v "$tool" >/dev/null 2>&1; then
+    printf "%-24s OK\n" "$tool"
+  else
+    printf "%-24s MISSING\n" "$tool"
+  fi
+done
+
+printf "\n"

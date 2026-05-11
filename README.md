@@ -2,11 +2,18 @@
 
 > A blazing-fast, minimalist Neovim configuration for DevOps engineers and backend developers.
 
-A high-performance Neovim setup optimized for **Neovim 0.12+** that prioritizes speed, simplicity, and developer experience. With a startup time under 15ms, nvimz replaces heavy plugin ecosystems with native APIs and the lightweight `mini.nvim` suite.
+**nvimz** is a high-performance Neovim setup optimized for **Neovim 0.12+** that prioritizes speed, simplicity, and developer experience. With a startup target under **20ms**, it replaces heavy plugin ecosystems with native APIs, the lightweight `mini.nvim` suite, and a "Zero-Mason" philosophy.
 
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Neovim](https://img.shields.io/badge/Neovim-%3E=0.12.0-blueviolet?logo=neovim)
 [![Status](https://img.shields.io/badge/status-active-success.svg)](https://github.com/andev0x/nvimz)
+
+## Philosophy: Zero-Mason, Native-First
+
+Unlike many configurations that rely on Mason for package management, **nvimz** expects language servers and formatters to be available in your system `$PATH`. This ensures:
+- **Maximum Speed:** No overhead from external package managers at startup.
+- **Reproducibility:** Your environment is managed by your system's package manager (Homebrew, APT, Nix, etc.).
+- **Reliability:** Native Neovim 0.12 features are used wherever possible, reducing plugin surface area.
 
 ## Screenshots
 
@@ -15,224 +22,150 @@ A high-performance Neovim setup optimized for **Neovim 0.12+** that prioritizes 
   <img src="https://raw.githubusercontent.com/andev0x/description-image-archive/refs/heads/main/nvimz/nvimz2.png" width="350" />
 </p>
 
-
 ## Quick Start
 
+### 1. Requirements
 
-### Installation
+- **Neovim 0.12.0+**
+- **System tools:** `git`, `rg` (ripgrep), `fd`
+- **Optional:** [Ollama](https://ollama.com/) for AI features
 
-1. **Backup existing config** (if you have one):
-   ```bash
-   mv ~/.config/nvim ~/.config/nvim.bak
-   ```
+### 2. Installation
 
-2. **Clone and launch**:
-   ```bash
-   git clone https://github.com/andev0x/nvimz.git ~/.config/nvim
-   nvim
-   ```
+```bash
+# Backup existing config
+mv ~/.config/nvim ~/.config/nvim.bak
 
-That's it! The config self-bootstraps on first launch, automatically installing the package manager and all plugins.
+# Clone and launch
+git clone https://github.com/andev0x/nvimz.git ~/.config/nvim
+nvim
+```
+
+The configuration self-bootstraps on first launch, automatically installing `mini.deps` and other plugins.
+
+### 3. Check Health
+
+Run the custom tool doctor to check if your system has the required binaries for LSP and formatting:
+```vim
+:ToolDoctor
+```
 
 ## Features
 
 ### Performance & Minimalism
-- **Startup time < 15ms** via lazy loading and `mini.deps`
-- **Zero bloat:** Native Neovim APIs + `mini.nvim` suite
-- **Treesitter built-in:** Neovim 0.12's native highlighting (no plugins needed)
+- **Startup time < 15ms** via optimized lazy loading and `mini.deps`.
+- **Zero bloat:** Heavy dependencies are replaced with the `mini.nvim` suite.
+- **Native Treesitter:** Uses Neovim 0.12's native highlighting and folding (no `nvim-treesitter` plugin).
 
 ### Development Workflow
-- **File Explorer:** Quick file navigation with `mini.files`
-- **Fuzzy Finding:** Fast file/buffer/grep search with `mini.pick`
-- **Git Integration:** Full Git support (status, blame, diff, commits)
-- **Floating Terminal:** Quick shell access without leaving Neovim
-- **Formatting & LSP:** Native LSP + Mason for language server management
+- **File Explorer:** Fast, fluid navigation with `mini.files`.
+- **Fuzzy Finding:** Powerful search for files, buffers, and grep with `mini.pick`.
+- **Git Integration:** Comprehensive Git support with `mini.git` and `mini.diff`.
+- **Floating Terminal:** Instant shell access with `<leader>t`.
+- **Formatting:** Managed via `conform.nvim` using system binaries.
 
-### Advanced Features
-- **Debugging:** Pre-configured DAP (Debugger Adapter Protocol) with UI
-- **Local AI:** Integrated Ollama support for offline code intelligence
-- **Clipboard Sync:** Automatic OS clipboard integration
-- **Self-Contained:** Auto-installs dependencies on first run
+### Advanced Capabilities
+- **Debugging:** Pre-configured `nvim-dap` with UI and Go support.
+- **Local AI:** Integrated [Ollama](https://ollama.com/) support via `gp.nvim`. Auto-starts Ollama if not running.
+- **Diagnostics:** Smart diagnostic popups on cursor hold.
 
 ## Tech Stack
 
 | Component | Technology |
 |-----------|-----------|
 | **Package Manager** | `mini.deps` |
-| **LSP** | Native `vim.lsp` + `mason.nvim` |
+| **LSP**          | Native `vim.lsp` + `lspconfig` |
 | **Git** | `mini.git` + `mini.diff` |
 | **Finder** | `mini.pick` + `mini.extra` |
 | **Explorer** | `mini.files` |
 | **Completion** | `mini.completion` (LSP-powered) |
 | **Formatting** | `conform.nvim` |
 | **Debugging** | `nvim-dap` + `nvim-dap-ui` |
-| **Treesitter** | Native `vim.treesitter` (built-in) |
+| **Treesitter** | Native `vim.treesitter` |
 | **AI** | `gp.nvim` + Ollama |
-
-## Requirements
-
-- **Neovim 0.12.0+**
-- **System tools:** `git`, `rg` (ripgrep), `fd`
-- **Optional:** [Ollama](https://ollama.com/) for AI features
-
-Language servers are installed automatically via Mason. Parsers for common languages (Go, Rust, Python, TypeScript, Markdown, C++, Java, JS) are supported natively.
 
 ## Keybindings
 
-### Core & Buffer Management
+### Core & Navigation
 | Key | Action |
 |-----|--------|
+| `<leader>ds` | Open dashboard |
 | `<leader>w` | Write buffer |
 | `<leader>q` | Quit window |
-| `<leader>h` | Clear search highlight |
-| `<leader>ds` | Open dashboard |
 | `<leader>xx` | Close buffer |
-| `<leader>bn` | Next buffer |
-| `<leader>bp` | Previous buffer |
+| `<leader>bn` / `bp` | Next / Previous buffer |
+| `<C-h/j/k/l>` | Window navigation |
 
-### Window Navigation
+### File & Search
 | Key | Action |
 |-----|--------|
-| `<C-h>` | Go to left window |
-| `<C-j>` | Go to lower window |
-| `<C-k>` | Go to upper window |
-| `<C-l>` | Go to right window |
-
-### File & Finding
-| Key | Action |
-|-----|--------|
-| `<leader>e` | Toggle file explorer |
-| `<leader>ff` | Find files |
+| `<leader>e` | Toggle file explorer (`mini.files`) |
+| `<leader>ff` | Find files (`mini.pick`) |
 | `<leader>fg` | Live grep |
 | `<leader>fb` | List buffers |
 | `<leader>fh` | Help tags |
 | `<leader>cp` | Copy relative path |
-| `<leader>cP` | Copy absolute path |
-| `<leader>cn` | Copy filename |
-| `<leader>cd` | Copy directory path |
 
-### LSP Navigation & Actions
+### LSP & Diagnostics
 | Key | Action |
 |-----|--------|
 | `gd` | Go to definition |
-| `gD` | Go to declaration |
-| `gr` | References |
-| `gi` | Implementation |
+| `gr` | References (Picker) |
 | `K` | Hover documentation |
 | `<leader>rn` | Rename symbol |
 | `<leader>ca` | Code actions |
-| `<leader>lr` | LSP references (picker) |
-| `<leader>ld` | LSP definition (picker) |
-| `<leader>ly` | LSP dynamic symbols |
-| `<leader>li` | LSP incoming calls |
-| `<leader>cs` | LSP document symbols |
-| `<leader>cS` | LSP workspace symbols |
+| `<leader>uh` | Toggle inlay hints |
+| `gl` | Show line diagnostics |
+| `[d` / `]d` | Previous / Next diagnostic |
 
-### Diagnostics
-| Key | Action |
-|-----|--------|
-| `gl` | Show diagnostics float |
-| `[d` | Previous diagnostic |
-| `]d` | Next diagnostic |
-
-### Git Integration
+### Git
 | Key | Action |
 |-----|--------|
 | `<leader>gs` | Git status |
-| `<leader>gb` | Git blame |
-| `<leader>gd` | Toggle git diff |
-| `<leader>gc` | Git commits (picker) |
-| `<leader>gh` | Git hunks (picker) |
+| `<leader>gb` | Git blame (at cursor) |
+| `<leader>gd` | Toggle diff overlay |
+| `<leader>gc` | Git commits (Picker) |
+| `<leader>gh` | Git hunks (Picker) |
 
-### Terminal & Debugging
+### Debugging (DAP)
 | Key | Action |
 |-----|--------|
-| `<leader>t` | Toggle floating terminal |
-| `<Esc><Esc>` | Exit terminal mode |
 | `<leader>db` | Toggle breakpoint |
-| `<leader>dc` | Continue execution |
-| `<leader>di` | Step into |
-| `<leader>do` | Step over |
-| `<leader>du` | Step out |
+| `<leader>dc` | Continue |
+| `<leader>di` / `do` | Step into / Step over |
 | `<leader>dr` | Open REPL |
-| `<leader>dt` | Toggle DAP UI |
+| `<leader>dt` | Debug test (Go specialized) |
 
-### Formatting & AI
+### AI (Ollama)
 | Key | Action |
 |-----|--------|
-| `<leader>fm` | Format buffer |
-| `<leader>aa` | AI Chat (New) |
-| `<leader>aq` | AI Chat Toggle |
+| `<leader>aa` | New AI Chat |
+| `<leader>aq` | Toggle AI Chat |
 | `<leader>a3` | Switch to Ollama 3B |
 | `<leader>a7` | Switch to Ollama 7B |
 
 ## Customization
 
 ### Adding Language Servers
-
-Language servers are managed through Mason. Use `:Mason` to open the interface and install servers for your languages.
-
-### Configuring AI
-
-The configuration uses `gp.nvim`. You can switch between models or add new ones in `lua/plugins/ai.lua`:
-
+Define new servers in `lua/infra/spec.lua`. Ensure the binary is installed on your system.
 ```lua
-agents = {
-    {
-        name = "Ollama-7B",
-        model = { model = "qwen2.5-coder:7b" },
+M.lsp_servers = {
+    gopls = {
+        cmd = { "gopls" },
+        filetypes = { "go" },
+        root_markers = { "go.mod", ".git" },
     },
 }
 ```
 
-Ensure Ollama is running:
-```bash
-ollama serve
-```
-
-### Treesitter Support
-
-Neovim 0.12 handles highlighting and folding natively. Support for Go, Rust, Python, TypeScript, Markdown, C++, Java, and Javascript is pre-configured. Ensure parsers are available in your runtime path.
-
-### Modifying Keybindings
-
-Edit the keymap configuration files in `lua/core/keymaps.lua` to customize shortcuts.
-
-## Troubleshooting
-
-### Slow startup?
-- Verify Neovim version: `nvim --version` (should be 0.12+)
-- Check for plugin conflicts in `lua/plugins/`
-
-### LSP not working?
-- Run `:Mason` and ensure language servers are installed
-- Check `:LspInfo` for connection status
-
-### Git integration issues?
-- Verify `git` is installed and the repository is initialized
-- Check git config with `git config --list`
-
-### AI features not available?
-- Ensure Ollama is installed and running: `ollama serve`
-- Verify model is downloaded: `ollama pull qwen2.5-coder:7b`
-
-## Project Structure
-
-```
-~/.config/nvim/
-├── init.lua              # Entry point
-├── lua/
-│   ├── core/            # Core settings (keymaps, options, autocmds)
-│   ├── infra/           # Infrastructure (LSP, dependencies)
-│   ├── plugins/         # Plugin configurations
-│   └── machine/         # Machine-specific overrides
-└── README.md            # This file
+### Adding Formatters
+Configure formatters in `lua/infra/spec.lua` and they will be automatically picked up by `conform.nvim`.
+```lua
+M.formatters_by_ft = {
+    lua = { "stylua" },
+}
 ```
 
 ## License
 
-This configuration is provided as-is. Modify freely for your workflow.
-
-## Contributing
-
-Found improvements? Submit a PR or open an issue on GitHub.
+MIT © [andev0x](https://github.com/andev0x)

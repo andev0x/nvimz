@@ -2,80 +2,131 @@ local M = {}
 
 local spec = require("infra.spec")
 
--- Clean root pattern lookup with robust fallback to the file's current directory
-local function get_root_dir(server_name, s_spec)
-	local util = require("lspconfig.util")
-
-	-- 1. Try to find root directory using defined markers (e.g., go.mod, .git)
-	if s_spec and s_spec.root_markers and #s_spec.root_markers > 0 then
-		local detected_root =
-			util.root_pattern((table.unpack or unpack)(s_spec.root_markers))(vim.api.nvim_buf_get_name(0))
-		if detected_root then
-			return detected_root
-		end
-	end
-
-	-- 2. Fallback to current buffer's directory so LSP ALWAYS activates, even for single files
-	return util.path.dirname(vim.api.nvim_buf_get_name(0))
-end
-
 local function on_attach(_, bufnr)
 	local map = function(lhs, rhs, desc)
-		vim.keymap.set("n", lhs, rhs, { buffer = bufnr, silent = true, desc = desc })
+		vim.keymap.set("n", lhs, rhs, {
+			buffer = bufnr,
+			silent = true,
+			desc = desc,
+		})
 	end
 
-	-- Core Navigation & Actions (Safe from mini.pick conflicts)
+	-- Navigation
 	map("gd", vim.lsp.buf.definition, "LSP: go to definition")
 	map("gD", vim.lsp.buf.declaration, "LSP: go to declaration")
 	map("gr", vim.lsp.buf.references, "LSP: references")
 	map("gi", vim.lsp.buf.implementation, "LSP: implementation")
 	map("K", vim.lsp.buf.hover, "LSP: hover")
+
+	-- Actions
 	map("<leader>rn", vim.lsp.buf.rename, "LSP: rename")
 	map("<leader>ca", vim.lsp.buf.code_action, "LSP: code action")
 
-	-- Diagnostics (FIXED: Remapped <leader>e to gl to completely resolve conflict with mini.files)
-	map("gl", vim.diagnostic.open_float, "Diagnostics: float status")
+	-- Diagnostics
+	map("gl", vim.diagnostic.open_float, "Diagnostics: line diagnostics")
 	map("[d", vim.diagnostic.goto_prev, "Diagnostics: previous")
 	map("]d", vim.diagnostic.goto_next, "Diagnostics: next")
 
-	-- Optional: Auto-open diagnostics popup when holding cursor still
+	-- Toggle inlay hints
+	if vim.lsp.inlay_hint then
+		map("<leader>uh", function()
+			vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
+		end, "LSP: toggle inlay hints")
+	end
+
+	-- Auto diagnostics popup on cursor hold
 	local group = vim.api.nvim_create_augroup("LspDiagnosticsFloat", { clear = false })
-	vim.api.nvim_clear_autocmds({ group = group, buffer = bufnr })
+
+	vim.api.nvim_clear_autocmds({
+		group = group,
+		buffer = bufnr,
+	})
+
 	vim.api.nvim_create_autocmd("CursorHold", {
 		group = group,
 		buffer = bufnr,
 		callback = function()
-			vim.diagnostic.open_float({
+			local diagnostics = vim.diagnostic.get(0, {
+				lnum = vim.api.nvim_win_get_cursor(0)[1] - 1,
+			})
+
+			if #diagnostics == 0 then
+				return
+			end
+
+			vim.diagnostic.open_float(nil, {
 				focus = false,
 				scope = "cursor",
-				close_events = { "CursorMoved", "CursorMovedI", "BufLeave", "InsertEnter" },
+				border = "rounded",
+				close_events = {
+					"CursorMoved",
+					"CursorMovedI",
+					"BufLeave",
+					"InsertEnter",
+				},
 			})
 		end,
 	})
 end
 
 function M.setup()
-	local servers = vim.tbl_keys(spec.lsp_servers)
+	-- Better CursorHold responsiveness without being too aggressive
+	vim.opt.updatetime = 1000
 
-	require("mason").setup()
-	require("mason-lspconfig").setup({
-		ensure_installed = servers,
+	-- LSP capabilities
+	local capabilities = vim.lsp.protocol.make_client_capabilities()
+
+	-- Uncomment if using blink.cmp
+	-- capabilities = require("blink.cmp").get_lsp_capabilities()
+
+	-- Uncomment if using nvim-cmp
+	-- capabilities = require("cmp_nvim_lsp").default_capabilities()
+
+	-- Global defaults for all LSP servers
+	vim.lsp.config("*", {
+		capabilities = capabilities,
+		on_attach = on_attach,
 	})
 
-	-- Improve cursor hold reaction time
-	vim.opt.updatetime = 300
-
 	for name, s_spec in pairs(spec.lsp_servers) do
-		local config = {
-			on_attach = on_attach,
+		local cmd = s_spec.cmd or {}
+
+		-- Skip setup if the language server executable is missing
+		if cmd[1] and vim.fn.executable(cmd[1]) ~= 1 then
+			vim.notify(string.format("LSP server '%s' not found: %s", name, cmd[1]), vim.log.levels.WARN)
+
+			goto continue
+		end
+
+		vim.lsp.config(name, {
 			cmd = s_spec.cmd,
 			filetypes = s_spec.filetypes,
 			settings = s_spec.settings,
-			root_dir = get_root_dir(name, s_spec),
-		}
 
-		vim.lsp.config(name, config)
+			root_dir = function(bufnr, on_dir)
+				local util = require("lspconfig.util")
+				local bufname = vim.api.nvim_buf_get_name(bufnr)
+
+				-- Try project root markers first
+				if s_spec.root_markers and #s_spec.root_markers > 0 then
+					local root = util.root_pattern((table.unpack or unpack)(s_spec.root_markers))(bufname)
+
+					if root then
+						on_dir(root)
+						return
+					end
+				end
+
+				-- Fallback to current file directory
+				local fallback = bufname ~= "" and util.path.dirname(bufname) or vim.fn.getcwd()
+
+				on_dir(fallback)
+			end,
+		})
+
 		vim.lsp.enable(name)
+
+		::continue::
 	end
 
 	vim.diagnostic.config({
@@ -83,7 +134,12 @@ function M.setup()
 		severity_sort = true,
 		underline = true,
 		update_in_insert = false,
-		float = { border = "rounded", source = "if_many" },
+
+		float = {
+			border = "rounded",
+			source = "if_many",
+		},
+
 		signs = {
 			text = {
 				[vim.diagnostic.severity.ERROR] = " ",

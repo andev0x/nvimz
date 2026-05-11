@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+brew upgrade
+
+go install golang.org/x/tools/gopls@latest
+
+cargo install stylua

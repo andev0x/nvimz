@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if command -v brew >/dev/null 2>&1; then
+  brew install git ripgrep fd go lua-language-server stylua shfmt
+  go install golang.org/x/tools/gopls@latest
+
+else
+  echo "Unsupported package manager"
+  exit 1
+fi

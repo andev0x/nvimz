@@ -1,40 +1,51 @@
 local M = {}
 
-local spec = require("infra.spec")
+local tools = require("infra.tools")
 
-local function missing_binaries()
-	local missing = {}
-	for _, bin in ipairs(spec.required_binaries()) do
-		if vim.fn.executable(bin) == 0 then
-			table.insert(missing, bin)
-		end
+local check = require("infra.health.check")
+local render = require("infra.health.render")
+
+local function iterate(category)
+	for _, tool in ipairs(category) do
+		render.tool(check.inspect(tool))
 	end
-	return missing
 end
 
 function M.check()
-	local missing = missing_binaries()
+	local missing = {}
+
+	for _, tool in ipairs(tools.core) do
+		if tool.required and not check.executable(tool.bin) then
+			table.insert(missing, tool.bin)
+		end
+	end
+
 	if #missing == 0 then
 		return
 	end
 
 	error(table.concat({
-		"Missing required system dependencies in PATH:",
+		"Missing critical dependencies:",
 		"  - " .. table.concat(missing, "\n  - "),
-		"Install them with your OS package manager before starting Neovim.",
 	}, "\n"))
 end
 
 function M.register_command()
-	vim.api.nvim_create_user_command("ZenHealth", function()
-		local missing = missing_binaries()
-		if #missing == 0 then
-			vim.notify("nvim-zen: all required dependencies are available", vim.log.levels.INFO)
-			return
-		end
+	vim.api.nvim_create_user_command("ToolDoctor", function()
+		render.section("Core")
+		iterate(tools.core)
 
-		vim.notify("nvim-zen missing dependencies: " .. table.concat(missing, ", "), vim.log.levels.ERROR)
-	end, { desc = "Show nvim-zen dependency health" })
+		render.section("LSP")
+		iterate(tools.lsp)
+
+		render.section("Formatters")
+		iterate(tools.formatters)
+
+		render.section("Linters")
+		iterate(tools.linters)
+	end, {
+		desc = "Show environment tooling health",
+	})
 end
 
 return M

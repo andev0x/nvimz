@@ -5,8 +5,6 @@ function M.setup()
 	local later = MiniDeps.later
 
 	later(function()
-		add({ source = "williamboman/mason.nvim" })
-		add({ source = "williamboman/mason-lspconfig.nvim" })
 		add({ source = "neovim/nvim-lspconfig" })
 		require("infra.lsp").setup()
 	end)
