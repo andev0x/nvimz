@@ -272,24 +272,55 @@ function M.setup()
 
 	-- ============================================================================
 	-- TIME ICON
-	-- Subtle biological clock indicator
+	-- Ambient biological clock
 	-- ============================================================================
 
 	local function get_time_icon()
 		local hour = tonumber(vim.fn.strftime("%H"))
 
+		-- Dawn
 		if hour >= 5 and hour < 7 then
-			return "󰖔"
-		elseif hour >= 7 and hour < 11 then
-			return "󰼰"
-		elseif hour >= 11 and hour < 15 then
-			return "󰖨"
-		elseif hour >= 15 and hour < 18 then
 			return "󰖚"
-		elseif hour >= 18 and hour < 22 then
+
+		-- Morning focus
+		elseif hour >= 7 and hour < 9 then
+			return ""
+
+		-- Productive work
+		elseif hour >= 9 and hour < 12 then
+			return "󱎫"
+
+		-- Lunch time
+		elseif hour >= 12 and hour < 13 then
+			return "󰩰"
+
+		-- Hydration / refresh
+		elseif hour >= 13 and hour < 14 then
+			return ""
+
+		-- Work
+		elseif hour >= 14 and hour < 17 then
+			return "󱍄"
+
+		-- Afternoon
+		elseif hour >= 17 and hour < 18 then
+			return "󰖚"
+
+		-- Dinner / relax
+		elseif hour >= 18 and hour < 20 then
+			return "󰅶"
+
+		-- Calm evening
+		elseif hour >= 20 and hour < 23 then
 			return "󰖔"
+
+		-- Sleep soon
+		elseif hour >= 23 and hour < 24 then
+			return "󰒲"
+
+		-- Deep night
 		else
-			return "󰖤"
+			return ""
 		end
 	end
 
