@@ -29,6 +29,10 @@ vim.opt.undofile = true
 vim.opt.swapfile = false
 vim.opt.backup = false
 
+-- Folding
+vim.opt.foldmethod = "indent"
+vim.opt.foldlevel = 99
+
 local ok, machine = pcall(require, "machine.local")
 if ok and type(machine) == "table" and type(machine.python_path) == "string" then
 	vim.g.python3_host_prog = machine.python_path

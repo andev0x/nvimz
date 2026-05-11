@@ -24,8 +24,12 @@ local function on_attach(_, bufnr)
 
 	-- Diagnostics
 	map("gl", vim.diagnostic.open_float, "Diagnostics: line diagnostics")
-	map("[d", vim.diagnostic.goto_prev, "Diagnostics: previous")
-	map("]d", vim.diagnostic.goto_next, "Diagnostics: next")
+	map("[d", function()
+		vim.diagnostic.jump({ count = -1 })
+	end, "Diagnostics: previous")
+	map("]d", function()
+		vim.diagnostic.jump({ count = 1 })
+	end, "Diagnostics: next")
 
 	-- Toggle inlay hints
 	if vim.lsp.inlay_hint then

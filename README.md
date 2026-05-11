@@ -62,11 +62,12 @@ Manage plugins with native commands:
 - **Native Treesitter:** Uses Neovim 0.12's native highlighting and folding (no `nvim-treesitter` plugin).
 
 ### Development Workflow
-- **File Explorer:** Fast, fluid navigation with `mini.files`.
+- **File Explorer:** Fast, fluid navigation with `mini.files`. Use `a` to quickly create files/folders.
 - **Fuzzy Finding:** Powerful search for files, buffers, and grep with `mini.pick`.
 - **Git Integration:** Comprehensive Git support with `mini.git` and `mini.diff`.
 - **Floating Terminal:** Instant shell access with `<leader>t`.
 - **Formatting:** Managed via `conform.nvim` using system binaries.
+- **Smart Completion:** Lightweight LSP-powered completion with `mini.completion`.
 
 ### Advanced Capabilities
 - **Debugging:** Pre-configured `nvim-dap` with UI and Go support.
@@ -82,11 +83,12 @@ Manage plugins with native commands:
 | **Git** | `mini.git` + `mini.diff` |
 | **Finder** | `mini.pick` + `mini.extra` |
 | **Explorer** | `mini.files` |
-| **Completion** | `mini.completion` (LSP-powered) |
+| **Completion** | `mini.completion` |
 | **Formatting** | `conform.nvim` |
 | **Debugging** | `nvim-dap` + `nvim-dap-ui` |
 | **Treesitter** | Native `vim.treesitter` |
 | **AI** | `gp.nvim` + Ollama |
+| **Theme** | `catppuccin` |
 
 ## Keybindings
 
@@ -96,9 +98,20 @@ Manage plugins with native commands:
 | `<leader>ds` | Open dashboard |
 | `<leader>w` | Write buffer |
 | `<leader>q` | Quit window |
+| `<leader>h` | Clear search highlight |
 | `<leader>xx` | Close buffer |
 | `<leader>bn` / `bp` | Next / Previous buffer |
 | `<C-h/j/k/l>` | Window navigation |
+| `<C-d/u>` | Scroll down/up and center |
+| `<leader>z` | Toggle fold |
+
+### Splits & Windows
+| Key | Action |
+|-----|--------|
+| `<leader>sv` | Split vertical |
+| `<leader>sh` | Split horizontal |
+| `<C-Up/Down>` | Resize height |
+| `<C-Left/Right>` | Resize width |
 
 ### File & Search
 | Key | Action |
@@ -109,6 +122,9 @@ Manage plugins with native commands:
 | `<leader>fb` | List buffers |
 | `<leader>fh` | Help tags |
 | `<leader>cp` | Copy relative path |
+| `<leader>cP` | Copy absolute path |
+| `<leader>cn` | Copy filename |
+| `<leader>cd` | Copy directory path |
 
 ### LSP & Diagnostics
 | Key | Action |
@@ -121,6 +137,8 @@ Manage plugins with native commands:
 | `<leader>uh` | Toggle inlay hints |
 | `gl` | Show line diagnostics |
 | `[d` / `]d` | Previous / Next diagnostic |
+| `<leader>cs` | Document symbols (Outline) |
+| `<leader>cS` | Workspace symbols |
 
 ### Git
 | Key | Action |

@@ -36,11 +36,32 @@ map("n", "<leader>cd", function()
 	vim.notify("Copied directory path: " .. dir)
 end, { desc = "Copy directory path", silent = true })
 
+-- Split management
+map("n", "<leader>sv", "<cmd>vsplit<cr>", { desc = "Split vertical", silent = true })
+map("n", "<leader>sh", "<cmd>split<cr>", { desc = "Split horizontal", silent = true })
+
+-- Resize splits
+map("n", "<C-Up>", "<cmd>resize +2<cr>", { desc = "Increase window height", silent = true })
+map("n", "<C-Down>", "<cmd>resize -2<cr>", { desc = "Decrease window height", silent = true })
+map("n", "<C-Left>", "<cmd>vertical resize -2<cr>", { desc = "Decrease window width", silent = true })
+map("n", "<C-Right>", "<cmd>vertical resize +2<cr>", { desc = "Increase window width", silent = true })
+
 -- Window navigation
 map("n", "<C-h>", "<C-w>h", { desc = "Go to left window", silent = true })
 map("n", "<C-j>", "<C-w>j", { desc = "Go to lower window", silent = true })
 map("n", "<C-k>", "<C-w>k", { desc = "Go to upper window", silent = true })
 map("n", "<C-l>", "<C-w>l", { desc = "Go to right window", silent = true })
+
+-- Fast navigation (Smooth-like scrolling)
+map("n", "<C-d>", "<C-d>zz", { desc = "Scroll down and center", silent = true })
+map("n", "<C-u>", "<C-u>zz", { desc = "Scroll up and center", silent = true })
+
+-- Folding
+map("n", "<leader>z", "za", { desc = "Toggle fold", silent = true })
+
+-- Font size
+-- Note: Terminal-level shortcuts (Cmd/Ctrl + and Cmd/Ctrl -) usually handle zooming
+-- in/out as Neovim inherits the font size from the terminal emulator.
 
 -- Terminal
 map("n", "<leader>t", function()
