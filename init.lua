@@ -19,6 +19,7 @@ vim.g.maplocalleader = "\\"
 -- No bootstrap needed for vim.pack as it is built-in to Neovim 0.12+
 
 -- 6. Load Core Configurations (Sorted by resource load priority)
+require("core.filetype")
 require("core.options")
 require("core.keymaps")
 require("core.autocmds")
