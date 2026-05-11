@@ -26,10 +26,6 @@ function M.setup()
 	-- Ensure folds are open by default
 	vim.opt.foldlevel = 99
 
-	-- Handle potential filetype aliases
-	vim.treesitter.language.add("javascript", { filetype = "js" })
-	vim.treesitter.language.add("typescript", { filetype = "typescripts" })
-
 	-- The user specifically requested support for:
 	-- go, rust, python, typescript, markdown, cpp, java, javascript
 	-- Note: Neovim 0.12 includes some parsers by default.

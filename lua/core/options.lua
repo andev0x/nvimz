@@ -19,7 +19,7 @@ vim.opt.scrolloff = 4
 vim.opt.splitbelow = true
 vim.opt.splitright = true
 vim.opt.timeoutlen = 300
-vim.opt.updatetime = 200
+vim.opt.updatetime = 1000
 
 vim.opt.wildmenu = true
 vim.opt.wildmode = "longest:full,full"

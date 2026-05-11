@@ -70,9 +70,6 @@ local function on_attach(_, bufnr)
 end
 
 function M.setup()
-	-- Better CursorHold responsiveness without being too aggressive
-	vim.opt.updatetime = 1000
-
 	-- LSP capabilities
 	local capabilities = vim.lsp.protocol.make_client_capabilities()
 

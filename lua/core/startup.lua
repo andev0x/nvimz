@@ -17,7 +17,7 @@ end
 
 function M.setup()
 	-- Only trigger the dashboard if Neovim is launched empty (no file/directory arguments)
-	if vim.fn.argc() > 0 or vim.blueprints_loaded then
+	if vim.fn.argc() > 0 or vim.g.blueprints_loaded then
 		return
 	end
 
@@ -44,9 +44,9 @@ function M.setup()
 
 	-- Actionable single-key shortcut menu
 	local menu = {
-		"   [f]  Find Files (mini.pick)    ",
-		"   [g]  Live Grep (mini.pick)     ",
-		"   [e]  File Explorer (mini.files)",
+		"   [f]  Find Files                ",
+		"   [g]  Live Grep                 ",
+		"   [e]  File Explorer             ",
 		"   [q]  Quit Neovim               ",
 	}
 
@@ -98,9 +98,15 @@ function M.setup()
 
 	-- Map single-key navigation triggers
 	local map_opts = { buffer = bufnr, nowait = true, silent = true }
-	vim.keymap.set("n", "f", function() require("mini.pick").builtin.files() end, map_opts)
-	vim.keymap.set("n", "g", function() require("mini.pick").builtin.grep_live() end, map_opts)
-	vim.keymap.set("n", "e", function() require("mini.files").open() end, map_opts)
+	vim.keymap.set("n", "f", function()
+		require("mini.pick").builtin.files()
+	end, map_opts)
+	vim.keymap.set("n", "g", function()
+		require("mini.pick").builtin.grep_live()
+	end, map_opts)
+	vim.keymap.set("n", "e", function()
+		require("mini.files").open()
+	end, map_opts)
 	vim.keymap.set("n", "q", ":qa<CR>", map_opts)
 
 	-- Apply syntax highlights

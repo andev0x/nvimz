@@ -3,8 +3,13 @@ local M = {}
 function M.setup()
 	-- Auto start Ollama if not running
 	if vim.fn.executable("ollama") == 1 then
-		local handle = vim.uv.spawn("nc", { args = { "-z", "127.0.0.1", "11434" } }, function(code)
-			if code ~= 0 then
+		local check_cmd = { "nc", "-z", "127.0.0.1", "11434" }
+		if vim.fn.executable("nc") ~= 1 then
+			check_cmd = { "sh", "-c", "command -v nc >/dev/null && nc -z 127.0.0.1 11434" }
+		end
+
+		vim.system(check_cmd, { text = true }, function(result)
+			if result.code ~= 0 then
 				vim.uv.spawn("ollama", { args = { "serve" }, detached = true }, function() end)
 			end
 		end)
