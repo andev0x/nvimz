@@ -2,7 +2,7 @@
 
 > A blazing-fast, minimalist Neovim configuration for DevOps engineers and backend developers.
 
-**nvimz** is a high-performance Neovim setup optimized for **Neovim 0.12+** that prioritizes speed, simplicity, and developer experience. With a startup target under **20ms**, it replaces heavy plugin ecosystems with native APIs, the lightweight `mini.nvim` suite, and a "Zero-Mason" philosophy.
+**nvimz** is a high-performance Neovim setup optimized for **Neovim 0.12+** that prioritizes speed, simplicity, and developer experience. With a startup target under **15ms**, it replaces heavy plugin ecosystems with native APIs, the lightweight `mini.nvim` suite, and the built-in `vim.pack` package manager.
 
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Neovim](https://img.shields.io/badge/Neovim-%3E=0.12.0-blueviolet?logo=neovim)
@@ -41,7 +41,7 @@ git clone https://github.com/andev0x/nvimz.git ~/.config/nvim
 nvim
 ```
 
-The configuration self-bootstraps on first launch, automatically installing `mini.deps` and other plugins.
+The configuration uses the built-in `vim.pack` system to manage plugins. On first launch, plugins will be automatically installed.
 
 ### 3. Check Health
 
@@ -50,10 +50,14 @@ Run the custom tool doctor to check if your system has the required binaries for
 :ToolDoctor
 ```
 
+Manage plugins with native commands:
+- `:PackUpdate` - Update all plugins.
+- `:PackClean` - Remove unused plugins from disk.
+
 ## Features
 
 ### Performance & Minimalism
-- **Startup time < 15ms** via optimized lazy loading and `mini.deps`.
+- **Startup time < 15ms** via optimized lazy loading and the native `vim.pack` system.
 - **Zero bloat:** Heavy dependencies are replaced with the `mini.nvim` suite.
 - **Native Treesitter:** Uses Neovim 0.12's native highlighting and folding (no `nvim-treesitter` plugin).
 
@@ -73,7 +77,7 @@ Run the custom tool doctor to check if your system has the required binaries for
 
 | Component | Technology |
 |-----------|-----------|
-| **Package Manager** | `mini.deps` |
+| **Package Manager** | Native `vim.pack` |
 | **LSP**          | Native `vim.lsp` + `lspconfig` |
 | **Git** | `mini.git` + `mini.diff` |
 | **Finder** | `mini.pick` + `mini.extra` |

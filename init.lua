@@ -15,24 +15,8 @@ end
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 
--- 5. Bootstrap and manage package manager infrastructure (mini.deps)
-local path_package = vim.fn.stdpath("data") .. "/site"
-local mini_path = path_package .. "/pack/deps/start/mini.deps"
-
-if not vim.uv.fs_stat(mini_path) then
-	vim.fn.system({
-		"git",
-		"clone",
-		"--filter=blob:none",
-		"--branch",
-		"v0.17.0",
-		"https://github.com/echasnovski/mini.deps",
-		mini_path,
-	})
-end
-
-vim.cmd.packadd("mini.deps")
-require("mini.deps").setup({ path = { package = path_package } })
+-- 5. Manage package manager infrastructure (builtin vim.pack)
+-- No bootstrap needed for vim.pack as it is built-in to Neovim 0.12+
 
 -- 6. Load Core Configurations (Sorted by resource load priority)
 require("core.options")
