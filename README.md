@@ -136,6 +136,7 @@ Manage plugins with native commands:
 | `<leader>ca` | Code actions |
 | `<leader>uh` | Toggle inlay hints |
 | `gl` | Show line diagnostics |
+| `<leader>fd` | Find diagnostics (Picker) |
 | `[d` / `]d` | Previous / Next diagnostic |
 | `<leader>cs` | Document symbols (Outline) |
 | `<leader>cS` | Workspace symbols |
@@ -152,7 +153,7 @@ Manage plugins with native commands:
 ### Debugging (DAP)
 | Key | Action |
 |-----|--------|
-| `<leader>db` | Toggle breakpoint |
+| `<leader>db` | Toggle breakpoint (with icons) |
 | `<leader>dc` | Continue |
 | `<leader>di` / `do` | Step into / Step over |
 | `<leader>dr` | Open REPL |
