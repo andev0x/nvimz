@@ -272,56 +272,57 @@ function M.setup()
 
 	-- ============================================================================
 	-- TIME ICON
-	-- Ambient biological clock
+	-- Ambient biological clock with caching for smoothness
 	-- ============================================================================
 
+	local cached_time_icon = ""
+	local last_time_update = 0
+
 	local function get_time_icon()
-		local hour = tonumber(vim.fn.strftime("%H"))
+		local now = vim.uv.now()
+		if now - last_time_update < 60000 then -- Update every 60 seconds
+			return cached_time_icon
+		end
+
+		local hour = tonumber(os.date("%H"))
 
 		-- Dawn
 		if hour >= 5 and hour < 7 then
-			return "󰖚"
-
+			cached_time_icon = "󰖚"
 		-- Morning focus
 		elseif hour >= 7 and hour < 9 then
-			return ""
-
+			cached_time_icon = ""
 		-- Productive work
 		elseif hour >= 9 and hour < 12 then
-			return "󱎫"
-
+			cached_time_icon = "󱎫"
 		-- Lunch time
 		elseif hour >= 12 and hour < 13 then
-			return "󰩰"
-
+			cached_time_icon = "󰩰"
 		-- Hydration / refresh
 		elseif hour >= 13 and hour < 14 then
-			return ""
-
+			cached_time_icon = ""
 		-- Work
 		elseif hour >= 14 and hour < 17 then
-			return "󱍄"
-
+			cached_time_icon = "󱍄"
 		-- Afternoon
 		elseif hour >= 17 and hour < 18 then
-			return "󰖚"
-
+			cached_time_icon = "󰖚"
 		-- Dinner / relax
 		elseif hour >= 18 and hour < 20 then
-			return "󰅶"
-
+			cached_time_icon = "󰅶"
 		-- Calm evening
 		elseif hour >= 20 and hour < 23 then
-			return "󰖔"
-
+			cached_time_icon = "󰖔"
 		-- Sleep soon
 		elseif hour >= 23 and hour < 24 then
-			return "󰒲"
-
+			cached_time_icon = "󰒲"
 		-- Deep night
 		else
-			return ""
+			cached_time_icon = ""
 		end
+
+		last_time_update = now
+		return cached_time_icon
 	end
 
 	-- ============================================================================
@@ -359,22 +360,44 @@ function M.setup()
 
 	-- ============================================================================
 	-- FILE SIZE
+	-- Caching to avoid frequent syscalls during redraw
 	-- ============================================================================
 
-	local function get_filesize()
-		local size = vim.fn.getfsize(vim.fn.expand("%:p"))
+	local filesize_cache = {}
 
+	local function update_filesize_cache(bufnr)
+		bufnr = bufnr or vim.api.nvim_get_current_buf()
+		local path = vim.api.nvim_buf_get_name(bufnr)
+		if path == "" then
+			filesize_cache[bufnr] = ""
+			return
+		end
+
+		local size = vim.fn.getfsize(path)
 		if size <= 0 then
-			return ""
-		end
-
-		if size < 1024 then
-			return size .. "B"
+			filesize_cache[bufnr] = ""
+		elseif size < 1024 then
+			filesize_cache[bufnr] = size .. "B"
 		elseif size < 1024 * 1024 then
-			return string.format("%.1fKB", size / 1024)
+			filesize_cache[bufnr] = string.format("%.1fKB", size / 1024)
 		else
-			return string.format("%.1fMB", size / (1024 * 1024))
+			filesize_cache[bufnr] = string.format("%.1fMB", size / (1024 * 1024))
 		end
+	end
+
+	vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost", "BufEnter" }, {
+		group = vim.api.nvim_create_augroup("statusline_cache", { clear = true }),
+		callback = function(args)
+			update_filesize_cache(args.buf)
+		end,
+	})
+
+	local function get_filesize()
+		local bufnr = vim.api.nvim_get_current_buf()
+		if not filesize_cache[bufnr] then
+			update_filesize_cache(bufnr)
+		end
+		return filesize_cache[bufnr] or ""
 	end
 
 	-- ============================================================================

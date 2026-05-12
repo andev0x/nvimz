@@ -57,7 +57,19 @@ local function on_attach(client, bufnr)
 		group = group,
 		buffer = bufnr,
 		callback = function()
-			local diagnostics = vim.diagnostic.get(0, {
+			-- Don't open if there's already a floating window or we're in insert mode
+			if vim.api.nvim_get_mode().mode ~= "n" or vim.fn.getcmdwintype() ~= "" then
+				return
+			end
+
+			-- Check for existing floating windows (simplified check)
+			for _, win in ipairs(vim.api.nvim_list_wins()) do
+				if vim.api.nvim_win_get_config(win).relative ~= "" then
+					return
+				end
+			end
+
+			local diagnostics = vim.diagnostic.get(bufnr, {
 				lnum = vim.api.nvim_win_get_cursor(0)[1] - 1,
 			})
 

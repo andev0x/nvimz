@@ -62,32 +62,38 @@ function M.setup()
 	-- Register user commands immediately
 	create_commands()
 
-	-- Defer plugin loading to keep startup extremely fast.
-	-- This prioritizes perceived responsiveness over eager initialization.
+	-- Phase 1: Essential UI & Icons (Immediate or very soon)
+	-- Loading the theme early prevents visual flashes of the default colorscheme.
 	vim.schedule(function()
 		add({
-			{ source = "neovim/nvim-lspconfig" },
-
 			{ source = "catppuccin/nvim", name = "catppuccin" },
-
 			{ source = "echasnovski/mini.nvim" },
-
-			{ source = "mfussenegger/nvim-dap" },
-			{ source = "nvim-neotest/nvim-nio" },
-			{ source = "rcarriga/nvim-dap-ui" },
-			{ source = "leoluz/nvim-dap-go" },
-
-			{ source = "Robitx/gp.nvim" },
-
-			{ source = "stevearc/conform.nvim" },
 		})
-
-		require("infra.lsp").setup()
 		require("plugins.theme").setup()
 		require("plugins.mini").setup()
-		require("plugins.dap").setup()
-		require("plugins.ai").setup()
-		require("plugins.format").setup()
+
+		-- Phase 2: Core Editing & Language Support (Slightly deferred)
+		vim.defer_fn(function()
+			add({
+				{ source = "neovim/nvim-lspconfig" },
+				{ source = "stevearc/conform.nvim" },
+			})
+			require("infra.lsp").setup()
+			require("plugins.format").setup()
+
+			-- Phase 3: Extra Features & Tools (Most deferred)
+			vim.defer_fn(function()
+				add({
+					{ source = "mfussenegger/nvim-dap" },
+					{ source = "nvim-neotest/nvim-nio" },
+					{ source = "rcarriga/nvim-dap-ui" },
+					{ source = "leoluz/nvim-dap-go" },
+					{ source = "Robitx/gp.nvim" },
+				})
+				require("plugins.dap").setup()
+				require("plugins.ai").setup()
+			end, 50)
+		end, 20)
 	end)
 end
 
