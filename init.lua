@@ -35,7 +35,3 @@ require("infra.deps").setup()
 
 -- 8. Track and warn if total actual startup time exceeds the 20ms target
 require("core.startup").track(_G.nvimz_start_time)
-
--- 9.
-vim.opt.number = true
--- vim.opt.relativenumber = true
