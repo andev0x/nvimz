@@ -2,6 +2,14 @@ local M = {}
 
 local spec = require("infra.spec")
 
+-- Global override for floating windows to ensure rounded borders
+local orig_open_floating_preview = vim.lsp.util.open_floating_preview
+function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
+	opts = opts or {}
+	opts.border = opts.border or "rounded"
+	return orig_open_floating_preview(contents, syntax, opts, ...)
+end
+
 local function on_attach(client, bufnr)
 	local function map(lhs, rhs, desc)
 		vim.keymap.set("n", lhs, rhs, {
@@ -33,6 +41,7 @@ local function on_attach(client, bufnr)
 
 	-- Toggle inlay hints
 	if client:supports_method("textDocument/inlayHint") then
+		vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
 		map("<leader>uh", function()
 			vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
 		end, "LSP: toggle inlay hints")

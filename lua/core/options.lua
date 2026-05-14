@@ -22,6 +22,20 @@ vim.opt.splitright = true
 vim.opt.timeoutlen = 300
 vim.opt.updatetime = 200 -- Faster completion and diagnostics
 
+-- Line wrapping and special characters
+vim.opt.wrap = true
+vim.opt.linebreak = true -- Proper word wrap: don't break words
+vim.opt.breakindent = true -- Smart break indent: wrapped lines match indentation
+vim.opt.showbreak = "↳ "
+vim.opt.list = true
+vim.opt.listchars = {
+	tab = "│ ", -- Slender vertical line for tabs
+	trail = "·", -- Small dot for trailing spaces
+	extends = "»", -- Slender indicator for lines extending off-screen
+	precedes = "«",
+	nbsp = "␣",
+}
+
 vim.opt.lazyredraw = true -- Reduce redraw jitter
 vim.opt.shada = "!,'100,<50,s10,h" -- Limit ShaDa file size
 vim.opt.synmaxcol = 240 -- Don't highlight long lines
