@@ -474,12 +474,7 @@ function M.setup()
 
 	local function get_fileinfo()
 		local ft = vim.bo.filetype ~= "" and vim.bo.filetype or "text"
-
-		local encoding = vim.bo.fileencoding ~= "" and vim.bo.fileencoding or vim.o.encoding
-
-		local format = vim.bo.fileformat
-
-		return string.format("%s • %s • %s", ft, encoding, format)
+		return string.format("%s • %%p%%%%", ft)
 	end
 
 	-- ============================================================================
