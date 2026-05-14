@@ -8,6 +8,10 @@
       "rev": "dca1a190aa85f9065979ef35802fb77131911106",
       "src": "https://github.com/stevearc/conform.nvim"
     },
+    "copilot.lua": {
+      "rev": "7e9c269bf40dea86b44e64bd746f1808e991e419",
+      "src": "https://github.com/zbirenbaum/copilot.lua"
+    },
     "gp.nvim": {
       "rev": "c37f154b97690c4925fef4e35ffdbf2c844b5f4e",
       "src": "https://github.com/Robitx/gp.nvim"

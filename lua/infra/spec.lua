@@ -8,6 +8,7 @@ M.lsp_icons = {
 	terraformls = "󱁢 ",
 	yamlls = " ",
 	lua_ls = " ",
+	copilot = " ",
 }
 
 M.lsp_servers = {

@@ -44,12 +44,30 @@ function M.setup()
 		default_command_agent = "Ollama-3B",
 	})
 
+	require("copilot").setup({
+		suggestion = {
+			enabled = true,
+			auto_trigger = true,
+			debounce = 75,
+			keymap = {
+				accept = "<M-right>",
+				accept_word = false,
+				accept_line = false,
+				next = "<M-]>",
+				prev = "<M-[>",
+				dismiss = "<C-]>",
+			},
+		},
+		panel = { enabled = false },
+	})
+
 	local map = function(lhs, rhs, desc)
 		vim.keymap.set({ "n", "v" }, lhs, rhs, { desc = desc, silent = true })
 	end
 
 	map("<leader>aa", "<cmd>GpChatNew<cr>", "AI Chat")
 	map("<leader>aq", "<cmd>GpChatToggle<cr>", "AI Toggle")
+	map("<leader>at", "<cmd>Copilot toggle<cr>", "AI Copilot Toggle")
 	map("<leader>a3", function()
 		vim.cmd("GpAgent Ollama-3B")
 		vim.notify("Switched to Ollama-3B")

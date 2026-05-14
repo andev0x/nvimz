@@ -89,6 +89,7 @@ function M.setup()
 					{ source = "rcarriga/nvim-dap-ui" },
 					{ source = "leoluz/nvim-dap-go" },
 					{ source = "Robitx/gp.nvim" },
+					{ source = "zbirenbaum/copilot.lua" },
 				})
 				require("plugins.dap").setup()
 				require("plugins.ai").setup()
