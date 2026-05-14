@@ -403,55 +403,69 @@ function M.setup()
 
 	-- ============================================================================
 	-- LSP
+	-- Caching to avoid querying clients on every redraw
 	-- ============================================================================
 
 	local lsp_icons = require("infra.spec").lsp_icons
+	local lsp_cache = {
+		val = "",
+		last_update = 0,
+	}
 
 	local function get_lsp()
+		local now = vim.uv.now()
+		if now - lsp_cache.last_update < 1000 then -- Update every second
+			return lsp_cache.val
+		end
+
 		local clients = vim.lsp.get_clients({ bufnr = 0 })
 
 		if #clients == 0 then
-			return ""
-		end
-
-		local names = {}
-
-		for _, client in ipairs(clients) do
-			if client.name ~= "copilot" then
-				local icon = lsp_icons[client.name] or "󰒋"
-				table.insert(names, icon .. " " .. client.name)
+			lsp_cache.val = ""
+		else
+			local names = {}
+			for _, client in ipairs(clients) do
+				if client.name ~= "copilot" then
+					local icon = lsp_icons[client.name] or "󰒋"
+					table.insert(names, icon .. " " .. client.name)
+				end
 			end
+			lsp_cache.val = table.concat(names, " ")
 		end
 
-		return table.concat(names, " ")
+		lsp_cache.last_update = now
+		return lsp_cache.val
 	end
 
 	-- ============================================================================
 	-- DIAGNOSTICS
+	-- Caching to reduce pressure during rapid redraws
 	-- ============================================================================
 
-	local function get_diagnostics()
-		local count = vim.diagnostic.count(0)
+	local diag_cache = {
+		val = "",
+		last_update = 0,
+	}
 
+	local function get_diagnostics()
+		local now = vim.uv.now()
+		if now - diag_cache.last_update < 100 then -- Update max 10 times per second
+			return diag_cache.val
+		end
+
+		local count = vim.diagnostic.count(0)
 		local errors = count[vim.diagnostic.severity.ERROR] or 0
 		local warns = count[vim.diagnostic.severity.WARN] or 0
 		local hints = count[vim.diagnostic.severity.HINT] or 0
 
 		local parts = {}
+		if errors > 0 then table.insert(parts, " " .. errors) end
+		if warns > 0 then table.insert(parts, " " .. warns) end
+		if hints > 0 then table.insert(parts, "󰌵 " .. hints) end
 
-		if errors > 0 then
-			table.insert(parts, " " .. errors)
-		end
-
-		if warns > 0 then
-			table.insert(parts, " " .. warns)
-		end
-
-		if hints > 0 then
-			table.insert(parts, "󰌵 " .. hints)
-		end
-
-		return table.concat(parts, " ")
+		diag_cache.val = table.concat(parts, " ")
+		diag_cache.last_update = now
+		return diag_cache.val
 	end
 
 	-- ============================================================================

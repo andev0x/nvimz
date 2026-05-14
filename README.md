@@ -58,6 +58,9 @@ Manage plugins with native commands:
 
 ### Performance & Minimalism
 - **Startup time < 15ms** via optimized lazy loading and the native `vim.pack` system.
+- **Ultra-Low Latency:** Optimized redraw cycles (`lazyredraw`), smooth scrolling, and throttled statusline updates to eliminate jitter.
+- **Smart Resource Management:** Automatic Treesitter disabling for large files (>500KB) and throttled diagnostic polling.
+- **LSP Throughput:** Refined attach logic and asynchronous-like diagnostic updates for a responsive editing experience.
 - **Zero bloat:** Heavy dependencies are replaced with the `mini.nvim` suite.
 - **Native Treesitter:** Uses Neovim 0.12's native highlighting and folding (no `nvim-treesitter` plugin).
 

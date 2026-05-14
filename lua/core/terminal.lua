@@ -38,6 +38,10 @@ local function create_floating_window(opts)
 	-- Create window
 	local win = vim.api.nvim_open_win(buf, true, win_config)
 
+	-- Terminal-specific performance optimizations
+	vim.api.nvim_buf_set_option(buf, "scrollback", 10000)
+	vim.api.nvim_buf_set_option(buf, "bufhidden", "hide")
+
 	return { buf = buf, win = win }
 end
 

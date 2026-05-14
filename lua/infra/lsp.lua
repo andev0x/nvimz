@@ -3,20 +3,13 @@ local M = {}
 local spec = require("infra.spec")
 
 local function on_attach(client, bufnr)
-	local map = function(lhs, rhs, desc)
+	local function map(lhs, rhs, desc)
 		vim.keymap.set("n", lhs, rhs, {
 			buffer = bufnr,
 			silent = true,
 			desc = desc,
 		})
 	end
-
-	-- Notify on attach for observability
-	vim.notify(
-		string.format("LSP: Attached %s to buffer %d", client.name, bufnr),
-		vim.log.levels.INFO,
-		{ title = "LSP" }
-	)
 
 	-- Navigation
 	map("gd", vim.lsp.buf.definition, "LSP: go to definition")
@@ -39,54 +32,37 @@ local function on_attach(client, bufnr)
 	end, "Diagnostics: next")
 
 	-- Toggle inlay hints
-	if vim.lsp.inlay_hint then
+	if client:supports_method("textDocument/inlayHint") then
 		map("<leader>uh", function()
 			vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
 		end, "LSP: toggle inlay hints")
 	end
 
-	-- Auto diagnostics popup on cursor hold
+	-- Optimize diagnostics popup: only create if not already exists and only on CursorHold
 	local group = vim.api.nvim_create_augroup("LspDiagnosticsFloat", { clear = false })
-
-	vim.api.nvim_clear_autocmds({
-		group = group,
-		buffer = bufnr,
-	})
+	vim.api.nvim_clear_autocmds({ group = group, buffer = bufnr })
 
 	vim.api.nvim_create_autocmd("CursorHold", {
 		group = group,
 		buffer = bufnr,
 		callback = function()
-			-- Don't open if there's already a floating window or we're in insert mode
 			if vim.api.nvim_get_mode().mode ~= "n" or vim.fn.getcmdwintype() ~= "" then
 				return
 			end
 
-			-- Check for existing floating windows (simplified check)
-			for _, win in ipairs(vim.api.nvim_list_wins()) do
-				if vim.api.nvim_win_get_config(win).relative ~= "" then
+			-- Check if any float is already open (simplified but efficient)
+			for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+				local conf = vim.api.nvim_win_get_config(win)
+				if conf.relative ~= "" and conf.focusable then
 					return
 				end
-			end
-
-			local diagnostics = vim.diagnostic.get(bufnr, {
-				lnum = vim.api.nvim_win_get_cursor(0)[1] - 1,
-			})
-
-			if #diagnostics == 0 then
-				return
 			end
 
 			vim.diagnostic.open_float(nil, {
 				focus = false,
 				scope = "cursor",
 				border = "rounded",
-				close_events = {
-					"CursorMoved",
-					"CursorMovedI",
-					"BufLeave",
-					"InsertEnter",
-				},
+				close_events = { "CursorMoved", "CursorMovedI", "BufLeave", "InsertEnter" },
 			})
 		end,
 	})
