@@ -614,12 +614,9 @@ function M.setup()
 	})
 
 	-- Set up Tab/S-Tab for smooth command-line/insert completion navigation
-	local imap = function(lhs, rhs)
-		vim.keymap.set("i", lhs, rhs, { expr = true, replace_keycodes = false })
-	end
-
-	imap("<Tab>", [[pumvisible() ? "\<C-n>" : "\<Tab>"]])
-	imap("<S-Tab>", [[pumvisible() ? "\<C-p>" : "\<S-Tab>"]])
+	-- Note: Neovim 0.12+ handles Tab/S-Tab for snippets by default.
+	-- We only need custom logic if we want to integrate it with pumvisible()
+	-- but Neovim 0.12's default is already quite smart.
 end
 
 return M

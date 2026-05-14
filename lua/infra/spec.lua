@@ -16,6 +16,11 @@ M.lsp_servers = {
 		cmd = { "gopls" },
 		filetypes = { "go", "gomod", "gowork", "gotmpl" },
 		root_markers = { "go.work", "go.mod", ".git" },
+		settings = {
+			gopls = {
+				semanticTokens = true,
+			},
+		},
 	},
 	pyright = {
 		cmd = { "pyright-langserver", "--stdio" },

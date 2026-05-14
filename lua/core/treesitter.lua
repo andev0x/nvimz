@@ -26,8 +26,22 @@ function M.setup()
 		end,
 	})
 
+	-- Force enable Native Treesitter Highlight for Go files
+	vim.api.nvim_create_autocmd("FileType", {
+		group = vim.api.nvim_create_augroup("go_treesitter", { clear = true }),
+		pattern = "go",
+		desc = "Force enable Native Treesitter Highlight for Go files",
+		callback = function(args)
+			local bufnr = args.buf
+			local ok, parser = pcall(vim.treesitter.get_parser, bufnr, "go")
+			if ok and parser then
+				vim.treesitter.start(bufnr, "go")
+			end
+		end,
+	})
+
 	-- Treesitter-based incremental selection (Native mapping)
-	vim.keymap.set({ "n", "x" }, "v", function()
+	vim.keymap.set({ "n", "x" }, "<leader>v", function()
 		local bufnr = vim.api.nvim_get_current_buf()
 		local parser_ok, parser = pcall(vim.treesitter.get_parser, bufnr)
 		if parser_ok and parser then

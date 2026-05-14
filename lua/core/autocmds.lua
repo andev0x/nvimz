@@ -7,3 +7,9 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 		vim.highlight.on_yank({ timeout = 120 })
 	end,
 })
+
+vim.api.nvim_create_autocmd("VimResized", {
+	group = group,
+	desc = "Equalize splits on window resize",
+	command = "tabdo wincmd =",
+})

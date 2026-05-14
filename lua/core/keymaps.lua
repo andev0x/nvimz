@@ -39,6 +39,7 @@ end, { desc = "Copy directory path", silent = true })
 -- Split management
 map("n", "<leader>sv", "<cmd>vsplit<cr>", { desc = "Split vertical", silent = true })
 map("n", "<leader>sh", "<cmd>split<cr>", { desc = "Split horizontal", silent = true })
+map("n", "<leader>se", "<C-w>=", { desc = "Equalize splits", silent = true })
 
 -- Resize splits
 map("n", "<C-Up>", "<cmd>resize +2<cr>", { desc = "Increase window height", silent = true })

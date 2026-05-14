@@ -15,6 +15,7 @@ vim.opt.hlsearch = true
 
 vim.opt.clipboard = "unnamedplus"
 vim.opt.termguicolors = true
+vim.opt.mouse = "a" -- Enable mouse support
 vim.opt.scrolloff = 4
 vim.opt.smoothscroll = true
 vim.opt.splitbelow = true

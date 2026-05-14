@@ -22,22 +22,31 @@ local function on_attach(client, bufnr)
 	-- Navigation
 	map("gd", vim.lsp.buf.definition, "LSP: go to definition")
 	map("gD", vim.lsp.buf.declaration, "LSP: go to declaration")
-	map("gr", vim.lsp.buf.references, "LSP: references")
-	map("gi", vim.lsp.buf.implementation, "LSP: implementation")
 	map("K", vim.lsp.buf.hover, "LSP: hover")
 
 	-- Actions
 	map("<leader>rn", vim.lsp.buf.rename, "LSP: rename")
 	map("<leader>ca", vim.lsp.buf.code_action, "LSP: code action")
 
+	-- Synchronize Native Semantic Tokens from LSPs (gopls)
+	if client.name == "gopls" then
+		if not client.server_capabilities.semanticTokensProvider then
+			local semantic = client.config.capabilities.textDocument.semanticTokens
+			if semantic then
+				client.server_capabilities.semanticTokensProvider = {
+					full = true,
+					legend = {
+						tokenTypes = semantic.tokenTypes,
+						tokenModifiers = semantic.tokenModifiers,
+					},
+					range = true,
+				}
+			end
+		end
+	end
+
 	-- Diagnostics
 	map("gl", vim.diagnostic.open_float, "Diagnostics: line diagnostics")
-	map("[d", function()
-		vim.diagnostic.jump({ count = -1 })
-	end, "Diagnostics: previous")
-	map("]d", function()
-		vim.diagnostic.jump({ count = 1 })
-	end, "Diagnostics: next")
 
 	-- Toggle inlay hints
 	if client:supports_method("textDocument/inlayHint") then
