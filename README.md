@@ -2,7 +2,7 @@
 
 > A blazing-fast, minimalist Neovim configuration for DevOps engineers and backend developers.
 
-**nvimz** is a high-performance Neovim setup optimized for **Neovim 0.12+** that prioritizes speed, simplicity, and developer experience. With a startup target under **15ms**, it replaces heavy plugin ecosystems with native APIs, the lightweight `mini.nvim` suite, and the built-in `vim.pack` package manager.
+**nvimz** is a high-performance Neovim setup optimized for **Neovim 0.12+** that prioritizes speed, simplicity, and developer experience. With a startup target under **20ms**, it replaces heavy plugin ecosystems with native APIs, the lightweight `mini.nvim` suite, and the built-in `vim.pack` package manager.
 
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Neovim](https://img.shields.io/badge/Neovim-%3E=0.12.0-blueviolet?logo=neovim)
@@ -28,7 +28,7 @@ Unlike many configurations that rely on Mason for package management, **nvimz** 
 
 - **Neovim 0.12.0+**
 - **System tools:** `git`, `rg` (ripgrep), `fd`
-- **Optional:** [Ollama](https://ollama.com/) for AI features
+- **Optional:** [Ollama](https://ollama.com/) for AI features, `stylua`, `black`, `shfmt`, `gofmt` for formatting.
 
 ### 2. Installation
 
@@ -57,7 +57,7 @@ Manage plugins with native commands:
 ## Features
 
 ### Performance & Minimalism
-- **Startup time < 15ms** via optimized lazy loading and the native `vim.pack` system.
+- **Startup time < 20ms** via optimized lazy loading and the native `vim.pack` system.
 - **Ultra-Low Latency:** Optimized redraw cycles (`lazyredraw`), smooth scrolling, and throttled statusline updates to eliminate jitter.
 - **Smart Resource Management:** Automatic Treesitter disabling for large files (>500KB) and throttled diagnostic polling.
 - **LSP Throughput:** Refined attach logic and asynchronous-like diagnostic updates for a responsive editing experience.
@@ -65,7 +65,7 @@ Manage plugins with native commands:
 - **Native Treesitter:** Uses Neovim 0.12's native highlighting and folding (no `nvim-treesitter` plugin).
 
 ### Development Workflow
-- **File Explorer:** Fast, fluid navigation with `mini.files`. Use `a` to quickly create files/folders.
+- **File Explorer:** Fast, fluid navigation with `mini.files`. Use `a` inside the explorer to quickly create files/folders.
 - **Fuzzy Finding:** Powerful search for files, buffers, and grep with `mini.pick`.
 - **Git Integration:** Comprehensive Git support with `mini.git` and `mini.diff`.
 - **Floating Terminal:** Instant shell access with `<leader>t`.
@@ -75,7 +75,9 @@ Manage plugins with native commands:
 ### Advanced Capabilities
 - **Debugging:** Pre-configured `nvim-dap` with UI and Go support.
 - **Local AI:** Integrated [Ollama](https://ollama.com/) support via `gp.nvim`. Auto-starts Ollama if not running.
+- **Copilot:** Native integration with `copilot.lua` for AI-assisted coding.
 - **Diagnostics:** Smart diagnostic popups on cursor hold.
+- **Dashboard:** Minimalist startup screen for quick access to files and search.
 
 ## Tech Stack
 
@@ -90,7 +92,7 @@ Manage plugins with native commands:
 | **Formatting** | `conform.nvim` |
 | **Debugging** | `nvim-dap` + `nvim-dap-ui` |
 | **Treesitter** | Native `vim.treesitter` |
-| **AI** | `gp.nvim` + Ollama |
+| **AI** | `gp.nvim` (Ollama) + `copilot.lua` |
 | **Theme** | `catppuccin` |
 
 ## Keybindings
@@ -107,14 +109,16 @@ Manage plugins with native commands:
 | `<C-h/j/k/l>` | Window navigation |
 | `<C-d/u>` | Scroll down/up and center |
 | `<leader>z` | Toggle fold |
+| `<leader>t` | Toggle floating terminal |
 
 ### Splits & Windows
 | Key | Action |
 |-----|--------|
 | `<leader>sv` | Split vertical |
 | `<leader>sh` | Split horizontal |
-| `<C-Up/Down>` | Resize height |
-| `<C-Left/Right>` | Resize width |
+| `<leader>se` | Equalize splits |
+| `<C-S-Up/Down>` | Resize height |
+| `<C-S-Left/Right>` | Resize width |
 
 ### File & Search
 | Key | Action |
@@ -133,7 +137,7 @@ Manage plugins with native commands:
 | Key | Action |
 |-----|--------|
 | `gd` | Go to definition |
-| `gr` | References (Picker) |
+| `gD` | Go to declaration |
 | `K` | Hover documentation |
 | `<leader>rn` | Rename symbol |
 | `<leader>ca` | Code actions |
@@ -143,6 +147,8 @@ Manage plugins with native commands:
 | `[d` / `]d` | Previous / Next diagnostic |
 | `<leader>cs` | Document symbols (Outline) |
 | `<leader>cS` | Workspace symbols |
+| `<leader>lr` | References (Picker) |
+| `<leader>ld` | Definition (Picker) |
 
 ### Git
 | Key | Action |
@@ -156,21 +162,32 @@ Manage plugins with native commands:
 ### Debugging (DAP)
 | Key | Action |
 |-----|--------|
-| `<leader>db` | Toggle breakpoint (with icons) |
+| `<leader>db` | Toggle breakpoint |
 | `<leader>dc` | Continue |
 | `<leader>di` / `do` | Step into / Step over |
+| `<leader>du` | Step out |
 | `<leader>dr` | Open REPL |
 | `<leader>dt` | Debug test (Go specialized) |
 
-### AI (Ollama)
+### AI
 | Key | Action |
 |-----|--------|
-| `<leader>aa` | New AI Chat |
+| `<leader>aa` | New AI Chat (Ollama) |
 | `<leader>aq` | Toggle AI Chat |
+| `<leader>at` | Toggle Copilot |
 | `<leader>a3` | Switch to Ollama 3B |
 | `<leader>a7` | Switch to Ollama 7B |
 
 ## Customization
+
+### Machine-specific Configuration
+You can create a `lua/machine/local.lua` file to define machine-specific settings. This file is ignored by Git.
+Example `lua/machine/local.lua`:
+```lua
+return {
+    python_path = "/usr/bin/python3",
+}
+```
 
 ### Adding Language Servers
 Define new servers in `lua/infra/spec.lua`. Ensure the binary is installed on your system.
