@@ -42,10 +42,10 @@ map("n", "<leader>sh", "<cmd>split<cr>", { desc = "Split horizontal", silent = t
 map("n", "<leader>se", "<C-w>=", { desc = "Equalize splits", silent = true })
 
 -- Resize splits
-map("n", "<C-Up>", "<cmd>resize +2<cr>", { desc = "Increase window height", silent = true })
-map("n", "<C-Down>", "<cmd>resize -2<cr>", { desc = "Decrease window height", silent = true })
-map("n", "<C-Left>", "<cmd>vertical resize -2<cr>", { desc = "Decrease window width", silent = true })
-map("n", "<C-Right>", "<cmd>vertical resize +2<cr>", { desc = "Increase window width", silent = true })
+map("n", "<C-S-Up>", "<cmd>resize +2<CR>")
+map("n", "<C-S-Down>", "<cmd>resize -2<CR>")
+map("n", "<C-S-Left>", "<cmd>vertical resize -2<CR>")
+map("n", "<C-S-Right>", "<cmd>vertical resize +2<CR>")
 
 -- Window navigation
 map("n", "<C-h>", "<C-w>h", { desc = "Go to left window", silent = true })
