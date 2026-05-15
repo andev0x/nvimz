@@ -57,7 +57,36 @@ local function setup_highlights()
 	})
 
 	set_hl(0, "MiniStatuslineDiagnostics", {
+		fg = "#A9B1D6",
+		bg = "#24283B",
+	})
+
+	set_hl(0, "MiniStatuslineError", {
+		fg = "#F7768E",
+		bg = "#24283B",
+		bold = true,
+	})
+
+	set_hl(0, "MiniStatuslineWarning", {
 		fg = "#E0AF68",
+		bg = "#24283B",
+		bold = true,
+	})
+
+	set_hl(0, "MiniStatuslineHint", {
+		fg = "#7AA2F7",
+		bg = "#24283B",
+		bold = true,
+	})
+
+	set_hl(0, "MiniStatuslineInfo", {
+		fg = "#7DCFFF",
+		bg = "#24283B",
+		bold = true,
+	})
+
+	set_hl(0, "MiniStatuslineTime", {
+		fg = "#9ECE6A",
 		bg = "#24283B",
 	})
 
@@ -116,16 +145,16 @@ local function get_time_icon()
 		cached_time_icon = "󰖚"
 	-- Morning focus
 	elseif hour >= 7 and hour < 9 then
-		cached_time_icon = ""
+		cached_time_icon = "󰖨"
 	-- Productive work
 	elseif hour >= 9 and hour < 12 then
-		cached_time_icon = "󱎫"
+		cached_time_icon = "󰄉"
 	-- Lunch time
 	elseif hour >= 12 and hour < 13 then
 		cached_time_icon = "󰩰"
 	-- Hydration / refresh
 	elseif hour >= 13 and hour < 14 then
-		cached_time_icon = ""
+		cached_time_icon = ""
 	-- Work
 	elseif hour >= 14 and hour < 17 then
 		cached_time_icon = "󱍄"
@@ -143,7 +172,7 @@ local function get_time_icon()
 		cached_time_icon = "󰒲"
 	-- Deep night
 	else
-		cached_time_icon = ""
+		cached_time_icon = "󰭎"
 	end
 
 	last_time_update = now
@@ -281,19 +310,28 @@ local function get_diagnostics()
 	local errors = count[vim.diagnostic.severity.ERROR] or 0
 	local warns = count[vim.diagnostic.severity.WARN] or 0
 	local hints = count[vim.diagnostic.severity.HINT] or 0
+	local infos = count[vim.diagnostic.severity.INFO] or 0
 
 	local parts = {}
 	if errors > 0 then
-		table.insert(parts, " " .. errors)
+		table.insert(parts, "%#MiniStatuslineError# " .. errors)
 	end
 	if warns > 0 then
-		table.insert(parts, " " .. warns)
+		table.insert(parts, "%#MiniStatuslineWarning# " .. warns)
 	end
 	if hints > 0 then
-		table.insert(parts, "󰌵 " .. hints)
+		table.insert(parts, "%#MiniStatuslineHint#󰠠 " .. hints)
+	end
+	if infos > 0 then
+		table.insert(parts, "%#MiniStatuslineInfo# " .. infos)
 	end
 
-	diag_cache.val = table.concat(parts, " ")
+	if #parts > 0 then
+		diag_cache.val = " " .. table.concat(parts, " ") .. " "
+	else
+		diag_cache.val = ""
+	end
+
 	diag_cache.last_update = now
 	return diag_cache.val
 end
@@ -397,7 +435,7 @@ local function setup_active_statusline(statusline, MiniStatusline)
 			},
 
 			{
-				hl = "MiniStatuslineInactive",
+				hl = "MiniStatuslineTime",
 				strings = {
 					" " .. get_time_icon() .. " ",
 				},
