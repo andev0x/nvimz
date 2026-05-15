@@ -66,7 +66,7 @@ function M.setup()
 	-- Loading the theme early prevents visual flashes of the default colorscheme.
 	vim.schedule(function()
 		add({
-			{ source = "catppuccin/nvim", name = "catppuccin" },
+			{ source = "folke/tokyonight.nvim", name = "tokyonight" },
 			{ source = "echasnovski/mini.nvim" },
 		})
 		require("plugins.theme").setup()

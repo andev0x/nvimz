@@ -1,75 +1,62 @@
 local M = {}
 
 function M.setup()
-	require("catppuccin").setup({
-		flavour = "mocha", -- latte, frappe, macchiato, mocha
-		transparent_background = true,
-		term_colors = true,
-		integrations = {
-			mini = {
-				enabled = true,
-				indentscope_color = "subtext0",
-			},
-			treesitter = true,
-			-- Required for Helix-like intelligent coloring
-			native_lsp = {
-				enabled = true,
-				semantic_tokens = true,
-				virtual_text = {
-					errors = { "italic" },
-					hints = { "italic" },
-					warnings = { "italic" },
-					information = { "italic" },
-				},
-				underlines = {
-					errors = { "underline" },
-					hints = { "underline" },
-					warnings = { "underline" },
-					information = { "underline" },
-				},
-			},
+	require("tokyonight").setup({
+		style = "moon",
+		transparent = true,
+		terminal_colors = true,
+		styles = {
+			comments = { italic = true },
+			keywords = { italic = true, bold = true }, -- Bold keywords for structural clarity
+			functions = { bold = true }, -- Bold functions to make logic "pop"
+			variables = {},
+			sidebars = "transparent",
+			floats = "transparent",
 		},
-		-- Using custom_highlights to override default theme behaviors
-		custom_highlights = function(colors)
-			return {
-				-- 1. Helix-like "Flat" Variables: Removes excessive colors from identifiers
-				-- This targets both Treesitter and LSP Semantic Tokens
-				["@variable"] = { fg = colors.text },
-				["@variable.parameter"] = { fg = colors.text },
-				["@variable.member"] = { fg = colors.text },
-				["@property"] = { fg = colors.text },
-				["@lsp.type.variable"] = { fg = colors.text },
-				["@lsp.type.parameter"] = { fg = colors.text },
-				["@lsp.type.property"] = { fg = colors.text },
-				["@lsp.type.variable.lua"] = { fg = colors.text },
+		on_highlights = function(highlights, colors)
+			-- 1. Helix-style Flat Identifiers: Removes the "rainbow" effect
+			-- Using fg_dark or a custom hex makes it even more subtle than colors.fg
+			local variable_color = "#92a2d5"
+			highlights["@variable"] = { fg = variable_color }
+			highlights["@variable.parameter"] = { fg = variable_color }
+			highlights["@variable.member"] = { fg = variable_color }
+			highlights["@property"] = { fg = variable_color }
+			highlights["@lsp.type.variable"] = { fg = variable_color }
+			highlights["@lsp.type.parameter"] = { fg = variable_color }
 
-				-- 2. Inlay Hints: Styled with a subtle background and Teal foreground
-				-- Mimics the "Block" look from Helix for type/parameter hints
-				LspInlayHint = {
-					fg = "#70bfa3", -- Your preferred Teal
-					bg = "#1e1e2e", -- Slightly darker than Mocha base for contrast
-					italic = true,
-				},
+			-- 2. Neutralize Noise: Dims operators and punctuation (The Helix secret)
+			local noise_color = colors.comment
+			highlights["@operator"] = { fg = noise_color }
+			highlights["@punctuation.bracket"] = { fg = noise_color }
+			highlights["@punctuation.delimiter"] = { fg = noise_color }
+			highlights["@lsp.type.operator"] = { fg = noise_color }
+			highlights["@lsp.type.punctuation"] = { fg = noise_color }
 
-				-- 3. UI Elements & Invisible Characters
-				NonText = { fg = colors.surface0 },
-				SpecialKey = { fg = colors.surface0 },
-
-				-- 4. Refined Function Calls: Subtle Blue instead of bright highlights
-				["@function.call"] = { fg = colors.blue },
-				["@method.call"] = { fg = colors.blue },
-				["@lsp.type.function"] = { fg = colors.blue },
-
-				-- 5. Constants & Types: Keeping them distinct but not overwhelming
-				["@constant"] = { fg = colors.peach },
-				["@type"] = { fg = colors.yellow },
-				["@lsp.type.type"] = { fg = colors.yellow },
+			-- 3. Inlay Hints: Teal foreground with a subtle block background
+			highlights.LspInlayHint = {
+				fg = "#70bfa3",
+				bg = "#1e2030", -- Darker contrast for the "tag" look
+				italic = true,
 			}
+
+			-- 4. Logic Highlights: High-contrast Blue and Yellow
+			highlights["@function.call"] = { fg = colors.blue, bold = true }
+			highlights["@method.call"] = { fg = colors.blue, bold = true }
+			highlights["@type"] = { fg = colors.yellow, bold = true }
+			highlights["@keyword"] = { fg = colors.magenta, bold = true }
+
+			-- 5. Go Specifics: Keep package names neutral
+			highlights["@module"] = { fg = variable_color }
+			highlights["@lsp.type.namespace"] = { fg = variable_color }
+			highlights["@constant.builtin"] = { fg = colors.orange, bold = true } -- nil, true, false
+
+			-- 6. UI Polish
+			highlights.NonText = { fg = colors.dark3 }
+			highlights.SpecialKey = { fg = colors.dark3 }
 		end,
 	})
 
-	-- Apply the colorscheme
-	vim.cmd.colorscheme("catppuccin")
+	vim.cmd.colorscheme("tokyonight-moon")
 end
 
 return M
