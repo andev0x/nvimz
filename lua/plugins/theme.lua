@@ -11,8 +11,10 @@ function M.setup()
 				indentscope_color = "subtext0",
 			},
 			treesitter = true,
+			-- Required for Helix-like intelligent coloring
 			native_lsp = {
 				enabled = true,
+				semantic_tokens = true,
 				virtual_text = {
 					errors = { "italic" },
 					hints = { "italic" },
@@ -27,23 +29,47 @@ function M.setup()
 				},
 			},
 		},
+		-- Using custom_highlights to override default theme behaviors
+		custom_highlights = function(colors)
+			return {
+				-- 1. Helix-like "Flat" Variables: Removes excessive colors from identifiers
+				-- This targets both Treesitter and LSP Semantic Tokens
+				["@variable"] = { fg = colors.text },
+				["@variable.parameter"] = { fg = colors.text },
+				["@variable.member"] = { fg = colors.text },
+				["@property"] = { fg = colors.text },
+				["@lsp.type.variable"] = { fg = colors.text },
+				["@lsp.type.parameter"] = { fg = colors.text },
+				["@lsp.type.property"] = { fg = colors.text },
+				["@lsp.type.variable.lua"] = { fg = colors.text },
+
+				-- 2. Inlay Hints: Styled with a subtle background and Teal foreground
+				-- Mimics the "Block" look from Helix for type/parameter hints
+				LspInlayHint = {
+					fg = "#70bfa3", -- Your preferred Teal
+					bg = "#1e1e2e", -- Slightly darker than Mocha base for contrast
+					italic = true,
+				},
+
+				-- 3. UI Elements & Invisible Characters
+				NonText = { fg = colors.surface0 },
+				SpecialKey = { fg = colors.surface0 },
+
+				-- 4. Refined Function Calls: Subtle Blue instead of bright highlights
+				["@function.call"] = { fg = colors.blue },
+				["@method.call"] = { fg = colors.blue },
+				["@lsp.type.function"] = { fg = colors.blue },
+
+				-- 5. Constants & Types: Keeping them distinct but not overwhelming
+				["@constant"] = { fg = colors.peach },
+				["@type"] = { fg = colors.yellow },
+				["@lsp.type.type"] = { fg = colors.yellow },
+			}
+		end,
 	})
 
+	-- Apply the colorscheme
 	vim.cmd.colorscheme("catppuccin")
-
-	-- Custom highlight overrides
-	local colors = {
-		bg_dark = "#181825", -- Mantle
-		surface0 = "#313244", -- Surface0
-		teal = "#70bfa3", -- Teal (Soft Blue)
-	}
-
-	-- Block Background for Inlay Hints
-	vim.api.nvim_set_hl(0, "LspInlayHint", { fg = colors.teal, bg = colors.bg_dark, italic = true })
-
-	-- Blur hidden characters
-	vim.api.nvim_set_hl(0, "NonText", { fg = colors.surface0 })
-	vim.api.nvim_set_hl(0, "SpecialKey", { fg = colors.surface0 })
 end
 
 return M

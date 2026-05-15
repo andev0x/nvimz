@@ -10,79 +10,26 @@ function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
 	return orig_open_floating_preview(contents, syntax, opts, ...)
 end
 
-local function on_attach(client, bufnr)
-	local function map(lhs, rhs, desc)
-		vim.keymap.set("n", lhs, rhs, {
-			buffer = bufnr,
-			silent = true,
-			desc = desc,
-		})
-	end
+local function setup_diagnostics()
+	vim.diagnostic.config({
+		virtual_text = false,
+		severity_sort = true,
+		underline = true,
+		update_in_insert = false,
 
-	-- Navigation
-	map("gd", vim.lsp.buf.definition, "LSP: go to definition")
-	map("gD", vim.lsp.buf.declaration, "LSP: go to declaration")
-	map("K", vim.lsp.buf.hover, "LSP: hover")
+		float = {
+			border = "rounded",
+			source = "if_many",
+		},
 
-	-- Actions
-	map("<leader>rn", vim.lsp.buf.rename, "LSP: rename")
-	map("<leader>ca", vim.lsp.buf.code_action, "LSP: code action")
-
-	-- Synchronize Native Semantic Tokens from LSPs (gopls)
-	if client.name == "gopls" then
-		if not client.server_capabilities.semanticTokensProvider then
-			local semantic = client.config.capabilities.textDocument.semanticTokens
-			if semantic then
-				client.server_capabilities.semanticTokensProvider = {
-					full = true,
-					legend = {
-						tokenTypes = semantic.tokenTypes,
-						tokenModifiers = semantic.tokenModifiers,
-					},
-					range = true,
-				}
-			end
-		end
-	end
-
-	-- Diagnostics
-	map("gl", vim.diagnostic.open_float, "Diagnostics: line diagnostics")
-
-	-- Toggle inlay hints
-	if client:supports_method("textDocument/inlayHint") then
-		vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
-		map("<leader>uh", function()
-			vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
-		end, "LSP: toggle inlay hints")
-	end
-
-	-- Optimize diagnostics popup: only create if not already exists and only on CursorHold
-	local group = vim.api.nvim_create_augroup("LspDiagnosticsFloat", { clear = false })
-	vim.api.nvim_clear_autocmds({ group = group, buffer = bufnr })
-
-	vim.api.nvim_create_autocmd("CursorHold", {
-		group = group,
-		buffer = bufnr,
-		callback = function()
-			if vim.api.nvim_get_mode().mode ~= "n" or vim.fn.getcmdwintype() ~= "" then
-				return
-			end
-
-			-- Check if any float is already open (simplified but efficient)
-			for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-				local conf = vim.api.nvim_win_get_config(win)
-				if conf.relative ~= "" and conf.focusable then
-					return
-				end
-			end
-
-			vim.diagnostic.open_float(nil, {
-				focus = false,
-				scope = "cursor",
-				border = "rounded",
-				close_events = { "CursorMoved", "CursorMovedI", "BufLeave", "InsertEnter" },
-			})
-		end,
+		signs = {
+			text = {
+				[vim.diagnostic.severity.ERROR] = " ",
+				[vim.diagnostic.severity.WARN] = " ",
+				[vim.diagnostic.severity.HINT] = "󰠠 ",
+				[vim.diagnostic.severity.INFO] = " ",
+			},
+		},
 	})
 end
 
@@ -113,10 +60,94 @@ function M.setup()
 	-- Uncomment if using nvim-cmp
 	-- capabilities = require("cmp_nvim_lsp").default_capabilities()
 
+	-- Use LspAttach for buffer-local setup (keymaps, inlay hints)
+	vim.api.nvim_create_autocmd("LspAttach", {
+		callback = function(args)
+			local bufnr = args.buf
+			local client = vim.lsp.get_client_by_id(args.data.client_id)
+			if not client then
+				return
+			end
+
+			local function map(lhs, rhs, desc)
+				vim.keymap.set("n", lhs, rhs, {
+					buffer = bufnr,
+					silent = true,
+					desc = desc,
+				})
+			end
+
+			-- Navigation
+			map("gd", vim.lsp.buf.definition, "LSP: go to definition")
+			map("gD", vim.lsp.buf.declaration, "LSP: go to declaration")
+			map("K", vim.lsp.buf.hover, "LSP: hover")
+
+			-- Actions
+			map("<leader>rn", vim.lsp.buf.rename, "LSP: rename")
+			map("<leader>ca", vim.lsp.buf.code_action, "LSP: code action")
+
+			-- Synchronize Native Semantic Tokens from LSPs (gopls)
+			if client.name == "gopls" then
+				if not client.server_capabilities.semanticTokensProvider then
+					local semantic = client.config.capabilities.textDocument.semanticTokens
+					if semantic then
+						client.server_capabilities.semanticTokensProvider = {
+							full = true,
+							legend = {
+								tokenTypes = semantic.tokenTypes,
+								tokenModifiers = semantic.tokenModifiers,
+							},
+							range = true,
+						}
+					end
+				end
+			end
+
+			-- Diagnostics
+			map("gl", vim.diagnostic.open_float, "Diagnostics: line diagnostics")
+
+			-- Toggle inlay hints: Enable by default if supported
+			if client:supports_method("textDocument/inlayHint") then
+				vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+				map("<leader>uh", function()
+					vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
+				end, "LSP: toggle inlay hints")
+			end
+
+			-- Optimize diagnostics popup: only create if not already exists and only on CursorHold
+			local diag_group = vim.api.nvim_create_augroup("LspDiagnosticsFloat", { clear = false })
+			vim.api.nvim_clear_autocmds({ group = diag_group, buffer = bufnr })
+
+			vim.api.nvim_create_autocmd("CursorHold", {
+				group = diag_group,
+				buffer = bufnr,
+				callback = function()
+					if vim.api.nvim_get_mode().mode ~= "n" or vim.fn.getcmdwintype() ~= "" then
+						return
+					end
+
+					-- Check if any float is already open (simplified but efficient)
+					for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+						local conf = vim.api.nvim_win_get_config(win)
+						if conf.relative ~= "" and conf.focusable then
+							return
+						end
+					end
+
+					vim.diagnostic.open_float(nil, {
+						focus = false,
+						scope = "cursor",
+						border = "rounded",
+						close_events = { "CursorMoved", "CursorMovedI", "BufLeave", "InsertEnter" },
+					})
+				end,
+			})
+		end,
+	})
+
 	-- Global defaults for all LSP servers
 	vim.lsp.config("*", {
 		capabilities = capabilities,
-		on_attach = on_attach,
 	})
 
 	for name, s_spec in pairs(spec.lsp_servers) do
@@ -159,26 +190,7 @@ function M.setup()
 		::continue::
 	end
 
-	vim.diagnostic.config({
-		virtual_text = false,
-		severity_sort = true,
-		underline = true,
-		update_in_insert = false,
-
-		float = {
-			border = "rounded",
-			source = "if_many",
-		},
-
-		signs = {
-			text = {
-				[vim.diagnostic.severity.ERROR] = " ",
-				[vim.diagnostic.severity.WARN] = " ",
-				[vim.diagnostic.severity.HINT] = "󰠠 ",
-				[vim.diagnostic.severity.INFO] = " ",
-			},
-		},
-	})
+	setup_diagnostics()
 end
 
 return M

@@ -19,6 +19,15 @@ M.lsp_servers = {
 		settings = {
 			gopls = {
 				semanticTokens = true,
+				hints = {
+					assignVariableTypes = true,
+					compositeLiteralFields = true,
+					compositeLiteralTypes = true,
+					constantValues = true,
+					functionTypeParameters = true,
+					parameterNames = true,
+					rangeVariableTypes = true,
+				},
 			},
 		},
 	},
@@ -31,11 +40,76 @@ M.lsp_servers = {
 		cmd = { "typescript-language-server", "--stdio" },
 		filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
 		root_markers = { "tsconfig.json", "jsconfig.json", "package.json", ".git" },
+		settings = {
+			javascript = {
+				inlayHints = {
+					includeInlayEnumMemberValueHints = true,
+					includeInlayFunctionLikeReturnTypeHints = true,
+					includeInlayFunctionParameterTypeHints = true,
+					includeInlayParameterNameHints = "all",
+					includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+					includeInlayPropertyDeclarationTypeHints = true,
+					includeInlayVariableTypeHints = true,
+				},
+			},
+			typescript = {
+				inlayHints = {
+					includeInlayEnumMemberValueHints = true,
+					includeInlayFunctionLikeReturnTypeHints = true,
+					includeInlayFunctionParameterTypeHints = true,
+					includeInlayParameterNameHints = "all",
+					includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+					includeInlayPropertyDeclarationTypeHints = true,
+					includeInlayVariableTypeHints = true,
+				},
+			},
+		},
 	},
 	rust_analyzer = {
 		cmd = { "rust-analyzer" },
 		filetypes = { "rust" },
 		root_markers = { "Cargo.toml", "rust-toolchain", "rust-toolchain.toml", ".git" },
+		settings = {
+			["rust-analyzer"] = {
+				inlayHints = {
+					bindingModeHints = { enable = false },
+					chainingHints = { enable = true },
+					closingBraceHints = { enable = true, minLines = 25 },
+					closureReturnTypeHints = { enable = "never" },
+					lifetimeElisionHints = { enable = "never", useParameterNames = false },
+					maxLength = 25,
+					parameterHints = { enable = true },
+					reborrowHints = { enable = "never" },
+					renderColons = true,
+					typeHints = { enable = true, hideClosureInitialization = false, hideNamedTempTypes = false },
+				},
+			},
+		},
+	},
+	lua_ls = {
+		cmd = { "lua-language-server" },
+		filetypes = { "lua" },
+		root_markers = { ".luarc.json", ".luarc.jsonc", ".git" },
+		settings = {
+			Lua = {
+				hint = {
+					enable = true,
+					arrayIndex = "Disable",
+					await = true,
+					paramName = "All",
+					paramType = true,
+					semicolon = "Disable",
+					setType = true,
+				},
+				workspace = {
+					checkThirdParty = false,
+					library = {
+						vim.env.VIMRUNTIME,
+					},
+				},
+				telemetry = { enable = false },
+			},
+		},
 	},
 	terraformls = {
 		cmd = { "terraform-ls", "serve" },
