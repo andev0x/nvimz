@@ -42,10 +42,15 @@ map("n", "<leader>sh", "<cmd>split<cr>", { desc = "Split horizontal", silent = t
 map("n", "<leader>se", "<C-w>=", { desc = "Equalize splits", silent = true })
 
 -- Resize splits
-map("n", "<C-S-Up>", "<cmd>resize +2<CR>")
-map("n", "<C-S-Down>", "<cmd>resize -2<CR>")
-map("n", "<C-S-Left>", "<cmd>vertical resize -2<CR>")
-map("n", "<C-S-Right>", "<cmd>vertical resize +2<CR>")
+map("n", "<A-Up>", "<cmd>resize +2<CR>", { desc = "Resize height +2", silent = true })
+map("n", "<A-Down>", "<cmd>resize -2<CR>", { desc = "Resize height -2", silent = true })
+map("n", "<A-Left>", "<cmd>vertical resize -2<CR>", { desc = "Resize width -2", silent = true })
+map("n", "<A-Right>", "<cmd>vertical resize +2<CR>", { desc = "Resize width +2", silent = true })
+
+-- map("n", "<A-k>", "<cmd>resize +2<CR>", { desc = "Resize height +2", silent = true })
+-- map("n", "<A-j>", "<cmd>resize -2<CR>", { desc = "Resize height -2", silent = true })
+-- map("n", "<A-h>", "<cmd>vertical resize -2<CR>", { desc = "Resize width -2", silent = true })
+-- map("n", "<A-l>", "<cmd>vertical resize +2<CR>", { desc = "Resize width +2", silent = true })
 
 -- Window navigation
 map("n", "<C-h>", "<C-w>h", { desc = "Go to left window", silent = true })

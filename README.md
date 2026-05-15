@@ -117,8 +117,8 @@ Manage plugins with native commands:
 | `<leader>sv` | Split vertical |
 | `<leader>sh` | Split horizontal |
 | `<leader>se` | Equalize splits |
-| `<C-S-Up/Down>` | Resize height |
-| `<C-S-Left/Right>` | Resize width |
+| `<A-Up/Down>` or `<A-k/j>` | Resize height |
+| `<A-Left/Right>` or `<A-h/l>` | Resize width |
 
 ### File & Search
 | Key | Action |
