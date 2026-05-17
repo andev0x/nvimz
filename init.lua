@@ -1,55 +1,52 @@
--- 1. Record the absolute start time in nanoseconds at the very first microsecond
+-- Record startup timestamp as early as possible
 _G.nvimz_start_time = vim.uv.hrtime()
 
--- 2. Enable bytecode compiler loader immediately to accelerate all subsequent loads
+-- Enable Lua bytecode cache loader
 if vim.loader and vim.loader.enable then
 	vim.loader.enable()
 end
 
--- 3. Enforce minimum system requirements
+-- Disable unused builtin runtime plugins early
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
+vim.g.loaded_gzip = 1
+vim.g.loaded_tarPlugin = 1
+vim.g.loaded_zipPlugin = 1
+vim.g.loaded_tutor_mode_plugin = 1
+vim.g.loaded_matchparen = 1
+
+-- Minimum supported Neovim version
 if vim.fn.has("nvim-0.12") == 0 then
 	error("nvim-zen requires Neovim 0.12+")
 end
 
--- 4. Define global map leaders
+-- Global leaders
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 
--- 5. Manage package manager infrastructure (builtin vim.pack)
--- No bootstrap needed for vim.pack as it is built-in to Neovim 0.12+
-
--- 6. Load Core Configurations (Sorted by resource load priority)
+-- Core modules
 require("core.filetype")
 require("core.options")
 require("core.keymaps")
 require("core.autocmds")
 require("core.terminal")
 
--- Defer Treesitter setup until after the UI is ready
-vim.api.nvim_create_autocmd("VimEnter", {
-	once = true,
-	callback = function()
-		vim.defer_fn(function()
-			require("core.treesitter").setup()
-		end, 50)
-	end,
-})
-
--- Register health check commands without executing them synchronously at startup
-require("core.health").register_command()
-
--- Defer health checks to avoid blocking startup
-vim.api.nvim_create_autocmd("VimEnter", {
-	once = true,
-	callback = function()
-		vim.defer_fn(function()
-			require("core.health").check()
-		end, 150)
-	end,
-})
-
--- 7. Initialize Infrastructure & Plugins
+-- Plugin/dependency infrastructure
 require("infra.deps").setup()
 
--- 8. Track and warn if total actual startup time exceeds the 20ms target
+-- Register health commands only
+require("core.health").register_command()
+
+-- Defer Treesitter initialization until UI is responsive
+vim.api.nvim_create_autocmd("VimEnter", {
+	once = true,
+	callback = function()
+		vim.schedule(function()
+			require("core.treesitter").setup()
+		end)
+	end,
+})
+
+-- Startup profiler / tracker
 require("core.startup").track(_G.nvimz_start_time)
