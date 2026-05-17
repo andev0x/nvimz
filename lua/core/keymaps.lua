@@ -1,14 +1,14 @@
 local map = vim.keymap.set
 
 map("n", "<leader>w", "<cmd>write<cr>", { desc = "Write buffer", silent = true })
-map("n", "<leader>q", "<cmd>quit<cr>", { desc = "Quit window", silent = true })
+map("n", "<leader>qq", "<cmd>quit<cr>", { desc = "Quit window", silent = true })
 map("n", "<leader>h", "<cmd>nohlsearch<cr>", { desc = "Clear search highlight", silent = true })
 
 map("n", "<leader>ds", function()
 	require("core.startup").open()
 end, { desc = "Open dashboard", silent = true })
 
-map("n", "<leader>xx", "<cmd>bdelete<cr>", { desc = "Close buffer", silent = true })
+map("n", "<leader>bd", "<cmd>bdelete<cr>", { desc = "Close buffer", silent = true })
 map("n", "<leader>bn", "<cmd>bnext<cr>", { desc = "Next buffer", silent = true })
 map("n", "<leader>bp", "<cmd>bprevious<cr>", { desc = "Previous buffer", silent = true })
 
@@ -42,15 +42,10 @@ map("n", "<leader>sh", "<cmd>split<cr>", { desc = "Split horizontal", silent = t
 map("n", "<leader>se", "<C-w>=", { desc = "Equalize splits", silent = true })
 
 -- Resize splits
-map("n", "<A-Up>", "<cmd>resize +2<CR>", { desc = "Resize height +2", silent = true })
-map("n", "<A-Down>", "<cmd>resize -2<CR>", { desc = "Resize height -2", silent = true })
-map("n", "<A-Left>", "<cmd>vertical resize -2<CR>", { desc = "Resize width -2", silent = true })
-map("n", "<A-Right>", "<cmd>vertical resize +2<CR>", { desc = "Resize width +2", silent = true })
-
--- map("n", "<A-k>", "<cmd>resize +2<CR>", { desc = "Resize height +2", silent = true })
--- map("n", "<A-j>", "<cmd>resize -2<CR>", { desc = "Resize height -2", silent = true })
--- map("n", "<A-h>", "<cmd>vertical resize -2<CR>", { desc = "Resize width -2", silent = true })
--- map("n", "<A-l>", "<cmd>vertical resize +2<CR>", { desc = "Resize width +2", silent = true })
+vim.keymap.set("n", "<leader>rh", "<cmd>vertical resize -2<CR>", { desc = "Resize left" })
+vim.keymap.set("n", "<leader>rl", "<cmd>vertical resize +2<CR>", { desc = "Resize right" })
+vim.keymap.set("n", "<leader>rj", "<cmd>resize -2<CR>", { desc = "Resize down" })
+vim.keymap.set("n", "<leader>rk", "<cmd>resize +2<CR>", { desc = "Resize up" })
 
 -- Window navigation
 map("n", "<C-h>", "<C-w>h", { desc = "Go to left window", silent = true })

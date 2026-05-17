@@ -102,9 +102,9 @@ Manage plugins with native commands:
 |-----|--------|
 | `<leader>ds` | Open dashboard |
 | `<leader>w` | Write buffer |
-| `<leader>q` | Quit window |
+| `<leader>qq` | Quit window |
 | `<leader>h` | Clear search highlight |
-| `<leader>xx` | Close buffer |
+| `<leader>bd` | Close buffer |
 | `<leader>bn` / `bp` | Next / Previous buffer |
 | `<C-h/j/k/l>` | Window navigation |
 | `<C-d/u>` | Scroll down/up and center |
@@ -117,8 +117,8 @@ Manage plugins with native commands:
 | `<leader>sv` | Split vertical |
 | `<leader>sh` | Split horizontal |
 | `<leader>se` | Equalize splits |
-| `<A-Up/Down>` or `<A-k/j>` | Resize height |
-| `<A-Left/Right>` or `<A-h/l>` | Resize width |
+| `<leader>rj/rk` | Resize height (Down/Up) |
+| `<leader>rh/rl` | Resize width (Left/Right) |
 
 ### File & Search
 | Key | Action |
@@ -141,6 +141,7 @@ Manage plugins with native commands:
 | `K` | Hover documentation |
 | `<leader>rn` | Rename symbol |
 | `<leader>ca` | Code actions |
+| `<leader>fm` | Format buffer |
 | `<leader>uh` | Toggle inlay hints |
 | `gl` | Show line diagnostics |
 | `<leader>fd` | Find diagnostics (Picker) |
@@ -177,6 +178,11 @@ Manage plugins with native commands:
 | `<leader>at` | Toggle Copilot |
 | `<leader>a3` | Switch to Ollama 3B |
 | `<leader>a7` | Switch to Ollama 7B |
+
+> Check conflicts all keymaps:
+```bash
+:redir! > keymaps.txt | silent map | redir END
+```
 
 ## Customization
 
