@@ -24,11 +24,29 @@ require("core.options")
 require("core.keymaps")
 require("core.autocmds")
 require("core.terminal")
-require("core.treesitter").setup()
+
+-- Defer Treesitter setup until after the UI is ready
+vim.api.nvim_create_autocmd("VimEnter", {
+	once = true,
+	callback = function()
+		vim.defer_fn(function()
+			require("core.treesitter").setup()
+		end, 50)
+	end,
+})
 
 -- Register health check commands without executing them synchronously at startup
-require("core.health").check()
 require("core.health").register_command()
+
+-- Defer health checks to avoid blocking startup
+vim.api.nvim_create_autocmd("VimEnter", {
+	once = true,
+	callback = function()
+		vim.defer_fn(function()
+			require("core.health").check()
+		end, 150)
+	end,
+})
 
 -- 7. Initialize Infrastructure & Plugins
 require("infra.deps").setup()

@@ -22,20 +22,11 @@ function M.setup()
 			local parser_ok, parser = pcall(vim.treesitter.get_parser, bufnr)
 			if parser_ok and parser then
 				vim.treesitter.start(bufnr)
-			end
-		end,
-	})
 
-	-- Force enable Native Treesitter Highlight for Go files
-	vim.api.nvim_create_autocmd("FileType", {
-		group = vim.api.nvim_create_augroup("go_treesitter", { clear = true }),
-		pattern = "go",
-		desc = "Force enable Native Treesitter Highlight for Go files",
-		callback = function(args)
-			local bufnr = args.buf
-			local ok, parser = pcall(vim.treesitter.get_parser, bufnr, "go")
-			if ok and parser then
-				vim.treesitter.start(bufnr, "go")
+				-- Enable Treesitter-based folding only for this buffer
+				vim.bo[bufnr].foldmethod = "expr"
+				vim.bo[bufnr].foldexpr = "v:lua.vim.treesitter.foldexpr()"
+				vim.bo[bufnr].foldlevel = 99
 			end
 		end,
 	})
@@ -55,12 +46,6 @@ function M.setup()
 		end
 		return "v"
 	end, { expr = true, desc = "Incremental selection" })
-
-	-- Native folding support via Treesitter
-	vim.opt.foldmethod = "expr"
-	vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
-	-- Ensure folds are open by default
-	vim.opt.foldlevel = 99
 
 	-- The user specifically requested support for:
 	-- go, rust, python, typescript, markdown, cpp, java, javascript
