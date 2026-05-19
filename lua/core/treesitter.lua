@@ -23,9 +23,9 @@ function M.setup()
 			end
 
 			-- Enable Treesitter only if parser exists
-			local has_parser = pcall(vim.treesitter.get_parser, bufnr)
+			local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
 
-			if not has_parser then
+			if not ok or not parser then
 				return
 			end
 

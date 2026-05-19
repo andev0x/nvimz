@@ -17,6 +17,11 @@ LANGS=(
   "python:tree-sitter/tree-sitter-python:src"
   "typescript:tree-sitter/tree-sitter-typescript:typescript/src"
   "tsx:tree-sitter/tree-sitter-typescript:tsx/src"
+  "lua:tree-sitter/tree-sitter-lua:src"
+  "vim:neovim/tree-sitter-vim:src"
+  "vimdoc:neovim/tree-sitter-vimdoc:src"
+  "gitcommit:romgrk/tree-sitter-gitcommit:src"
+  "markdown:tree-sitter-grammars/tree-sitter-markdown:tree-sitter-markdown/src"
 )
 
 mkdir -p "$PARSER_DIR"
