@@ -14,6 +14,9 @@ function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
 	return orig_open_floating_preview(contents, syntax, opts, ...)
 end
 
+-- LSP capabilities
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+
 local function setup_diagnostics()
 	vim.diagnostic.config({
 		virtual_text = false,
@@ -70,15 +73,15 @@ local function init_global()
 			vim.notify("Usage: LspStart <server_name>", vim.log.levels.ERROR)
 			return
 		end
-		-- Force enable regardless of current filetype
+		-- Force start regardless of current filetype
 		if spec.lsp_servers[name] then
-			M.enable_server(name, spec.lsp_servers[name])
+			M.enable_server(name, spec.lsp_servers[name], 0)
 		else
-			vim.lsp.enable(name)
+			vim.notify(string.format("LSP server '%s' not found in spec", name), vim.log.levels.ERROR)
 		end
 	end, {
 		nargs = 1,
-		desc = "Start/Enable LSP server",
+		desc = "Start LSP server",
 		complete = function()
 			return vim.tbl_keys(spec.lsp_servers)
 		end,
@@ -106,16 +109,17 @@ local function init_global()
 			local name = client.name
 			client.stop()
 			vim.defer_fn(function()
-				vim.lsp.enable(name)
+				local bufnr = vim.api.nvim_get_current_buf()
+				local ft = vim.bo[bufnr].filetype
+				M.start(ft, bufnr)
 			end, 500)
 		end
 	end, { desc = "Restart LSP clients for current buffer" })
 
-	-- LSP capabilities
-	local capabilities = vim.lsp.protocol.make_client_capabilities()
-
 	-- Use LspAttach for buffer-local setup (keymaps, inlay hints)
+	local lsp_group = vim.api.nvim_create_augroup("LspSetup", { clear = true })
 	vim.api.nvim_create_autocmd("LspAttach", {
+		group = lsp_group,
 		callback = function(args)
 			local bufnr = args.buf
 			local client = vim.lsp.get_client_by_id(args.data.client_id)
@@ -179,66 +183,54 @@ local function init_global()
 		end,
 	})
 
-	-- Global defaults for all LSP servers
-	vim.lsp.config("*", {
-		capabilities = capabilities,
-	})
-
 	setup_diagnostics()
 end
 
-function M.enable_server(name, s_spec)
-	if enabled_servers[name] then
-		return
-	end
-
+function M.enable_server(name, s_spec, bufnr)
 	local cmd = s_spec.cmd or {}
 
 	-- Skip setup if the language server executable is missing
 	if cmd[1] and vim.fn.executable(cmd[1]) ~= 1 then
 		-- Only warn once
-		enabled_servers[name] = "missing"
-		vim.notify(string.format("LSP server '%s' not found: %s", name, cmd[1]), vim.log.levels.WARN)
+		if enabled_servers[name] ~= "missing" then
+			enabled_servers[name] = "missing"
+			vim.notify(string.format("LSP server '%s' not found: %s", name, cmd[1]), vim.log.levels.WARN)
+		end
 		return
 	end
 
-	vim.lsp.config(name, {
+	local bufname = vim.api.nvim_buf_get_name(bufnr)
+	local root_dir = nil
+
+	-- Try project root markers first
+	if s_spec.root_markers and #s_spec.root_markers > 0 then
+		root_dir = vim.fs.root(bufnr, s_spec.root_markers)
+	end
+
+	-- Fallback to current file directory or CWD
+	if not root_dir then
+		root_dir = bufname ~= "" and vim.fs.dirname(bufname) or vim.uv.cwd()
+	end
+
+	vim.lsp.start({
+		name = name,
 		cmd = s_spec.cmd,
-		filetypes = s_spec.filetypes,
+		root_dir = root_dir,
 		settings = s_spec.settings,
+		capabilities = capabilities,
+	}, { bufnr = bufnr })
 
-		root_dir = function(bufnr, on_dir)
-			local bufname = vim.api.nvim_buf_get_name(bufnr)
-
-			-- Try project root markers first
-			if s_spec.root_markers and #s_spec.root_markers > 0 then
-				local root = vim.fs.root(bufnr, s_spec.root_markers)
-
-				if root then
-					on_dir(root)
-					return
-				end
-			end
-
-			-- Fallback to current file directory or CWD
-			local fallback = bufname ~= "" and vim.fs.dirname(bufname) or vim.uv.cwd()
-
-			on_dir(fallback)
-		end,
-	})
-
-	vim.lsp.enable(name)
 	enabled_servers[name] = true
 end
 
-function M.start(ft)
+function M.start(ft, bufnr)
 	-- Ensure global setup (diagnostics, commands, etc.) is done once
 	init_global()
 
 	-- Look up and enable servers matching the current filetype
 	for name, s_spec in pairs(spec.lsp_servers) do
 		if s_spec.filetypes and vim.tbl_contains(s_spec.filetypes, ft) then
-			M.enable_server(name, s_spec)
+			M.enable_server(name, s_spec, bufnr)
 		end
 	end
 end

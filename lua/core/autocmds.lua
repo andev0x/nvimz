@@ -32,7 +32,7 @@ vim.api.nvim_create_autocmd("FileType", {
 		-- Silently call the startup command for the language
 		-- This runs asynchronously in the background
 		pcall(function()
-			require("infra.lsp").start(ft)
+			require("infra.lsp").start(ft, args.buf)
 		end)
 	end,
 })
