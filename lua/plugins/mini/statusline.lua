@@ -24,7 +24,7 @@ local function setup_highlights()
 
 	set_hl(0, "MiniStatuslineModeVisual", {
 		fg = colors.bg,
-		bg = colors.magenta,
+		bg = "#ad8ee6",
 		bold = true,
 	})
 
@@ -36,7 +36,7 @@ local function setup_highlights()
 
 	set_hl(0, "MiniStatuslineModeCommand", {
 		fg = colors.bg,
-		bg = colors.orange,
+		bg = colors.yellow,
 		bold = true,
 	})
 
