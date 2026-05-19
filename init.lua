@@ -31,22 +31,13 @@ require("core.options")
 require("core.keymaps")
 require("core.autocmds")
 require("core.terminal")
+require("core.treesitter").setup()
 
 -- Plugin/dependency infrastructure
 require("infra.deps").setup()
 
 -- Register health commands only
 require("core.health").register_command()
-
--- Defer Treesitter initialization until UI is responsive
-vim.api.nvim_create_autocmd("VimEnter", {
-	once = true,
-	callback = function()
-		vim.schedule(function()
-			require("core.treesitter").setup()
-		end)
-	end,
-})
 
 -- Startup profiler / tracker
 require("core.startup").track(_G.nvimz_start_time)

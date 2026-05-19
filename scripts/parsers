@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Configuration
+PARSER_DIR="${HOME}/.local/share/nvim/site/parser"
+TMP_DIR="/tmp/nvimz-parsers"
+CC="${CC:-cc}"
+
+# Languages to install
+# format: "lang_name:github_repo:source_subpath"
+LANGS=(
+  "c:tree-sitter/tree-sitter-c:src"
+  "cpp:tree-sitter/tree-sitter-cpp:src"
+  "go:tree-sitter/tree-sitter-go:src"
+  "rust:tree-sitter/tree-sitter-rust:src"
+  "python:tree-sitter/tree-sitter-python:src"
+  "typescript:tree-sitter/tree-sitter-typescript:typescript/src"
+  "tsx:tree-sitter/tree-sitter-typescript:tsx/src"
+)
+
+mkdir -p "$PARSER_DIR"
+mkdir -p "$TMP_DIR"
+
+echo "--------------------------------------------------"
+echo " nvimz: Treesitter Parser Manager"
+echo "--------------------------------------------------"
+
+for entry in "${LANGS[@]}"; do
+  IFS=":" read -r lang repo subpath <<< "$entry"
+  
+  TARGET="$PARSER_DIR/$lang.so"
+  
+  if [ -f "$TARGET" ]; then
+    echo "✅ $lang: Already installed"
+    continue
+  fi
+
+  echo "⏳ $lang: Installing..."
+  
+  REPO_DIR="$TMP_DIR/$lang"
+  rm -rf "$REPO_DIR"
+  
+  # Clone grammar
+  git clone --depth 1 "https://github.com/$repo" "$REPO_DIR" > /dev/null 2>&1
+  
+  cd "$REPO_DIR/$subpath"
+  
+  # Determine compiler and files
+  COMPILER="$CC"
+  FILES="parser.c"
+  
+  if [ -f "scanner.cc" ]; then
+    COMPILER="c++"
+    FILES="$FILES scanner.cc"
+  elif [ -f "scanner.c" ]; then
+    FILES="$FILES scanner.c"
+  fi
+
+  echo "  🔨 Compiling with $COMPILER..."
+  $COMPILER -O3 -fPIC -shared $FILES -I. -o "$lang.so"
+
+  mv "$lang.so" "$TARGET"
+  echo "✨ $lang: Successfully installed to $TARGET"
+done
+
+echo "--------------------------------------------------"
+echo "Done! Restart Neovim to apply changes."

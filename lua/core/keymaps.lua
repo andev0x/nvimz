@@ -65,7 +65,12 @@ map("n", "<leader>z", "za", { desc = "Toggle fold", silent = true })
 -- in/out as Neovim inherits the font size from the terminal emulator.
 
 -- Terminal
-map("n", "<leader>t", function()
+map("n", "<leader>tt", function()
 	require("core.terminal").toggle()
 end, { desc = "Toggle floating terminal", silent = true })
 map("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+
+-- UI Toggles
+map("n", "<leader>uh", function()
+	vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = 0 }), { bufnr = 0 })
+end, { desc = "LSP: toggle inlay hints", silent = true })

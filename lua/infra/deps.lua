@@ -56,6 +56,31 @@ local function create_commands()
 	end, {
 		desc = "Remove inactive plugins",
 	})
+
+	vim.api.nvim_create_user_command("ParsersUpdate", function()
+		local script = vim.fn.stdpath("config") .. "/scripts/parsers"
+		vim.fn.jobstart({ script }, {
+			stdout_buffered = true,
+			on_stdout = function(_, data)
+				if data then
+					for _, line in ipairs(data) do
+						if line ~= "" then
+							print(line)
+						end
+					end
+				end
+			end,
+			on_exit = function(_, code)
+				if code == 0 then
+					vim.notify("Treesitter parsers updated successfully!", vim.log.levels.INFO)
+				else
+					vim.notify("Treesitter parser update failed!", vim.log.levels.ERROR)
+				end
+			end,
+		})
+	end, {
+		desc = "Update Treesitter parsers",
+	})
 end
 
 function M.setup()
@@ -78,7 +103,7 @@ function M.setup()
 				{ source = "neovim/nvim-lspconfig" },
 				{ source = "stevearc/conform.nvim" },
 			})
-			require("infra.lsp").setup()
+			-- require("infra.lsp").setup() -- Handled lazily by FileType autocmd
 			require("plugins.format").setup()
 
 			-- Phase 3: Extra Features & Tools (Most deferred)

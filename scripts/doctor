@@ -22,4 +22,16 @@ for tool in "${TOOLS[@]}"; do
   fi
 done
 
+printf "\nTreesitter Parsers:\n"
+PARSERS=("c" "cpp" "go" "rust" "python" "typescript" "tsx")
+PARSER_DIR="${HOME}/.local/share/nvim/site/parser"
+
+for parser in "${PARSERS[@]}"; do
+  if [ -f "$PARSER_DIR/$parser.so" ]; then
+    printf "%-24s OK\n" "$parser"
+  else
+    printf "%-24s MISSING\n" "$parser"
+  fi
+done
+
 printf "\n"

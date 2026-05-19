@@ -2,6 +2,10 @@ local M = {}
 
 local spec = require("infra.spec")
 
+-- Internal state to track initialized global components and enabled servers
+local initialized = false
+local enabled_servers = {}
+
 -- Global override for floating windows to ensure rounded borders
 local orig_open_floating_preview = vim.lsp.util.open_floating_preview
 function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
@@ -33,7 +37,12 @@ local function setup_diagnostics()
 	})
 end
 
-function M.setup()
+local function init_global()
+	if initialized then
+		return
+	end
+	initialized = true
+
 	-- Basic LspInfo command for native-first observability
 	vim.api.nvim_create_user_command("LspInfo", function()
 		local clients = vim.lsp.get_clients()
@@ -51,14 +60,59 @@ function M.setup()
 		vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
 	end, { desc = "Show active LSP clients" })
 
+	vim.api.nvim_create_user_command("LspLog", function()
+		vim.cmd("tabnew " .. vim.lsp.get_log_path())
+	end, { desc = "Open LSP log" })
+
+	vim.api.nvim_create_user_command("LspStart", function(opts)
+		local name = opts.args
+		if name == "" then
+			vim.notify("Usage: LspStart <server_name>", vim.log.levels.ERROR)
+			return
+		end
+		-- Force enable regardless of current filetype
+		if spec.lsp_servers[name] then
+			M.enable_server(name, spec.lsp_servers[name])
+		else
+			vim.lsp.enable(name)
+		end
+	end, {
+		nargs = 1,
+		desc = "Start/Enable LSP server",
+		complete = function()
+			return vim.tbl_keys(spec.lsp_servers)
+		end,
+	})
+
+	vim.api.nvim_create_user_command("LspStop", function(opts)
+		local name = opts.args
+		local clients = name == "" and vim.lsp.get_clients({ bufnr = 0 }) or vim.lsp.get_clients({ name = name })
+		for _, client in ipairs(clients) do
+			client.stop()
+		end
+	end, {
+		nargs = "?",
+		desc = "Stop LSP server",
+		complete = function()
+			return vim.tbl_map(function(c)
+				return c.name
+			end, vim.lsp.get_clients())
+		end,
+	})
+
+	vim.api.nvim_create_user_command("LspRestart", function()
+		local clients = vim.lsp.get_clients({ bufnr = 0 })
+		for _, client in ipairs(clients) do
+			local name = client.name
+			client.stop()
+			vim.defer_fn(function()
+				vim.lsp.enable(name)
+			end, 500)
+		end
+	end, { desc = "Restart LSP clients for current buffer" })
+
 	-- LSP capabilities
 	local capabilities = vim.lsp.protocol.make_client_capabilities()
-
-	-- Uncomment if using blink.cmp
-	-- capabilities = require("blink.cmp").get_lsp_capabilities()
-
-	-- Uncomment if using nvim-cmp
-	-- capabilities = require("cmp_nvim_lsp").default_capabilities()
 
 	-- Use LspAttach for buffer-local setup (keymaps, inlay hints)
 	vim.api.nvim_create_autocmd("LspAttach", {
@@ -86,32 +140,12 @@ function M.setup()
 			map("<leader>rn", vim.lsp.buf.rename, "LSP: rename")
 			map("<leader>ca", vim.lsp.buf.code_action, "LSP: code action")
 
-			-- Synchronize Native Semantic Tokens from LSPs (gopls)
-			if client.name == "gopls" then
-				if not client.server_capabilities.semanticTokensProvider then
-					local semantic = client.config.capabilities.textDocument.semanticTokens
-					if semantic then
-						client.server_capabilities.semanticTokensProvider = {
-							full = true,
-							legend = {
-								tokenTypes = semantic.tokenTypes,
-								tokenModifiers = semantic.tokenModifiers,
-							},
-							range = true,
-						}
-					end
-				end
-			end
-
 			-- Diagnostics
 			map("gl", vim.diagnostic.open_float, "Diagnostics: line diagnostics")
 
 			-- Toggle inlay hints: Enable by default if supported
 			if client:supports_method("textDocument/inlayHint") then
 				vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
-				map("<leader>uh", function()
-					vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
-				end, "LSP: toggle inlay hints")
 			end
 
 			-- Optimize diagnostics popup: only create if not already exists and only on CursorHold
@@ -126,7 +160,7 @@ function M.setup()
 						return
 					end
 
-					-- Check if any float is already open (simplified but efficient)
+					-- Check if any float is already open
 					for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
 						local conf = vim.api.nvim_win_get_config(win)
 						if conf.relative ~= "" and conf.focusable then
@@ -150,47 +184,71 @@ function M.setup()
 		capabilities = capabilities,
 	})
 
-	for name, s_spec in pairs(spec.lsp_servers) do
-		local cmd = s_spec.cmd or {}
-
-		-- Skip setup if the language server executable is missing
-		if cmd[1] and vim.fn.executable(cmd[1]) ~= 1 then
-			vim.notify(string.format("LSP server '%s' not found: %s", name, cmd[1]), vim.log.levels.WARN)
-
-			goto continue
-		end
-
-		vim.lsp.config(name, {
-			cmd = s_spec.cmd,
-			filetypes = s_spec.filetypes,
-			settings = s_spec.settings,
-
-			root_dir = function(bufnr, on_dir)
-				local bufname = vim.api.nvim_buf_get_name(bufnr)
-
-				-- Try project root markers first
-				if s_spec.root_markers and #s_spec.root_markers > 0 then
-					local root = vim.fs.root(bufnr, s_spec.root_markers)
-
-					if root then
-						on_dir(root)
-						return
-					end
-				end
-
-				-- Fallback to current file directory or CWD
-				local fallback = bufname ~= "" and vim.fs.dirname(bufname) or vim.uv.cwd()
-
-				on_dir(fallback)
-			end,
-		})
-
-		vim.lsp.enable(name)
-
-		::continue::
-	end
-
 	setup_diagnostics()
 end
 
+function M.enable_server(name, s_spec)
+	if enabled_servers[name] then
+		return
+	end
+
+	local cmd = s_spec.cmd or {}
+
+	-- Skip setup if the language server executable is missing
+	if cmd[1] and vim.fn.executable(cmd[1]) ~= 1 then
+		-- Only warn once
+		enabled_servers[name] = "missing"
+		vim.notify(string.format("LSP server '%s' not found: %s", name, cmd[1]), vim.log.levels.WARN)
+		return
+	end
+
+	vim.lsp.config(name, {
+		cmd = s_spec.cmd,
+		filetypes = s_spec.filetypes,
+		settings = s_spec.settings,
+
+		root_dir = function(bufnr, on_dir)
+			local bufname = vim.api.nvim_buf_get_name(bufnr)
+
+			-- Try project root markers first
+			if s_spec.root_markers and #s_spec.root_markers > 0 then
+				local root = vim.fs.root(bufnr, s_spec.root_markers)
+
+				if root then
+					on_dir(root)
+					return
+				end
+			end
+
+			-- Fallback to current file directory or CWD
+			local fallback = bufname ~= "" and vim.fs.dirname(bufname) or vim.uv.cwd()
+
+			on_dir(fallback)
+		end,
+	})
+
+	vim.lsp.enable(name)
+	enabled_servers[name] = true
+end
+
+function M.start(ft)
+	-- Ensure global setup (diagnostics, commands, etc.) is done once
+	init_global()
+
+	-- Look up and enable servers matching the current filetype
+	for name, s_spec in pairs(spec.lsp_servers) do
+		if s_spec.filetypes and vim.tbl_contains(s_spec.filetypes, ft) then
+			M.enable_server(name, s_spec)
+		end
+	end
+end
+
+-- Compatibility with old setup() call if needed, but we prefer lazy M.start(ft)
+function M.setup()
+	-- Do nothing or just init_global?
+	-- Let's just init_global so commands are available.
+	init_global()
+end
+
 return M
+

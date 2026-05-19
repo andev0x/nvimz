@@ -50,9 +50,10 @@ Run the custom tool doctor to check if your system has the required binaries for
 :ToolDoctor
 ```
 
-Manage plugins with native commands:
+Manage plugins and parsers with native commands:
 - `:PackUpdate` - Update all plugins.
 - `:PackClean` - Remove unused plugins from disk.
+- `:ParsersUpdate` - Download and compile Treesitter parsers (Go, Rust, TS, Python, etc.).
 
 ## Features
 
