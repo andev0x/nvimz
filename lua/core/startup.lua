@@ -143,11 +143,11 @@ function M.setup()
 
 	-- Logo highlight
 	for row = top_padding, top_padding + #logo - 2 do
-		vim.api.nvim_buf_add_highlight(bufnr, ns, "String", row, 0, -1)
+		vim.api.nvim_buf_add_highlight(bufnr, ns, "NvimzLogo", row, 0, -1)
 	end
 
 	-- Startup time highlight
-	vim.api.nvim_buf_add_highlight(bufnr, ns, "Comment", top_padding + #logo - 1, 0, -1)
+	vim.api.nvim_buf_add_highlight(bufnr, ns, "NvimzStats", top_padding + #logo - 1, 0, -1)
 
 	-- Menu key highlights
 	local menu_start = top_padding + #logo + 1

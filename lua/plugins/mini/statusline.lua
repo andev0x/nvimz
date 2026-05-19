@@ -7,97 +7,98 @@ local M = {}
 
 local function setup_highlights()
 	local set_hl = vim.api.nvim_set_hl
+	local colors = require("tokyonight.colors").setup({ style = "moon" })
 
-	-- Main mode colors
+	-- Main mode colors - High vibrancy
 	set_hl(0, "MiniStatuslineModeNormal", {
-		fg = "#0B1220",
-		bg = "#7AA2F7",
+		fg = colors.bg,
+		bg = colors.blue,
 		bold = true,
 	})
 
 	set_hl(0, "MiniStatuslineModeInsert", {
-		fg = "#0B1220",
-		bg = "#9ECE6A",
+		fg = colors.bg,
+		bg = colors.green,
 		bold = true,
 	})
 
 	set_hl(0, "MiniStatuslineModeVisual", {
-		fg = "#0B1220",
-		bg = "#BB9AF7",
+		fg = colors.bg,
+		bg = colors.magenta,
 		bold = true,
 	})
 
 	set_hl(0, "MiniStatuslineModeReplace", {
-		fg = "#0B1220",
-		bg = "#F7768E",
+		fg = colors.bg,
+		bg = colors.red,
 		bold = true,
 	})
 
 	set_hl(0, "MiniStatuslineModeCommand", {
-		fg = "#0B1220",
-		bg = "#E0AF68",
+		fg = colors.bg,
+		bg = colors.orange,
 		bold = true,
 	})
 
-	-- Neutral sections
+	-- Neutral sections - Synchronized with theme
 	set_hl(0, "MiniStatuslineFilename", {
-		fg = "#D4D4D8",
-		bg = "#24283B",
+		fg = colors.fg,
+		bg = colors.bg_highlight,
 		bold = true,
 	})
 
 	set_hl(0, "MiniStatuslineDevinfo", {
-		fg = "#A9B1D6",
-		bg = "#24283B",
+		fg = colors.fg_dark,
+		bg = colors.bg_highlight,
 	})
 
 	set_hl(0, "MiniStatuslineFileinfo", {
-		fg = "#7DCFFF",
-		bg = "#24283B",
+		fg = colors.blue,
+		bg = colors.bg_highlight,
 	})
 
 	set_hl(0, "MiniStatuslineDiagnostics", {
-		fg = "#A9B1D6",
-		bg = "#24283B",
+		fg = colors.fg_dark,
+		bg = colors.bg_highlight,
 	})
 
 	set_hl(0, "MiniStatuslineError", {
-		fg = "#F7768E",
-		bg = "#24283B",
+		fg = colors.error,
+		bg = colors.bg_highlight,
 		bold = true,
 	})
 
 	set_hl(0, "MiniStatuslineWarning", {
-		fg = "#E0AF68",
-		bg = "#24283B",
+		fg = colors.warning,
+		bg = colors.bg_highlight,
 		bold = true,
 	})
 
 	set_hl(0, "MiniStatuslineHint", {
-		fg = "#7AA2F7",
-		bg = "#24283B",
+		fg = colors.hint,
+		bg = colors.bg_highlight,
 		bold = true,
 	})
 
 	set_hl(0, "MiniStatuslineInfo", {
-		fg = "#7DCFFF",
-		bg = "#24283B",
+		fg = colors.info,
+		bg = colors.bg_highlight,
 		bold = true,
 	})
 
 	set_hl(0, "MiniStatuslineTime", {
-		fg = "#9ECE6A",
-		bg = "#24283B",
+		fg = colors.green,
+		bg = colors.bg_highlight,
 	})
 
 	set_hl(0, "MiniStatuslineInactive", {
-		fg = "#6B7280",
-		bg = "#1F2335",
+		fg = colors.dark3,
+		bg = colors.bg_statusline,
 	})
 
 	set_hl(0, "MiniStatuslinePath", {
-		fg = "#7C8397",
-		bg = "#24283B",
+		fg = colors.comment,
+		bg = colors.bg_highlight,
 		italic = true,
 	})
 end

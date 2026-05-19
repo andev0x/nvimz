@@ -3,171 +3,102 @@ local M = {}
 function M.setup()
 	require("tokyonight").setup({
 		style = "moon",
-		transparent = true,
+		transparent = true, -- Enable transparency for the system blur effect
 		terminal_colors = true,
 
 		-- ---------------------------------------------------------------------
-		-- Global syntax styling
-		-- Philosophy:
-		-- - Reduce visual noise
-		-- - Emphasize reading flow over syntax taxonomy
-		-- - Avoid excessive bold/saturation
-		-- - Keep the editor calm during long coding sessions
+		-- Deep Forest Palette Overrides (Helix-Inspired Tuning)
+		-- ---------------------------------------------------------------------
+		on_colors = function(colors)
+			-- Deep Emerald/Forest Backgrounds
+			colors.bg = "#0b1210"
+			colors.bg_dark = "#080d0b"
+			colors.bg_float = "#0d1614"
+			colors.bg_sidebar = "#080d0b"
+			colors.bg_statusline = "#0d1614"
+			colors.bg_visual = "#1a2b26"
+			colors.bg_highlight = "#162420"
+
+			-- Shift blues to precise Helix teals and vibrant functional blues
+			colors.blue = "#72cce8" -- Vibrant Light Blue (Used for explicit Function Calls like stop/cancel)
+			colors.blue1 = "#b4f9f8"
+			colors.blue2 = "#00b4d8" -- Intense Teal for specialized methods
+			colors.blue5 = "#89ddff"
+			colors.blue6 = "#b4f9f8"
+			colors.blue7 = "#394b70"
+
+			-- Sharp green execution for structural control
+			colors.magenta = "#a3e635" -- High-visibility Lime/Green for structural keywords
+			colors.magenta2 = "#73daca"
+			colors.purple = "#a3e635"
+
+			-- Contrast accents
+			colors.orange = "#ff9e64"
+			colors.yellow = "#e0af68"
+			colors.green = "#9ece6a" -- Core Emerald Green
+			colors.teal = "#1abc9c"
+		end,
+
+		-- ---------------------------------------------------------------------
+		-- Green-centric Syntax & UI
 		-- ---------------------------------------------------------------------
 		styles = {
 			comments = { italic = true },
-			keywords = { italic = true },
-			functions = {},
+			keywords = { italic = true, bold = true },
+			functions = { bold = true },
 			variables = {},
 			sidebars = "transparent",
 			floats = "transparent",
 		},
 
 		on_highlights = function(highlights, colors)
-			-- -----------------------------------------------------------------
-			-- Palette tuning
-			-- -----------------------------------------------------------------
+			-- UI synchronization with green theme
+			highlights.Visual = { bg = colors.bg_visual, bold = true }
+			highlights.CursorLine = { bg = colors.bg_highlight }
+			highlights.WinSeparator = { fg = colors.teal, bold = true }
+			highlights.LineNr = { fg = "#3b423d" }
+			highlights.CursorLineNr = { fg = colors.green, bold = true }
 
-			-- Neutral identifier color inspired by Helix/editor-style themes
-			local identifier = "#9aa5ce"
+			-- High-contrast MatchParen
+			highlights.MatchParen = { fg = colors.orange, bold = true, underline = true }
 
-			-- Dimmed syntax noise
-			local noise = colors.comment
-
-			-- Softer semantic accents
-			local soft_blue = "#7aa2f7"
-			local soft_purple = "#b4a1ff"
-			local soft_yellow = "#d9b27c"
-			local soft_orange = "#dca561"
-
-			-- -----------------------------------------------------------------
-			-- Core philosophy:
-			-- Flatten most identifiers to reduce rainbow noise
-			-- -----------------------------------------------------------------
-
-			highlights["@variable"] = { fg = identifier }
-			highlights["@variable.parameter"] = { fg = identifier }
-			highlights["@variable.member"] = { fg = identifier }
-
-			highlights["@property"] = { fg = identifier }
-			highlights["@module"] = { fg = identifier }
-
-			highlights["@lsp.type.variable"] = { fg = identifier }
-			highlights["@lsp.type.parameter"] = { fg = identifier }
-			highlights["@lsp.type.namespace"] = { fg = identifier }
-
-			-- -----------------------------------------------------------------
-			-- Reduce punctuation/operator attention
-			-- -----------------------------------------------------------------
-
-			highlights["@operator"] = { fg = noise }
-			highlights["@punctuation.bracket"] = { fg = noise }
-			highlights["@punctuation.delimiter"] = { fg = noise }
-
-			highlights["@lsp.type.operator"] = { fg = noise }
-			highlights["@lsp.type.punctuation"] = { fg = noise }
-
-			-- -----------------------------------------------------------------
-			-- Keywords:
-			-- Keep structure readable without screaming for attention
-			-- -----------------------------------------------------------------
-
-			highlights["@keyword"] = {
-				fg = soft_purple,
-				italic = true,
-			}
-
-			-- -----------------------------------------------------------------
-			-- Functions:
-			-- Slight emphasis without bold
-			-- -----------------------------------------------------------------
-
-			highlights["@function"] = { fg = soft_blue }
-			highlights["@function.call"] = { fg = soft_blue }
-
-			highlights["@method"] = { fg = soft_blue }
-			highlights["@method.call"] = { fg = soft_blue }
-
-			-- -----------------------------------------------------------------
-			-- Types:
-			-- Warm but subtle to avoid overpowering the editor
-			-- -----------------------------------------------------------------
-
-			highlights["@type"] = { fg = soft_yellow }
-			highlights["@type.builtin"] = { fg = soft_yellow }
-
-			-- -----------------------------------------------------------------
-			-- Builtins/constants:
-			-- Slightly warmer for quick scanning
-			-- -----------------------------------------------------------------
-
-			highlights["@constant.builtin"] = {
-				fg = soft_orange,
-			}
-
-			-- -----------------------------------------------------------------
-			-- Comments:
-			-- Atmospheric and low distraction
-			-- -----------------------------------------------------------------
-
-			highlights.Comment = {
-				fg = "#66708a",
-				italic = true,
-			}
-
-			-- -----------------------------------------------------------------
-			-- Inlay hints:
-			-- Minimal and soft instead of sticker-like blocks
-			-- -----------------------------------------------------------------
-
+			-- LspInlayHint: Mossy/Subtle (Perfect contrast against dark forest)
 			highlights.LspInlayHint = {
-				fg = "#6a8f89",
+				fg = "#4e5e54",
 				bg = "NONE",
 				italic = true,
 			}
 
+			-- Dashboard/Startup synchronization (Emerald)
+			highlights.NvimzLogo = { fg = colors.teal, bold = true }
+			highlights.NvimzStats = { fg = colors.green, italic = true }
+
 			-- -----------------------------------------------------------------
-			-- UI polish
+			-- Helix-Style Balanced Syntax Tuning
 			-- -----------------------------------------------------------------
+			-- Balancing the "Greens" to prevent flat text and maximize scan-speed
+			highlights["@keyword"] = { fg = colors.green, italic = true, bold = true } -- Core keywords (package, import)
+			highlights["@variable"] = { fg = "#78aec2" } -- Light Cyan/Silver for high-readability parameters (ctx, signals)
+			highlights["@function"] = { fg = colors.blue, bold = true } -- Teal/Blue function architecture
+			highlights["@string"] = { fg = "#86b38a" } -- Soft Sage Green for friendly, non-distracting strings
+			highlights["@comment"] = { fg = "#5a6e68", italic = true } -- Perfect mossy tone for background documentation
 
-			highlights.NonText = { fg = colors.dark3 }
-			highlights.SpecialKey = { fg = colors.dark3 }
-
-			-- Softer cursor line
-			highlights.CursorLine = {
-				bg = "#1a1d2a",
+			-- -----------------------------------------------------------------
+			-- Neovim 0.12 Core Treesitter Extensions for Golang (Helix Match)
+			-- -----------------------------------------------------------------
+			-- Enforce strict color isolation for nested Go AST tokens
+			local go_native_tokens = {
+				["@function.call.go"] = { fg = colors.blue, bold = true }, -- e.g., stop(), cancel(), Println()
+				["@function.method.go"] = { fg = colors.blue, bold = true }, -- Method architecture
+				["@method.call.go"] = { fg = colors.blue, bold = true }, -- e.g., apiServer.Shutdown(), ctx.Done()
+				["@keyword.function.go"] = { fg = colors.orange, bold = true }, -- 'func' gets a warm accent just like Helix!
+				["@variable.member.go"] = { fg = "#b4f9f8" }, -- Struct properties get distinct light teal illumination
+				["@type.go"] = { fg = "#2ac3de", bold = true }, -- Types like 'Context', 'CancelFunc' get structural blue
 			}
 
-			-- Cleaner split separator
-			highlights.WinSeparator = {
-				fg = "#24283b",
-			}
-
-			-- More subtle line numbers
-			highlights.LineNr = {
-				fg = "#414868",
-			}
-
-			highlights.CursorLineNr = {
-				fg = "#7aa2f7",
-			}
-
-			-- Floating windows
-			highlights.FloatBorder = {
-				fg = "#3b4261",
-				bg = "NONE",
-			}
-
-			-- Visual selection
-			highlights.Visual = {
-				bg = "#283457",
-			}
-
-			-- Matching parentheses
-			highlights.MatchParen = {
-				fg = colors.fg,
-				bg = "#2b3254",
-			}
+			for token, style in pairs(go_native_tokens) do
+				highlights[token] = style
+			end
 		end,
 	})
 
