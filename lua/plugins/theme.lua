@@ -81,7 +81,7 @@ function M.setup()
 			highlights.LineNr = { fg = "#2f3d37" }
 			highlights.CursorLineNr = { fg = colors.green, bold = true }
 
-			-- Elegant, non-intrusive parenthesis matching
+			-- Elegant, non-intrusive parenthesis matching with subtle background
 			highlights.MatchParen = {
 				fg = colors.orange,
 				bg = colors.bg_highlight,
@@ -91,9 +91,10 @@ function M.setup()
 			-- -----------------------------------------------------------------
 			-- Diagnostics & Inlay Hints
 			-- -----------------------------------------------------------------
+			-- Fixed background to NONE to prevent ugly block boxes in transparent mode
 			highlights.DiagnosticVirtualTextHint = {
 				fg = "#5a6e68",
-				bg = colors.bg_visual,
+				bg = "NONE",
 				italic = true,
 			}
 			highlights.LspInlayHint = {
@@ -109,7 +110,7 @@ function M.setup()
 			highlights.NvimzStats = { fg = colors.green, italic = true }
 
 			-- -----------------------------------------------------------------
-			-- Standard Treesitter Cú Pháp (Neovim 0.12 Compatible)
+			-- Standard Treesitter Syntax (Neovim 0.12 Compatible)
 			-- -----------------------------------------------------------------
 			highlights["@keyword"] = { fg = colors.green, italic = true }
 			highlights["@variable"] = { fg = "#7aa2b8" }
