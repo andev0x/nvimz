@@ -14,7 +14,6 @@ vim.g.loaded_gzip = 1
 vim.g.loaded_tarPlugin = 1
 vim.g.loaded_zipPlugin = 1
 vim.g.loaded_tutor_mode_plugin = 1
-vim.g.loaded_matchparen = 1
 
 -- Minimum supported Neovim version
 if vim.fn.has("nvim-0.12") == 0 then
@@ -32,6 +31,7 @@ require("core.keymaps")
 require("core.autocmds")
 require("core.terminal")
 require("core.treesitter").setup()
+require("core.scope_line").setup()
 
 -- Plugin/dependency infrastructure
 require("infra.deps").setup()

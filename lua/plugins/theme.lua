@@ -84,7 +84,7 @@ function M.setup()
 			-- Elegant, non-intrusive parenthesis matching
 			highlights.MatchParen = {
 				fg = colors.orange,
-				bg = "NONE",
+				bg = colors.bg_highlight,
 				bold = true,
 			}
 
@@ -93,7 +93,7 @@ function M.setup()
 			-- -----------------------------------------------------------------
 			highlights.DiagnosticVirtualTextHint = {
 				fg = "#5a6e68",
-				bg = "NONE",
+				bg = colors.bg_visual,
 				italic = true,
 			}
 			highlights.LspInlayHint = {
