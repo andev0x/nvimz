@@ -17,10 +17,10 @@ LANGS=(
   "python:tree-sitter/tree-sitter-python:src"
   "typescript:tree-sitter/tree-sitter-typescript:typescript/src"
   "tsx:tree-sitter/tree-sitter-typescript:tsx/src"
-  "lua:tree-sitter/tree-sitter-lua:src"
+  "lua:tree-sitter-grammars/tree-sitter-lua:src"
   "vim:neovim/tree-sitter-vim:src"
   "vimdoc:neovim/tree-sitter-vimdoc:src"
-  "gitcommit:romgrk/tree-sitter-gitcommit:src"
+  "gitcommit:the-mikedavis/tree-sitter-gitcommit:src"
   "markdown:tree-sitter-grammars/tree-sitter-markdown:tree-sitter-markdown/src"
 )
 
@@ -47,7 +47,7 @@ for entry in "${LANGS[@]}"; do
   rm -rf "$REPO_DIR"
   
   # Clone grammar
-  git clone --depth 1 "https://github.com/$repo" "$REPO_DIR" > /dev/null 2>&1
+  git clone --depth 1 "https://github.com/$repo" "$REPO_DIR"
   
   cd "$REPO_DIR/$subpath"
   

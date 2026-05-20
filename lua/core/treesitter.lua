@@ -32,9 +32,9 @@ function M.setup()
 			vim.treesitter.start(bufnr)
 
 			-- Treesitter folding
-			vim.bo[bufnr].foldmethod = "expr"
-			vim.bo[bufnr].foldexpr = "v:lua.vim.treesitter.foldexpr()"
-			vim.bo[bufnr].foldlevel = 99
+			vim.wo.foldmethod = "expr"
+			vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+			vim.wo.foldlevel = 99
 		end,
 	})
 end
