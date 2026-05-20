@@ -29,3 +29,5 @@ node_modules/
 
 # Skip local credential or secret files if you write custom scripts
 .env*.local
+.commit_suggest_history.json
+
