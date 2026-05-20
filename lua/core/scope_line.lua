@@ -70,18 +70,28 @@ local function draw_scope_line(bufnr, winid)
 
 	-- Draw vertical line from the line below declaration up to the closing brace row
 	for row = start_row + 1, end_row do
-		-- Only render if the target row is valid and not an empty line
 		if vim.api.nvim_buf_is_valid(bufnr) then
 			local line_str = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false)[1] or ""
-			-- Skip empty rows to prevent floating vertical lines in dead spaces
-			if #line_str > 0 then
-				vim.api.nvim_buf_set_extmark(bufnr, ns, row, 0, {
-					virt_text = { { "│", "ScopeLine" } },
-					virt_text_pos = "overlay",
-					virt_text_win_col = visual_col,
-					hl_mode = "blend",
-					priority = 10,
-				})
+
+			-- Only process non-empty lines
+			if #line_str:gsub("%s", "") > 0 then
+				if #line_str < visual_col then
+					-- Handle short lines (e.g., closing braces or short segments)
+					-- Pad with spaces up to visual_col to keep the line vertically straight
+					local padding = string.rep(" ", visual_col - #line_str)
+					vim.api.nvim_buf_set_extmark(bufnr, ns, row, #line_str, {
+						virt_text = { { padding .. "│", "ScopeLine" } },
+						virt_text_pos = "eol",
+						priority = 10,
+					})
+				else
+					-- Handle regular lines: use "inline" to push text rightwards instead of overlaying
+					vim.api.nvim_buf_set_extmark(bufnr, ns, row, visual_col, {
+						virt_text = { { "│", "ScopeLine" } },
+						virt_text_pos = "inline",
+						priority = 10,
+					})
+				end
 			end
 		end
 	end
