@@ -27,14 +27,13 @@ vim.opt.updatetime = 200 -- Faster completion and diagnostics
 vim.opt.wrap = true
 vim.opt.linebreak = true -- Proper word wrap: don't break words
 vim.opt.breakindent = true -- Smart break indent: wrapped lines match indentation
-vim.opt.showbreak = "↳ "
-vim.opt.list = true
+vim.opt.showbreak = "⤷ " -- Soft curved arrow
 vim.opt.listchars = {
-	tab = "│ ", -- Slender vertical line for tabs
-	trail = "·", -- Small dot for trailing spaces
-	extends = "»", -- Slender indicator for lines extending off-screen
-	precedes = "«",
-	nbsp = "␣",
+	tab = "│ ", -- Keeps your slender vertical line
+	trail = "•", -- Slightly more visible middle dot
+	extends = "→", -- Modern clean arrow
+	precedes = "←",
+	nbsp = "◌", -- Dotted circle for non-breaking space (cleaner than ␣)
 }
 
 vim.opt.lazyredraw = true -- Reduce redraw jitter

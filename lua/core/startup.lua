@@ -55,7 +55,10 @@ function M.setup()
 		startup_time = (vim.uv.hrtime() - _G.nvimz_start_time) / 1e6
 	end
 
-	-- Minimal modern "nvimz" logo
+	-- =========================================================================
+	-- Minimal Logo
+	-- =========================================================================
+
 	local logo = {
 		[[ █▄░█ █░█ █ █▀▄▀█ ▀█░ ]],
 		[[ █░▀█ ▀▄▀ █ █░▀░█ █▄▀ ]],
@@ -64,7 +67,10 @@ function M.setup()
 		string.format("󱐋 %.2fms", startup_time),
 	}
 
-	-- Minimal action menu
+	-- =========================================================================
+	-- Minimal Action Menu
+	-- =========================================================================
+
 	local menu = {
 		string.format("[f]  %-14s", "Find Files"),
 		string.format("[g]  %-14s", "Live Grep"),
@@ -76,11 +82,14 @@ function M.setup()
 	local win_width = vim.api.nvim_win_get_width(0)
 	local win_height = vim.api.nvim_win_get_height(0)
 
-	-- Calculate vertical centering
+	-- Vertical centering
 	local content_height = #logo + #menu + 1
 	local top_padding = math.max(0, math.floor((win_height - content_height) / 2))
 
-	-- Build final layout
+	-- =========================================================================
+	-- Build Final Layout
+	-- =========================================================================
+
 	local lines = {}
 
 	for _ = 1, top_padding do
@@ -106,7 +115,13 @@ function M.setup()
 	-- Mount dashboard buffer
 	vim.api.nvim_set_current_buf(bufnr)
 
-	-- Minimal local UI
+	-- Move cursor away from top-left corner
+	vim.api.nvim_win_set_cursor(0, { top_padding + 8, 0 })
+
+	-- =========================================================================
+	-- Minimal Local UI
+	-- =========================================================================
+
 	vim.opt_local.number = false
 	vim.opt_local.relativenumber = false
 	vim.opt_local.signcolumn = "no"
@@ -117,7 +132,23 @@ function M.setup()
 	vim.opt_local.wrap = false
 	vim.opt_local.list = false
 
+	-- Blend dashboard into terminal background
+	vim.api.nvim_set_hl(0, "Normal", {
+		bg = "NONE",
+	})
+
+	vim.api.nvim_set_hl(0, "NormalFloat", {
+		bg = "NONE",
+	})
+
+	vim.api.nvim_set_hl(0, "EndOfBuffer", {
+		fg = "#0b1210",
+	})
+
+	-- =========================================================================
 	-- Keymaps
+	-- =========================================================================
+
 	local map_opts = {
 		buffer = bufnr,
 		nowait = true,
@@ -138,25 +169,67 @@ function M.setup()
 
 	vim.keymap.set("n", "q", "<cmd>qa<cr>", map_opts)
 
-	-- Highlight groups
+	-- =========================================================================
+	-- Highlight Groups
+	-- =========================================================================
+
 	local ns = vim.api.nvim_create_namespace("nvimz_dashboard")
 
-	-- Logo highlight
-	for row = top_padding, top_padding + #logo - 2 do
+	-- Forest green logo
+	vim.api.nvim_set_hl(0, "NvimzLogo", {
+		fg = "#7a9f7e",
+	})
+
+	-- Muted moss username
+	vim.api.nvim_set_hl(0, "NvimzUser", {
+		fg = "#5f7a66",
+		italic = true,
+	})
+
+	-- Subtle olive startup stats
+	vim.api.nvim_set_hl(0, "NvimzStats", {
+		fg = "#5f7865",
+		italic = true,
+	})
+
+	-- Green shortcut keys
+	vim.api.nvim_set_hl(0, "NvimzKey", {
+		fg = "#89b482",
+		bold = true,
+	})
+
+	-- Soft menu text
+	vim.api.nvim_set_hl(0, "NvimzMenu", {
+		fg = "#c7d5cf",
+	})
+
+	-- =========================================================================
+	-- Apply Highlights
+	-- =========================================================================
+
+	-- ASCII logo
+	for row = top_padding, top_padding + 1 do
 		vim.api.nvim_buf_add_highlight(bufnr, ns, "NvimzLogo", row, 0, -1)
 	end
 
-	-- Startup time highlight
-	vim.api.nvim_buf_add_highlight(bufnr, ns, "NvimzStats", top_padding + #logo - 1, 0, -1)
+	-- Username
+	vim.api.nvim_buf_add_highlight(bufnr, ns, "NvimzUser", top_padding + 3, 0, -1)
 
-	-- Menu key highlights
+	-- Startup stats
+	vim.api.nvim_buf_add_highlight(bufnr, ns, "NvimzStats", top_padding + 4, 0, -1)
+
+	-- Menu
 	local menu_start = top_padding + #logo + 1
 
 	for i, line in ipairs(menu) do
 		local row = menu_start + i - 1
 		local col_start = math.floor((win_width - vim.fn.strdisplaywidth(line)) / 2)
 
-		vim.api.nvim_buf_add_highlight(bufnr, ns, "Special", row, col_start, col_start + 3)
+		-- Highlight shortcut key
+		vim.api.nvim_buf_add_highlight(bufnr, ns, "NvimzKey", row, col_start, col_start + 3)
+
+		-- Highlight menu text
+		vim.api.nvim_buf_add_highlight(bufnr, ns, "NvimzMenu", row, col_start + 5, -1)
 	end
 end
 
@@ -164,7 +237,10 @@ function M.open()
 	M.setup()
 end
 
--- Auto-open dashboard on startup
+-- ============================================================================
+-- Auto-open Dashboard on Startup
+-- ============================================================================
+
 vim.api.nvim_create_autocmd("VimEnter", {
 	once = true,
 	callback = function()
