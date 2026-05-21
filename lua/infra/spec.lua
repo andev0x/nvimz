@@ -92,6 +92,10 @@ M.lsp_servers = {
 		root_markers = { ".luarc.json", ".luarc.jsonc", ".git" },
 		settings = {
 			Lua = {
+				diagnostics = {
+					globals = { "vim", "MiniIcons", "MiniDiff", "MiniFiles" },
+					disable = { "different-requires" },
+				},
 				hint = {
 					enable = true,
 					arrayIndex = "Disable",
@@ -162,7 +166,8 @@ end
 function M.required_binaries()
 	local bins = { "git", "rg", "fd" }
 
-	for name, server in pairs(M.lsp_servers) do
+	-- Changed 'name' to '_' to fix the unused local warning
+	for _, server in pairs(M.lsp_servers) do
 		table.insert(bins, server.cmd[1])
 	end
 

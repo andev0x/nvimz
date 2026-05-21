@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+  "diagnostics": {
+    "globals": [
+      "vim",
+      "MiniIcons",
+      "MiniDiff",
+      "MiniFiles"
+    ],
+    "disable": [
+      "different-requires"
+    ]
+  },
+  "workspace": {
+    "checkThirdParty": false
+  }
+}

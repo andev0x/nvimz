@@ -30,6 +30,29 @@ local function center_text(text, width)
 	return string.rep(" ", padding) .. text
 end
 
+local function set_line_highlight(bufnr, ns, row, hl_group)
+	local line = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false)[1] or ""
+
+	vim.api.nvim_buf_set_extmark(bufnr, ns, row, 0, {
+		end_col = #line,
+		hl_group = hl_group,
+	})
+end
+
+local function set_range_highlight(bufnr, ns, row, start_col, end_col, hl_group)
+	local line = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false)[1] or ""
+
+	-- Support highlighting until end of line
+	if end_col == -1 then
+		end_col = #line
+	end
+
+	vim.api.nvim_buf_set_extmark(bufnr, ns, row, start_col, {
+		end_col = end_col,
+		hl_group = hl_group,
+	})
+end
+
 -- ============================================================================
 -- Dashboard
 -- ============================================================================
@@ -78,16 +101,16 @@ function M.setup()
 		string.format("[q]  %-14s", "Quit Neovim"),
 	}
 
-	-- Window dimensions
+	-- Get current window dimensions
 	local win_width = vim.api.nvim_win_get_width(0)
 	local win_height = vim.api.nvim_win_get_height(0)
 
-	-- Vertical centering
+	-- Calculate vertical centering
 	local content_height = #logo + #menu + 1
 	local top_padding = math.max(0, math.floor((win_height - content_height) / 2))
 
 	-- =========================================================================
-	-- Build Final Layout
+	-- Build Dashboard Layout
 	-- =========================================================================
 
 	local lines = {}
@@ -106,10 +129,10 @@ function M.setup()
 		table.insert(lines, center_text(line, win_width))
 	end
 
-	-- Write content into buffer
+	-- Write dashboard content into buffer
 	vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-	-- Lock buffer editing
+	-- Prevent buffer editing
 	vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
 	-- Mount dashboard buffer
@@ -119,7 +142,7 @@ function M.setup()
 	vim.api.nvim_win_set_cursor(0, { top_padding + 8, 0 })
 
 	-- =========================================================================
-	-- Minimal Local UI
+	-- Local Window UI
 	-- =========================================================================
 
 	vim.opt_local.number = false
@@ -132,18 +155,43 @@ function M.setup()
 	vim.opt_local.wrap = false
 	vim.opt_local.list = false
 
-	-- Blend dashboard into terminal background
-	vim.api.nvim_set_hl(0, "Normal", {
+	-- =========================================================================
+	-- Highlight Groups
+	-- =========================================================================
+
+	vim.api.nvim_set_hl(0, "DashboardNormal", {
 		bg = "NONE",
 	})
 
-	vim.api.nvim_set_hl(0, "NormalFloat", {
-		bg = "NONE",
-	})
-
-	vim.api.nvim_set_hl(0, "EndOfBuffer", {
+	vim.api.nvim_set_hl(0, "DashboardEndOfBuffer", {
 		fg = "#0b1210",
 	})
+
+	vim.api.nvim_set_hl(0, "NvimzLogo", {
+		fg = "#7a9f7e",
+	})
+
+	vim.api.nvim_set_hl(0, "NvimzUser", {
+		fg = "#5f7a66",
+		italic = true,
+	})
+
+	vim.api.nvim_set_hl(0, "NvimzStats", {
+		fg = "#5f7865",
+		italic = true,
+	})
+
+	vim.api.nvim_set_hl(0, "NvimzKey", {
+		fg = "#89b482",
+		bold = true,
+	})
+
+	vim.api.nvim_set_hl(0, "NvimzMenu", {
+		fg = "#c7d5cf",
+	})
+
+	-- Apply local window highlights
+	vim.wo.winhighlight = "Normal:DashboardNormal,EndOfBuffer:DashboardEndOfBuffer"
 
 	-- =========================================================================
 	-- Keymaps
@@ -170,55 +218,23 @@ function M.setup()
 	vim.keymap.set("n", "q", "<cmd>qa<cr>", map_opts)
 
 	-- =========================================================================
-	-- Highlight Groups
+	-- Apply Highlights
 	-- =========================================================================
 
 	local ns = vim.api.nvim_create_namespace("nvimz_dashboard")
 
-	-- Forest green logo
-	vim.api.nvim_set_hl(0, "NvimzLogo", {
-		fg = "#7a9f7e",
-	})
-
-	-- Muted moss username
-	vim.api.nvim_set_hl(0, "NvimzUser", {
-		fg = "#5f7a66",
-		italic = true,
-	})
-
-	-- Subtle olive startup stats
-	vim.api.nvim_set_hl(0, "NvimzStats", {
-		fg = "#5f7865",
-		italic = true,
-	})
-
-	-- Green shortcut keys
-	vim.api.nvim_set_hl(0, "NvimzKey", {
-		fg = "#89b482",
-		bold = true,
-	})
-
-	-- Soft menu text
-	vim.api.nvim_set_hl(0, "NvimzMenu", {
-		fg = "#c7d5cf",
-	})
-
-	-- =========================================================================
-	-- Apply Highlights
-	-- =========================================================================
-
-	-- ASCII logo
+	-- Highlight ASCII logo
 	for row = top_padding, top_padding + 1 do
-		vim.api.nvim_buf_add_highlight(bufnr, ns, "NvimzLogo", row, 0, -1)
+		set_line_highlight(bufnr, ns, row, "NvimzLogo")
 	end
 
-	-- Username
-	vim.api.nvim_buf_add_highlight(bufnr, ns, "NvimzUser", top_padding + 3, 0, -1)
+	-- Highlight username
+	set_line_highlight(bufnr, ns, top_padding + 3, "NvimzUser")
 
-	-- Startup stats
-	vim.api.nvim_buf_add_highlight(bufnr, ns, "NvimzStats", top_padding + 4, 0, -1)
+	-- Highlight startup stats
+	set_line_highlight(bufnr, ns, top_padding + 4, "NvimzStats")
 
-	-- Menu
+	-- Highlight menu
 	local menu_start = top_padding + #logo + 1
 
 	for i, line in ipairs(menu) do
@@ -226,10 +242,10 @@ function M.setup()
 		local col_start = math.floor((win_width - vim.fn.strdisplaywidth(line)) / 2)
 
 		-- Highlight shortcut key
-		vim.api.nvim_buf_add_highlight(bufnr, ns, "NvimzKey", row, col_start, col_start + 3)
+		set_range_highlight(bufnr, ns, row, col_start, col_start + 3, "NvimzKey")
 
-		-- Highlight menu text
-		vim.api.nvim_buf_add_highlight(bufnr, ns, "NvimzMenu", row, col_start + 5, -1)
+		-- Highlight menu label
+		set_range_highlight(bufnr, ns, row, col_start + 5, -1, "NvimzMenu")
 	end
 end
 
