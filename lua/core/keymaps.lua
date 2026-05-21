@@ -58,7 +58,7 @@ map("n", "<C-d>", "<C-d>zz", { desc = "Scroll down and center", silent = true })
 map("n", "<C-u>", "<C-u>zz", { desc = "Scroll up and center", silent = true })
 
 -- Folding
-map("n", "<leader>z", "za", { desc = "Toggle fold", silent = true })
+map({ "n", "v" }, "<leader>z", "za", { desc = "Toggle fold", silent = true })
 
 -- Font size
 -- Note: Terminal-level shortcuts (Cmd/Ctrl + and Cmd/Ctrl -) usually handle zooming
