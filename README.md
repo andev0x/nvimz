@@ -110,7 +110,8 @@ Manage plugins and parsers with native commands:
 | `<C-h/j/k/l>` | Window navigation |
 | `<C-d/u>` | Scroll down/up and center |
 | `<leader>z` | Toggle fold |
-| `<leader>t` | Toggle floating terminal |
+| `<leader>tt` | Toggle floating terminal |
+| `<leader>tb` | Toggle bottom terminal |
 
 ### Splits & Windows
 | Key | Action |
@@ -146,11 +147,12 @@ Manage plugins and parsers with native commands:
 | `<leader>uh` | Toggle inlay hints |
 | `gl` | Show line diagnostics |
 | `<leader>fd` | Find diagnostics (Picker) |
-| `[d` / `]d` | Previous / Next diagnostic |
 | `<leader>cs` | Document symbols (Outline) |
 | `<leader>cS` | Workspace symbols |
 | `<leader>lr` | References (Picker) |
 | `<leader>ld` | Definition (Picker) |
+| `<leader>ly` | Type definition (Picker) |
+| `<leader>li` | Implementation (Picker) |
 
 ### Git
 | Key | Action |
