@@ -68,6 +68,9 @@ map("n", "<leader>z", "za", { desc = "Toggle fold", silent = true })
 map("n", "<leader>tt", function()
 	require("core.terminal").toggle()
 end, { desc = "Toggle floating terminal", silent = true })
+map("n", "<leader>tb", function()
+	require("core.terminal").toggle_bottom()
+end, { desc = "Toggle bottom terminal", silent = true })
 map("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
 -- UI Toggles
