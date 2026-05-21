@@ -24,7 +24,7 @@ function M.setup()
 			colors.bg_statusline = "#0d1614"
 
 			-- Subdued UI accents
-			colors.bg_visual = "#16231f"
+			colors.bg_visual = "#253b34"
 			colors.bg_highlight = "#101a17"
 
 			-- Primary syntax base tones
