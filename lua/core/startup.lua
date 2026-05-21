@@ -20,7 +20,7 @@ function M.track(start_ns)
 end
 
 -- ============================================================================
--- Utility
+-- Utility Functions
 -- ============================================================================
 
 local function center_text(text, width)
@@ -42,7 +42,6 @@ end
 local function set_range_highlight(bufnr, ns, row, start_col, end_col, hl_group)
 	local line = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false)[1] or ""
 
-	-- Support highlighting until end of line
 	if end_col == -1 then
 		end_col = #line
 	end
@@ -53,8 +52,41 @@ local function set_range_highlight(bufnr, ns, row, start_col, end_col, hl_group)
 	})
 end
 
+-- Create a single persistent namespace for the dashboard
+local dashboard_ns = vim.api.nvim_create_namespace("nvimz_dashboard")
+
+-- Define highlights with the new cyber-green and cyan color palette
+local function define_highlights()
+	vim.api.nvim_set_hl(0, "DashboardNormal", { bg = "NONE" })
+	vim.api.nvim_set_hl(0, "DashboardEndOfBuffer", { fg = "#0b1210" })
+
+	-- Bright neon green for the main ASCII logo
+	vim.api.nvim_set_hl(0, "NvimzLogo", { fg = "#b8e673", bold = true })
+
+	-- Medium green for the username
+	vim.api.nvim_set_hl(0, "NvimzUser", { fg = "#8cb359", bold = true })
+
+	-- Muted gray/green for the startup stats
+	vim.api.nvim_set_hl(0, "NvimzStats", { fg = "#5c7365", italic = true })
+
+	-- Vibrant cyan/blue for the shortcut brackets and keys: [f], [g], etc.
+	vim.api.nvim_set_hl(0, "NvimzKey", { fg = "#3399cc", bold = true })
+
+	-- Clean crisp white/gray for the descriptions
+	vim.api.nvim_set_hl(0, "NvimzMenu", { fg = "#ccd9d2" })
+end
+
+-- Initialize highlights immediately on load
+define_highlights()
+
+-- Re-apply highlights when the colorscheme changes
+vim.api.nvim_create_autocmd("ColorScheme", {
+	pattern = "*",
+	callback = define_highlights,
+})
+
 -- ============================================================================
--- Dashboard
+-- Dashboard Core
 -- ============================================================================
 
 function M.setup()
@@ -142,7 +174,7 @@ function M.setup()
 	vim.api.nvim_win_set_cursor(0, { top_padding + 8, 0 })
 
 	-- =========================================================================
-	-- Local Window UI
+	-- Local Window UI Options
 	-- =========================================================================
 
 	vim.opt_local.number = false
@@ -154,41 +186,6 @@ function M.setup()
 	vim.opt_local.cursorcolumn = false
 	vim.opt_local.wrap = false
 	vim.opt_local.list = false
-
-	-- =========================================================================
-	-- Highlight Groups
-	-- =========================================================================
-
-	vim.api.nvim_set_hl(0, "DashboardNormal", {
-		bg = "NONE",
-	})
-
-	vim.api.nvim_set_hl(0, "DashboardEndOfBuffer", {
-		fg = "#0b1210",
-	})
-
-	vim.api.nvim_set_hl(0, "NvimzLogo", {
-		fg = "#7a9f7e",
-	})
-
-	vim.api.nvim_set_hl(0, "NvimzUser", {
-		fg = "#5f7a66",
-		italic = true,
-	})
-
-	vim.api.nvim_set_hl(0, "NvimzStats", {
-		fg = "#5f7865",
-		italic = true,
-	})
-
-	vim.api.nvim_set_hl(0, "NvimzKey", {
-		fg = "#89b482",
-		bold = true,
-	})
-
-	vim.api.nvim_set_hl(0, "NvimzMenu", {
-		fg = "#c7d5cf",
-	})
 
 	-- Apply local window highlights
 	vim.wo.winhighlight = "Normal:DashboardNormal,EndOfBuffer:DashboardEndOfBuffer"
@@ -221,31 +218,32 @@ function M.setup()
 	-- Apply Highlights
 	-- =========================================================================
 
-	local ns = vim.api.nvim_create_namespace("nvimz_dashboard")
+	-- Clear old extmarks to ensure a pristine state when re-opening
+	vim.api.nvim_buf_clear_namespace(bufnr, dashboard_ns, 0, -1)
 
 	-- Highlight ASCII logo
 	for row = top_padding, top_padding + 1 do
-		set_line_highlight(bufnr, ns, row, "NvimzLogo")
+		set_line_highlight(bufnr, dashboard_ns, row, "NvimzLogo")
 	end
 
 	-- Highlight username
-	set_line_highlight(bufnr, ns, top_padding + 3, "NvimzUser")
+	set_line_highlight(bufnr, dashboard_ns, top_padding + 3, "NvimzUser")
 
 	-- Highlight startup stats
-	set_line_highlight(bufnr, ns, top_padding + 4, "NvimzStats")
+	set_line_highlight(bufnr, dashboard_ns, top_padding + 4, "NvimzStats")
 
-	-- Highlight menu
+	-- Highlight action menu items
 	local menu_start = top_padding + #logo + 1
 
 	for i, line in ipairs(menu) do
 		local row = menu_start + i - 1
 		local col_start = math.floor((win_width - vim.fn.strdisplaywidth(line)) / 2)
 
-		-- Highlight shortcut key
-		set_range_highlight(bufnr, ns, row, col_start, col_start + 3, "NvimzKey")
+		-- Highlight shortcut key component: e.g., "[f]"
+		set_range_highlight(bufnr, dashboard_ns, row, col_start, col_start + 3, "NvimzKey")
 
-		-- Highlight menu label
-		set_range_highlight(bufnr, ns, row, col_start + 5, -1, "NvimzMenu")
+		-- Highlight menu description label
+		set_range_highlight(bufnr, dashboard_ns, row, col_start + 5, -1, "NvimzMenu")
 	end
 end
 
