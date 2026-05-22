@@ -58,7 +58,7 @@ local dashboard_ns = vim.api.nvim_create_namespace("nvimz_dashboard")
 -- Define highlights with the new cyber-green and cyan color palette
 local function define_highlights()
 	vim.api.nvim_set_hl(0, "DashboardNormal", { bg = "NONE" })
-	vim.api.nvim_set_hl(0, "DashboardEndOfBuffer", { fg = "#0b1210" })
+	vim.api.nvim_set_hl(0, "DashboardEndOfBuffer", { fg = "NONE", bg = "NONE", ctermfg = "NONE", ctermbg = "NONE" })
 
 	-- Bright neon green for the main ASCII logo
 	vim.api.nvim_set_hl(0, "NvimzLogo", { fg = "#b8e673", bold = true })
@@ -186,6 +186,7 @@ function M.setup()
 	vim.opt_local.cursorcolumn = false
 	vim.opt_local.wrap = false
 	vim.opt_local.list = false
+	vim.opt_local.fillchars = "eob: "
 
 	-- Apply local window highlights
 	vim.wo.winhighlight = "Normal:DashboardNormal,EndOfBuffer:DashboardEndOfBuffer"
