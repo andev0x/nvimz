@@ -79,7 +79,9 @@ function M.setup()
 
 			-- Low-contrast non-active line numbers to reduce distractions
 			highlights.LineNr = { fg = "#2f3d37" }
-			highlights.CursorLineNr = { fg = colors.green, bold = true }
+
+			-- Clean crisp foreground white active line number for premium minimal look
+			highlights.CursorLineNr = { fg = "#d7e3dc", bold = true }
 
 			-- Elegant, non-intrusive parenthesis matching with subtle background
 			highlights.MatchParen = {

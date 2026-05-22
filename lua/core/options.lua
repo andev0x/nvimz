@@ -1,7 +1,7 @@
 vim.opt.number = true
 vim.opt.relativenumber = false
 vim.opt.signcolumn = "yes"
-vim.opt.cursorline = false
+vim.opt.cursorline = true
 
 vim.opt.expandtab = true
 vim.opt.shiftwidth = 2
