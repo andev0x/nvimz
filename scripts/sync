@@ -2,8 +2,16 @@
 
 set -euo pipefail
 
-brew upgrade
+if command -v brew >/dev/null 2>&1; then
+  brew upgrade
+elif command -v pacman >/dev/null 2>&1; then
+  sudo pacman -Syu
+fi
 
 go install golang.org/x/tools/gopls@latest
 
-cargo install stylua
+if ! command -v stylua >/dev/null 2>&1; then
+  if command -v cargo >/dev/null 2>&1; then
+    cargo install stylua
+  fi
+fi

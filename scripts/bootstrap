@@ -9,6 +9,9 @@ if command -v brew >/dev/null 2>&1; then
   # Install Treesitter parsers
   ./scripts/parsers
 
+elif command -v pacman >/dev/null 2>&1; then
+  ./scripts/arch-install
+
 else
   echo "Unsupported package manager"
   exit 1

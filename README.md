@@ -46,6 +46,14 @@ nvim
 
 The configuration uses the built-in `vim.pack` system to manage plugins. On first launch, packages will be automatically initialized and installed.
 
+For Arch Linux users, a dedicated installation script is available:
+
+```bash
+./scripts/arch-install
+```
+
+This script will install all necessary system dependencies via `pacman` (or `yay`/`paru` if available).
+
 ### 3. Verification & Maintenance
 
 Run the custom built-in health check to ensure your system `$PATH` contains the required binaries for LSP and formatting:
