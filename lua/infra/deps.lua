@@ -84,43 +84,60 @@ local function create_commands()
 end
 
 function M.setup()
-	-- Register user commands immediately
+	-- Register user commands immediately (cheap)
 	create_commands()
 
-	-- Phase 1: Essential UI & Icons (Immediate or very soon)
-	-- Loading the theme early prevents visual flashes of the default colorscheme.
+	-- Phase 1: UI (Now deferred until the first idle period)
 	vim.schedule(function()
 		add({
 			{ source = "folke/tokyonight.nvim", name = "tokyonight" },
 			{ source = "echasnovski/mini.nvim" },
 		})
-		require("plugins.theme").setup()
-		require("plugins.mini").setup()
 
-		-- Phase 2: Core Editing & Language Support (Slightly deferred)
-		vim.defer_fn(function()
+		pcall(function()
+			require("plugins.theme").setup()
+			require("plugins.mini").setup()
+		end)
+	end)
+
+	-- Phase 2: Core Editing (Triggered by file access)
+
+	vim.api.nvim_create_autocmd({ "BufReadPre", "BufNewFile" }, {
+		group = vim.api.nvim_create_augroup("PackPhase2", { clear = true }),
+		once = true,
+		callback = function()
 			add({
 				{ source = "neovim/nvim-lspconfig" },
 				{ source = "stevearc/conform.nvim" },
 			})
-			-- require("infra.lsp").setup() -- Handled lazily by FileType autocmd
-			require("plugins.format").setup()
 
-			-- Phase 3: Extra Features & Tools (Most deferred)
-			vim.defer_fn(function()
-				add({
-					{ source = "mfussenegger/nvim-dap" },
-					{ source = "nvim-neotest/nvim-nio" },
-					{ source = "rcarriga/nvim-dap-ui" },
-					{ source = "leoluz/nvim-dap-go" },
-					{ source = "Robitx/gp.nvim" },
-					{ source = "zbirenbaum/copilot.lua" },
-				})
+			pcall(function()
+				-- require("infra.lsp").setup() -- Handled lazily by FileType autocmd
+				require("plugins.format").setup()
+			end)
+		end,
+	})
+
+	-- Phase 3: Extra Features & Tools (Triggered by typing or deferred)
+	vim.api.nvim_create_autocmd("InsertEnter", {
+		group = vim.api.nvim_create_augroup("PackPhase3", { clear = true }),
+		once = true,
+		callback = function()
+			add({
+				{ source = "mfussenegger/nvim-dap" },
+				{ source = "nvim-neotest/nvim-nio" },
+				{ source = "rcarriga/nvim-dap-ui" },
+				{ source = "leoluz/nvim-dap-go" },
+				{ source = "Robitx/gp.nvim" },
+				{ source = "zbirenbaum/copilot.lua" },
+			})
+
+			pcall(function()
 				require("plugins.dap").setup()
 				require("plugins.ai").setup()
-			end, 50)
-		end, 20)
-	end)
+			end)
+		end,
+	})
 end
 
 return M
