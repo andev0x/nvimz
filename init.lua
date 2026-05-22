@@ -24,20 +24,38 @@ end
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 
--- Core modules
-require("core.filetype")
-require("core.options")
-require("core.keymaps")
-require("core.autocmds")
-require("core.terminal")
-require("core.treesitter").setup()
-require("core.scope_line").setup()
+-- Core modules: Options are essential for early UI state
+pcall(require, "core.options")
 
--- Plugin/dependency infrastructure
-require("infra.deps").setup()
+-- Defer remaining core modules to the next event loop tick
+vim.schedule(function()
+	local core_deferred = {
+		"core.filetype",
+		"core.keymaps",
+		"core.autocmds",
+		"core.terminal",
+	}
 
--- Register health commands only
-require("core.health").register_command()
+	for _, module in ipairs(core_deferred) do
+		pcall(require, module)
+	end
+
+	-- Setup deferred UI components
+	pcall(function()
+		require("core.treesitter").setup()
+		require("core.scope_line").setup()
+	end)
+
+	-- Plugin/dependency infrastructure
+	pcall(function()
+		require("infra.deps").setup()
+	end)
+
+	-- Register health commands
+	pcall(function()
+		require("core.health").register_command()
+	end)
+end)
 
 -- Startup profiler / tracker
 require("core.startup").track(_G.nvimz_start_time)

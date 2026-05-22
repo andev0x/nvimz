@@ -94,7 +94,7 @@ Manage plugins and parsers with native commands:
 | **Debugging** | `nvim-dap` + `nvim-dap-ui` |
 | **Treesitter** | Native `vim.treesitter` |
 | **AI** | `gp.nvim` (Ollama) + `copilot.lua` |
-| **Theme** | `catppuccin` |
+| **Theme** | `tokyonight` |
 
 ## Keybindings
 
@@ -212,6 +212,16 @@ M.lsp_servers = {
 
 ### Adding Formatters
 Configure formatters in `lua/infra/spec.lua` and they will be automatically picked up by `conform.nvim`.
+```lua
+M.formatters_by_ft = {
+    lua = { "stylua" },
+}
+```
+
+## License
+
+MIT © [andev0x](https://github.com/andev0x)
+ill be automatically picked up by `conform.nvim`.
 ```lua
 M.formatters_by_ft = {
     lua = { "stylua" },
