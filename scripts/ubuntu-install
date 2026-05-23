@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# nvimz: Ubuntu Dependency Installer
+
+echo "--------------------------------------------------"
+echo " nvimz: Ubuntu Installation"
+echo "--------------------------------------------------"
+
+# Check if apt is available
+if ! command -v apt-get >/dev/null 2>&1; then
+  echo "❌ Error: apt-get not found. This script is intended for Ubuntu/Debian."
+  exit 1
+fi
+
+echo "⏳ Updating package lists..."
+sudo apt-get update
+
+echo "⏳ Installing dependencies via apt..."
+PACKAGES=(
+  neovim
+  git
+  ripgrep
+  fd-find
+  golang-go
+  build-essential
+  curl
+  unzip
+)
+
+# Attempt to add lua-language-server (available in newer Ubuntu)
+if apt-cache show lua-language-server >/dev/null 2>&1; then
+  PACKAGES+=(lua-language-server)
+fi
+
+sudo apt-get install -y "${PACKAGES[@]}"
+
+# Set up fd symlink (Ubuntu calls it fdfind)
+mkdir -p "$HOME/.local/bin"
+if [ ! -f "$HOME/.local/bin/fd" ] && command -v fdfind >/dev/null 2>&1; then
+  ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"
+  echo "✅ Linked fdfind to $HOME/.local/bin/fd"
+fi
+
+# Ensure go bin is in path for the rest of the script
+export GOPATH="$HOME/go"
+export PATH="$PATH:$GOPATH/bin:$HOME/.local/bin"
+
+echo "⏳ Installing gopls and shfmt via Go..."
+go install golang.org/x/tools/gopls@latest
+go install mvdan.cc/sh/v3/cmd/shfmt@latest
+
+echo "✅ System dependencies installed."
+
+# Run the parsers script
+if [ -f "./scripts/parsers" ]; then
+  echo "⏳ Installing Treesitter parsers..."
+  ./scripts/parsers
+fi
+
+echo "--------------------------------------------------"
+echo "Ubuntu setup complete! Launch with 'nvim'."
+echo "💡 Make sure to add \$HOME/.local/bin and \$HOME/go/bin to your PATH."

@@ -12,6 +12,9 @@ if command -v brew >/dev/null 2>&1; then
 elif command -v pacman >/dev/null 2>&1; then
   ./scripts/arch-install
 
+elif command -v apt-get >/dev/null 2>&1; then
+  ./scripts/ubuntu-install
+
 else
   echo "Unsupported package manager"
   exit 1
