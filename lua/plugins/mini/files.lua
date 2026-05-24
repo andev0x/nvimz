@@ -1,9 +1,35 @@
 local M = {}
 
+-- Cache for gitignored files to keep navigation performant
+local git_ignored_cache = setmetatable({}, { __mode = "v" })
+
+local function is_ignored(path)
+	if git_ignored_cache[path] ~= nil then
+		return git_ignored_cache[path]
+	end
+
+	-- Check if the path is ignored by git
+	-- Use 'git check-ignore' which is reliable but requires a process call
+	local handle = io.popen("git check-ignore " .. vim.fn.shellescape(path) .. " 2>/dev/null")
+	if not handle then
+		return false
+	end
+
+	local result = handle:read("*a")
+	handle:close()
+
+	local ignored = result ~= ""
+	git_ignored_cache[path] = ignored
+	return ignored
+end
+
 function M.setup()
 	require("mini.files").setup({
 		content = {
 			highlight = function(fs_entry)
+				if is_ignored(fs_entry.path) then
+					return "MiniFilesGitIgnored"
+				end
 				return MiniFiles.default_highlight(fs_entry)
 			end,
 		},
