@@ -10,6 +10,7 @@
 
 # Logs
 *.log
+snapshots/
 
 # Runtime state
 .state/cache/

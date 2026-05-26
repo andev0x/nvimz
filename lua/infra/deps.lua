@@ -185,18 +185,18 @@ function M.check_updates()
 
 	for _, plugin in ipairs(plugins) do
 		local name = plugin.spec.name or plugin.spec.src
-		io.write(string.format("󰆓 %-20s", name))
+		io.write(string.format(" 󰆓 %-20s", name))
 		io.flush()
 
 		vim.system({ "git", "-C", plugin.path, "fetch", "origin", "--quiet" }):wait()
 
 		local branch = get_default_branch(plugin.path)
-		local local_rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "HEAD" }, { text = true }):wait().stdout:gsub("\n", "")
-		local remote_rev =
-			vim.system({ "git", "-C", plugin.path, "rev-parse", "origin/" .. branch }, { text = true }):wait().stdout:gsub(
-				"\n",
-				""
-			)
+		local local_rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "HEAD" }, { text = true })
+			:wait().stdout
+			:gsub("\n", "")
+		local remote_rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "origin/" .. branch }, { text = true })
+			:wait().stdout
+			:gsub("\n", "")
 
 		if local_rev ~= remote_rev then
 			print(string.format(" → pending update (%s)", branch))
@@ -230,10 +230,9 @@ function M.generate_lockfile()
 
 	for _, plugin in ipairs(plugins) do
 		local name = plugin.spec.name or plugin.spec.src
-		local rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "HEAD" }, { text = true }):wait().stdout:gsub(
-			"\n",
-			""
-		)
+		local rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "HEAD" }, { text = true })
+			:wait().stdout
+			:gsub("\n", "")
 		lock.plugins[name] = {
 			rev = rev,
 			src = plugin.spec.src,
@@ -289,8 +288,12 @@ function M.pack_sync()
 		vim.system({ "git", "-C", plugin.path, "fetch", "origin", "--quiet" }):wait()
 
 		local branch = get_default_branch(plugin.path)
-		local local_rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "HEAD" }, { text = true }):wait().stdout:gsub("\n", "")
-		local remote_rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "origin/" .. branch }, { text = true }):wait().stdout:gsub("\n", "")
+		local local_rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "HEAD" }, { text = true })
+			:wait().stdout
+			:gsub("\n", "")
+		local remote_rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "origin/" .. branch }, { text = true })
+			:wait().stdout
+			:gsub("\n", "")
 
 		table.insert(lines, "## " .. name)
 		table.insert(lines, "Branch: `" .. branch .. "`")
@@ -348,7 +351,8 @@ function M.pack_validate()
 
 	-- 3. Check Invalid Treesitter Parsers
 	table.insert(lines, "## 3. Treesitter Parsers")
-	local parsers = { "c", "cpp", "go", "rust", "python", "typescript", "tsx", "lua", "vim", "vimdoc", "gitcommit", "markdown" }
+	local parsers =
+		{ "c", "cpp", "go", "rust", "python", "typescript", "tsx", "lua", "vim", "vimdoc", "gitcommit", "markdown" }
 	local invalid_parsers = {}
 	for _, lang in ipairs(parsers) do
 		local ok, err = pcall(vim.treesitter.language.inspect, lang)
@@ -473,7 +477,8 @@ function M.pack_doctor()
 
 	-- 3. Parser Health
 	table.insert(lines, "## 3. Treesitter Parser Health")
-	local parsers = { "c", "cpp", "go", "rust", "python", "typescript", "tsx", "lua", "vim", "vimdoc", "gitcommit", "markdown" }
+	local parsers =
+		{ "c", "cpp", "go", "rust", "python", "typescript", "tsx", "lua", "vim", "vimdoc", "gitcommit", "markdown" }
 	for _, lang in ipairs(parsers) do
 		local ok, err = pcall(vim.treesitter.language.inspect, lang)
 		local status = ok and "✅ Installed" or "❌ Missing/Invalid"
@@ -489,7 +494,10 @@ function M.pack_doctor()
 		local exists = vim.fn.isdirectory(plugin.path) == 1
 		local status = exists and "✅ Healthy" or "❌ Missing"
 		local rev = plugin.rev and plugin.rev:sub(1, 7) or "N/A"
-		table.insert(lines, string.format("- **%s**: %s (Revision: `%s`, Active: `%s`)", name, status, rev, tostring(plugin.active)))
+		table.insert(
+			lines,
+			string.format("- **%s**: %s (Revision: `%s`, Active: `%s`)", name, status, rev, tostring(plugin.active))
+		)
 	end
 	table.insert(lines, "")
 
@@ -590,7 +598,7 @@ function M.pack_benchmark()
 				table.insert(prof_modules, {
 					script = script,
 					self_sourced = tonumber(self_sourced),
-					self_only = tonumber(self_only)
+					self_only = tonumber(self_only),
 				})
 			end
 		end
@@ -604,8 +612,18 @@ function M.pack_benchmark()
 
 	local count = 0
 	for _, mod in ipairs(prof_modules) do
-		if count >= 10 then break end
-		table.insert(lines, string.format("| `%s` | %.3f ms | %.3f ms |", vim.fn.fnamemodify(mod.script, ":t"), mod.self_sourced, mod.self_only))
+		if count >= 10 then
+			break
+		end
+		table.insert(
+			lines,
+			string.format(
+				"| `%s` | %.3f ms | %.3f ms |",
+				vim.fn.fnamemodify(mod.script, ":t"),
+				mod.self_sourced,
+				mod.self_only
+			)
+		)
 		count = count + 1
 	end
 	table.insert(lines, "")
@@ -621,7 +639,10 @@ function M.pack_benchmark()
 		end
 		local history_avg = history_sum / #stats
 		table.insert(lines, string.format("- Current Warm Average: **%.2f ms**", warm_avg))
-		table.insert(lines, string.format("- Cached Historical Average (last %d runs): **%.2f ms**", #stats, history_avg))
+		table.insert(
+			lines,
+			string.format("- Cached Historical Average (last %d runs): **%.2f ms**", #stats, history_avg)
+		)
 		local diff = warm_avg - history_avg
 		if diff > 0 then
 			table.insert(lines, string.format("- Status: ⚠️ Slower than historical average by **+%.2f ms**", diff))
@@ -670,8 +691,12 @@ function M.pack_status()
 	local outdated = 0
 	for _, plugin in ipairs(plugins) do
 		local branch = get_default_branch(plugin.path)
-		local local_rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "HEAD" }, { text = true }):wait().stdout:gsub("\n", "")
-		local remote_rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "origin/" .. branch }, { text = true }):wait().stdout:gsub("\n", "")
+		local local_rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "HEAD" }, { text = true })
+			:wait().stdout
+			:gsub("\n", "")
+		local remote_rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "origin/" .. branch }, { text = true })
+			:wait().stdout
+			:gsub("\n", "")
 		if local_rev ~= remote_rev then
 			outdated = outdated + 1
 		end
@@ -702,7 +727,9 @@ function M.pack_status()
 			for _, plugin in ipairs(plugins) do
 				local name = plugin.spec.name or plugin.spec.src
 				local entry = lock.plugins[name]
-				local local_rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "HEAD" }, { text = true }):wait().stdout:gsub("\n", "")
+				local local_rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "HEAD" }, { text = true })
+					:wait().stdout
+					:gsub("\n", "")
 				if not entry or entry.rev ~= local_rev then
 					lock_ok = false
 					break
@@ -715,10 +742,16 @@ function M.pack_status()
 		lock_ok = false
 	end
 
-	print(string.format("nvimz Status: plugins=%d, outdated=%d, startup=%.2fms, health=%s, lockfile=%s",
-		plugin_count, outdated, startup_time,
-		health_ok and "OK" or "WARNING",
-		lock_ok and "In Sync" or "Out of Sync"))
+	print(
+		string.format(
+			"nvimz Status: plugins=%d, outdated=%d, startup=%.2fms, health=%s, lockfile=%s",
+			plugin_count,
+			outdated,
+			startup_time,
+			health_ok and "OK" or "WARNING",
+			lock_ok and "In Sync" or "Out of Sync"
+		)
+	)
 end
 
 function M.pack_clean()
@@ -746,9 +779,18 @@ function M.pack_clean()
 
 	local parser_dir = vim.fn.expand("~/.local/share/nvim/site/parser")
 	local valid_parsers = {
-		c = true, cpp = true, go = true, rust = true, python = true,
-		typescript = true, tsx = true, lua = true, vim = true,
-		vimdoc = true, gitcommit = true, markdown = true
+		c = true,
+		cpp = true,
+		go = true,
+		rust = true,
+		python = true,
+		typescript = true,
+		tsx = true,
+		lua = true,
+		vim = true,
+		vimdoc = true,
+		gitcommit = true,
+		markdown = true,
 	}
 	if vim.fn.isdirectory(parser_dir) == 1 then
 		local files = vim.fn.globpath(parser_dir, "*.so", true, true)
@@ -788,7 +830,9 @@ function M.pack_snapshot()
 	local plugins = {}
 	for _, plugin in ipairs(vim.pack.get()) do
 		local name = plugin.spec.name or plugin.spec.src
-		local rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "HEAD" }, { text = true }):wait().stdout:gsub("\n", "")
+		local rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "HEAD" }, { text = true })
+			:wait().stdout
+			:gsub("\n", "")
 		local branch = get_default_branch(plugin.path)
 		plugins[name] = {
 			rev = rev,
@@ -897,7 +941,8 @@ function M.pack_report()
 	table.insert(lines, "--------------------------------------------------")
 	table.insert(lines, " nvimz: Treesitter Parser Manager")
 	table.insert(lines, "--------------------------------------------------")
-	local parsers = { "c", "cpp", "go", "rust", "python", "typescript", "tsx", "lua", "vim", "vimdoc", "gitcommit", "markdown" }
+	local parsers =
+		{ "c", "cpp", "go", "rust", "python", "typescript", "tsx", "lua", "vim", "vimdoc", "gitcommit", "markdown" }
 	for _, lang in ipairs(parsers) do
 		local ok = pcall(vim.treesitter.language.inspect, lang)
 		if ok then
