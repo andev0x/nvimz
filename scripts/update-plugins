@@ -2,8 +2,46 @@
 
 set -euo pipefail
 
-echo "Updating Neovim plugins..."
-nvim --headless -c "lua require('infra.deps').setup()" -c "PackUpdate" -c "qa"
+PLUGIN_DIR="$HOME/.local/share/nvim/site/pack/core/opt"
 
-echo "Updating Treesitter parsers..."
+echo "󰚰 Updating Neovim plugins..."
+echo
+
+updated=0
+
+for dir in "$PLUGIN_DIR"/*; do
+  [ -d "$dir/.git" ] || continue
+
+  name=$(basename "$dir")
+
+  echo "󰆓 $name"
+
+  git -C "$dir" fetch origin --quiet
+
+  BRANCH=$(git -C "$dir" remote show origin | sed -n '/HEAD branch/s/.*: //p')
+
+  LOCAL=$(git -C "$dir" rev-parse HEAD)
+  REMOTE=$(git -C "$dir" rev-parse "origin/$BRANCH")
+
+  if [ "$LOCAL" != "$REMOTE" ]; then
+    echo "  → updating to origin/$BRANCH"
+
+    git -C "$dir" checkout "$BRANCH" >/dev/null 2>&1 || true
+    git -C "$dir" pull --ff-only origin "$BRANCH"
+
+    updated=$((updated + 1))
+  else
+    echo "  → already up to date"
+  fi
+
+  echo
+done
+
+echo "󰄬 Updated plugins: $updated"
+
+echo
+echo "󰚰 Updating Treesitter parsers..."
 ./scripts/parsers
+
+echo
+echo "󰄬 Done."
