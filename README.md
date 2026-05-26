@@ -60,24 +60,30 @@ These scripts will install all necessary system dependencies via `pacman` or `ap
 
 ### 3. Verification & Maintenance
 
-Run the custom built-in health check to ensure your system `$PATH` contains the required binaries for LSP and formatting:
+**nvimz** includes robust scripts for automated maintenance and health reporting:
 
-```vim
-:ToolDoctor
+```bash
+# Update plugins and Treesitter parsers in one command
+./scripts/update-plugins
 
+# Run a full validation suite (updates, health checks, benchmarks)
+# Generates a detailed MAINTENANCE_REPORT.md
+./scripts/validate
 ```
 
-Manage your environment using native Neovim commands:
+You can also manage your environment using native Neovim commands:
 
+* `:ToolDoctor` – Show environment tooling health (LSP, formatters, etc.).
 * `:PackUpdate` – Update all managed plugins.
 * `:PackClean` – Remove unused plugins from your local disk.
-* `:ParsersUpdate` – Download and compile Tree-sitter parsers directly via native APIs (Go, Rust, TS, Python, etc.).
+* `:ParsersUpdate` – Download and compile Tree-sitter parsers directly via native APIs.
 
 ## Features
 
 ### Performance & Minimalism
 
 * **Sub-10ms Startup Time:** Achieved via strict bytecode caching and event-driven lazy loading through native `vim.pack`.
+* **Persistent State Caching:** Centralized caching in `lua/infra/cache.lua` persists startup metrics, plugin loading history, and machine-specific configurations to JSON, ensuring a consistent and optimized experience across restarts.
 * **Ultra-Low Latency:** Optimized redraw cycles (`lazyredraw`), smooth scrolling, and throttled statusline updates to eliminate runtime frame drops.
 * **Smart Resource Allocation:** Automatic Tree-sitter throttling for large files (greater than 500KB) and optimized diagnostic polling rates.
 * **High-Throughput LSP:** Non-blocking attach logic and asynchronous diagnostic rendering for an instantaneous editing response.
