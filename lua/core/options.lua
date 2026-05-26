@@ -53,7 +53,17 @@ vim.opt.backup = false
 vim.opt.foldmethod = "indent"
 vim.opt.foldlevel = 99
 
-local ok, machine = pcall(require, "machine.local")
-if ok and type(machine) == "table" and type(machine.python_path) == "string" then
+local cache = require("infra.cache")
+local machine = cache.get("machine_state")
+
+if not machine then
+	local ok, local_machine = pcall(require, "machine.local")
+	if ok and type(local_machine) == "table" then
+		machine = local_machine
+		cache.set("machine_state", machine)
+	end
+end
+
+if machine and type(machine.python_path) == "string" then
 	vim.g.python3_host_prog = machine.python_path
 end

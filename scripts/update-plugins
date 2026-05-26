@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+echo "Updating Neovim plugins..."
+nvim --headless -c "lua require('infra.deps').setup()" -c "PackUpdate" -c "qa"
+
+echo "Updating Treesitter parsers..."
+./scripts/parsers

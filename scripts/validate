@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+REPORT_FILE="MAINTENANCE_REPORT.md"
+
+{
+  echo "# nvimz Maintenance Report"
+  echo "Date: $(date)"
+  echo ""
+
+  echo "## 1. Plugin & Parser Updates"
+  ./scripts/update-plugins | sed 's/^/    /'
+  echo ""
+
+  echo "## 2. Lockfile Validation"
+  if jq . nvim-pack-lock.json > /dev/null; then
+    echo "✅ Lockfile (\`nvim-pack-lock.json\`) is valid JSON."
+  else
+    echo "❌ Lockfile (\`nvim-pack-lock.json\`) is INVALID."
+  fi
+  echo ""
+
+  echo "## 3. Environment Health"
+  echo "\`\`\`"
+  nvim --headless -c "lua require('core.health').register_command()" -c "ToolDoctor" -c "qa" 2>&1
+  echo "\`\`\`"
+  echo ""
+
+  echo "## 4. Startup Benchmark"
+  nvim --startuptime /tmp/nvim-startup.txt --headless -c "qa"
+  STARTUP_TIME=$(grep "NVIM STARTED" /tmp/nvim-startup.txt | tail -n 1 | awk '{print $1}')
+  echo "Total startup time: **${STARTUP_TIME}ms** (Target: <20ms)"
+  echo ""
+} > "$REPORT_FILE"
+
+cat "$REPORT_FILE"

@@ -10,6 +10,23 @@ function M.track(start_ns)
 		callback = function()
 			local elapsed_ms = (vim.uv.hrtime() - start_ns) / 1e6
 
+			-- Cache startup stats
+			vim.schedule(function()
+				local ok, cache = pcall(require, "infra.cache")
+				if ok then
+					local stats = cache.get("startup_stats") or {}
+					table.insert(stats, {
+						time = os.date("%Y-%m-%d %H:%M:%S"),
+						elapsed_ms = elapsed_ms,
+					})
+					-- Keep only last 10 entries
+					while #stats > 10 do
+						table.remove(stats, 1)
+					end
+					cache.set("startup_stats", stats)
+				end
+			end)
+
 			if elapsed_ms > 20 then
 				vim.schedule(function()
 					vim.notify(("nvimz startup %.2fms exceeded 20ms target"):format(elapsed_ms), vim.log.levels.WARN)

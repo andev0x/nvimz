@@ -87,6 +87,9 @@ function M.setup()
 	-- Register user commands immediately (cheap)
 	create_commands()
 
+	local cache = require("infra.cache")
+	local state = cache.get("plugin_state") or { phases = {} }
+
 	-- Phase 1: UI (Now deferred until the first idle period)
 	vim.schedule(function()
 		add({
@@ -98,6 +101,9 @@ function M.setup()
 			require("plugins.theme").setup()
 			require("plugins.mini").setup()
 		end)
+
+		state.phases[1] = true
+		cache.set("plugin_state", state)
 	end)
 
 	-- Phase 2: Core Editing (Triggered by file access)
@@ -115,6 +121,9 @@ function M.setup()
 				-- require("infra.lsp").setup() -- Handled lazily by FileType autocmd
 				require("plugins.format").setup()
 			end)
+
+			state.phases[2] = true
+			cache.set("plugin_state", state)
 		end,
 	})
 
@@ -136,6 +145,9 @@ function M.setup()
 				require("plugins.dap").setup()
 				require("plugins.ai").setup()
 			end)
+
+			state.phases[3] = true
+			cache.set("plugin_state", state)
 		end,
 	})
 end
