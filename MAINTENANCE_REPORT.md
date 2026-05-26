@@ -1,5 +1,5 @@
 # nvimz Maintenance Report
-Date: 2026-05-26 14:52:16
+Date: Tue May 26 17:54:47 +07 2026
 
 ## 1. Lockfile Validation
 ✅ Lockfile (`nvim-pack-lock.json`) is valid JSON.
@@ -25,11 +25,10 @@ Date: 2026-05-26 14:52:16
 ────────────────────────────────────────────────────────────
  Linters
 ────────────────────────────────────────────────────────────
- golangci-lint          OK         golangci-lint has version 2.12.2 built with go1.26.2 from c0d3ddc on 2026-05-06T11:01:25Z
-```
+ golangci-lint          OK         golangci-lint has version 2.12.2 built with go1.26.2 from c0d3ddc on 2026-05-06T11:01:25Z```
 
 ## 3. Startup Benchmark
-Total startup time: **009.735ms** (Target: <20ms)
+Total startup time: **008.881ms** (Target: <20ms)
 
 ## 4. Parser Validation
 ```
@@ -49,5 +48,6 @@ Total startup time: **009.735ms** (Target: <20ms)
 ✅ gitcommit: Already installed
 ✅ markdown: Already installed
 --------------------------------------------------
+Done! Restart Neovim to apply changes.
 ```
 

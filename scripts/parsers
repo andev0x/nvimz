@@ -24,6 +24,10 @@ LANGS=(
   "markdown:tree-sitter-grammars/tree-sitter-markdown:tree-sitter-markdown/src"
 )
 
+PYTHON_QUERY_DIR="${HOME}/.config/nvim/queries/python"
+PYTHON_HIGHLIGHTS_URL="https://raw.githubusercontent.com/neovim/neovim/master/runtime/queries/python/highlights.scm"
+PYTHON_HIGHLIGHTS_FILE="${PYTHON_QUERY_DIR}/highlights.scm"
+
 mkdir -p "$PARSER_DIR"
 mkdir -p "$TMP_DIR"
 
@@ -78,6 +82,19 @@ for entry in "${LANGS[@]}"; do
   mv "$lang.so" "$TARGET"
   echo "✨ $lang: Successfully installed to $TARGET"
 done
+
+if [[ $CHECK_ONLY -eq 1 ]]; then
+  if [ -f "$PYTHON_HIGHLIGHTS_FILE" ]; then
+    echo "✅ python highlights: Already installed"
+  else
+    echo "❌ python highlights: MISSING"
+  fi
+else
+  echo "⏳ python highlights: Installing..."
+  mkdir -p "$PYTHON_QUERY_DIR"
+  curl -fsSL -o "$PYTHON_HIGHLIGHTS_FILE" "$PYTHON_HIGHLIGHTS_URL"
+  echo "✨ python highlights: Installed to $PYTHON_HIGHLIGHTS_FILE"
+fi
 
 echo "--------------------------------------------------"
 echo "Done! Restart Neovim to apply changes."
