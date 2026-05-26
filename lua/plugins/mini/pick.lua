@@ -21,8 +21,38 @@ function M.setup()
 	})
 
 	-- General Finders
+	local function grep_gitignored_hidden()
+		local rg_config_path = vim.fs.joinpath(vim.fn.stdpath("config"), "rg-hidden.conf")
+		local previous_rg_config = vim.env.RIPGREP_CONFIG_PATH
+		vim.env.RIPGREP_CONFIG_PATH = rg_config_path
+		vim.api.nvim_create_autocmd("User", {
+			pattern = "MiniPickStop",
+			once = true,
+			callback = function()
+				vim.env.RIPGREP_CONFIG_PATH = previous_rg_config
+			end,
+		})
+		MiniPick.builtin.grep_live({ tool = "rg" }, { source = { name = "Grep hidden (gitignored)" } })
+	end
+
+	local function files_hidden()
+		local rg_config_path = vim.fs.joinpath(vim.fn.stdpath("config"), "rg-hidden-files.conf")
+		local previous_rg_config = vim.env.RIPGREP_CONFIG_PATH
+		vim.env.RIPGREP_CONFIG_PATH = rg_config_path
+		vim.api.nvim_create_autocmd("User", {
+			pattern = "MiniPickStop",
+			once = true,
+			callback = function()
+				vim.env.RIPGREP_CONFIG_PATH = previous_rg_config
+			end,
+		})
+		MiniPick.builtin.files({ tool = "rg" }, { source = { name = "Files (hidden)" } })
+	end
+
 	vim.keymap.set("n", "<leader>ff", "<cmd>Pick files<cr>", { desc = "Find files" })
+	vim.keymap.set("n", "<leader>fe", files_hidden, { desc = "Find files (hidden)" })
 	vim.keymap.set("n", "<leader>fg", "<cmd>Pick grep_live<cr>", { desc = "Live grep" })
+	vim.keymap.set("n", "<leader>fr", grep_gitignored_hidden, { desc = "Grep hidden (gitignored)" })
 	vim.keymap.set("n", "<leader>fb", "<cmd>Pick buffers<cr>", { desc = "Buffers" })
 	vim.keymap.set("n", "<leader>fh", "<cmd>Pick help<cr>", { desc = "Help tags" })
 	vim.keymap.set("n", "<leader>fd", "<cmd>Pick diagnostic<cr>", { desc = "Find diagnostics" })
