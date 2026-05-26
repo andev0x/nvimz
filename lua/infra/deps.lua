@@ -31,7 +31,7 @@ local function create_commands()
 	vim.g.pack_commands_created = true
 
 	vim.api.nvim_create_user_command("PackUpdate", function()
-		vim.pack.update()
+		M.pack_update()
 	end, {
 		desc = "Update plugins",
 	})
@@ -150,6 +150,116 @@ function M.setup()
 			cache.set("plugin_state", state)
 		end,
 	})
+end
+
+local function get_default_branch(path)
+	local obj = vim.system({ "git", "-C", path, "remote", "show", "origin" }, { text = true }):wait()
+	if obj.code ~= 0 then
+		return "main"
+	end
+	for line in vim.gsplit(obj.stdout, "\n") do
+		local branch = line:match("HEAD branch: (.+)")
+		if branch then
+			return branch
+		end
+	end
+	return "main"
+end
+
+function M.check_updates()
+	local plugins = vim.pack.get()
+	local results = {}
+
+	for _, plugin in ipairs(plugins) do
+		local name = plugin.spec.name or plugin.spec.src
+		io.write(string.format("󰆓 %-20s", name))
+		io.flush()
+
+		vim.system({ "git", "-C", plugin.path, "fetch", "origin", "--quiet" }):wait()
+
+		local branch = get_default_branch(plugin.path)
+		local local_rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "HEAD" }, { text = true }):wait().stdout:gsub("\n", "")
+		local remote_rev =
+			vim.system({ "git", "-C", plugin.path, "rev-parse", "origin/" .. branch }, { text = true }):wait().stdout:gsub(
+				"\n",
+				""
+			)
+
+		if local_rev ~= remote_rev then
+			print(string.format(" → pending update (%s)", branch))
+			table.insert(results, {
+				plugin = plugin,
+				branch = branch,
+				local_rev = local_rev,
+				remote_rev = remote_rev,
+			})
+		else
+			print(" → up to date")
+		end
+	end
+
+	return results
+end
+
+function M.apply_updates(updates)
+	if #updates == 0 then
+		return
+	end
+
+	for _, update in ipairs(updates) do
+		vim.system({ "git", "-C", update.plugin.path, "reset", "--hard", "origin/" .. update.branch }):wait()
+	end
+end
+
+function M.generate_lockfile()
+	local plugins = vim.pack.get()
+	local lock = { plugins = {} }
+
+	for _, plugin in ipairs(plugins) do
+		local name = plugin.spec.name or plugin.spec.src
+		local rev = vim.system({ "git", "-C", plugin.path, "rev-parse", "HEAD" }, { text = true }):wait().stdout:gsub(
+			"\n",
+			""
+		)
+		lock.plugins[name] = {
+			rev = rev,
+			src = plugin.spec.src,
+		}
+	end
+
+	local path = vim.fn.stdpath("config") .. "/nvim-pack-lock.json"
+	local f = io.open(path, "w")
+	if f then
+		f:write(vim.json.encode(lock))
+		f:close()
+	end
+end
+
+function M.validate()
+	local script = vim.fn.stdpath("config") .. "/scripts/validate"
+	vim.system({ script }):wait()
+end
+
+function M.pack_update()
+	print("󰚰 Checking updates...")
+	local updates = M.check_updates()
+
+	if #updates > 0 then
+		print(string.format("󰚰 Applying %d updates...", #updates))
+		M.apply_updates(updates)
+	else
+		print("󰄬 Plugins already up to date.")
+	end
+
+	M.generate_lockfile()
+	M.validate()
+
+	-- Treesitter parsers update
+	print("󰚰 Updating Treesitter parsers...")
+	local parsers_script = vim.fn.stdpath("config") .. "/scripts/parsers"
+	vim.system({ parsers_script }):wait()
+
+	print("󰄬 Done. Maintenance report updated.")
 end
 
 return M

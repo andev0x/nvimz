@@ -60,23 +60,31 @@ For Arch Linux or Ubuntu users, dedicated installation scripts are available:
 
 ### 3. Verification & Maintenance
 
-**nvimz** includes robust scripts and commands for health reporting:
+**nvimz** features a centralized orchestration layer in `lua/infra/deps.lua` that manages the entire package lifecycle. It uses a deterministic update strategy:
 
 ```bash
-# Update plugins and Treesitter parsers
+# Update plugins via CLI wrapper
+# This invokes the nvim orchestration layer in headless mode
 ./scripts/update-plugins
 
-# Run a full validation suite (updates, health checks, benchmarks)
-# Generates a detailed MAINTENANCE_REPORT.md
+# Run the full validation pipeline
+# Updates plugins -> Regenerates lockfile -> Validates environment -> Benchmarks
 ./scripts/validate
 ```
+
+**Key Orchestration Features:**
+
+* **Deterministic Updates:** Plugins are updated via `git reset --hard` to their remote default branch, ensuring a clean and predictable state.
+* **Source of Truth:** The on-disk git state is the absolute source of truth.
+* **Generated Lockfile:** `nvim-pack-lock.json` is a generated snapshot of your exact environment, not cached metadata.
+* **Maintenance Report:** Every validation run generates `MAINTENANCE_REPORT.md`, providing a transparent audit of your setup's health and performance.
 
 **Native Commands:**
 
 * `:ToolDoctor` – Show environment tooling health (LSP, formatters, etc.).
-* `:PackUpdate` – Update all managed plugins.
+* `:PackUpdate` – Invoke the full orchestration workflow: check, update, relock, and validate.
 * `:PackClean` – Remove unused plugins from local disk.
-* `:ParsersUpdate` – Download and compile Tree-sitter parsers directly via native APIs.
+* `:ParsersUpdate` – Update and compile Tree-sitter parsers directly.
 
 ## Features
 
@@ -84,6 +92,7 @@ For Arch Linux or Ubuntu users, dedicated installation scripts are available:
 
 * **Sub-15ms Startup Time:** Achieved via bytecode caching and a 3-phase event-driven lazy loading system.
 * **Persistent State Caching:** Centralized caching in `lua/infra/cache.lua` persists startup metrics and plugin states.
+* **Lifecycle Orchestration:** `lua/infra/deps.lua` acts as the primary package lifecycle manager, handling everything from on-disk git state validation to automated maintenance reporting.
 * **Bare-Metal Tree-sitter:** Direct interaction with Neovim 0.12's native syntax highlighting and folding.
 * **Zero Ecosystem Bloat:** Replaces heavy third-party dependency chains with the unified `mini.nvim` suite.
 * **High-Throughput LSP:** Non-blocking attach logic using native `vim.lsp.start` for instantaneous response.

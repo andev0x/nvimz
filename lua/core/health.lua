@@ -30,19 +30,23 @@ function M.check()
 	}, "\n"))
 end
 
+function M.run_doctor()
+	render.section("Core")
+	iterate(tools.core)
+
+	render.section("LSP")
+	iterate(tools.lsp)
+
+	render.section("Formatters")
+	iterate(tools.formatters)
+
+	render.section("Linters")
+	iterate(tools.linters)
+end
+
 function M.register_command()
 	vim.api.nvim_create_user_command("ToolDoctor", function()
-		render.section("Core")
-		iterate(tools.core)
-
-		render.section("LSP")
-		iterate(tools.lsp)
-
-		render.section("Formatters")
-		iterate(tools.formatters)
-
-		render.section("Linters")
-		iterate(tools.linters)
+		M.run_doctor()
 	end, {
 		desc = "Show environment tooling health",
 	})

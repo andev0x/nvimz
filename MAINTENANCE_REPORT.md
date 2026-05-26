@@ -1,31 +1,10 @@
 # nvimz Maintenance Report
-Date: Tue May 26 08:51:15 +07 2026
+Date: Tue May 26 10:26:28 +07 2026
 
-## 1. Plugin & Parser Updates
-    Updating Neovim plugins...
-    Updating Treesitter parsers...
-    --------------------------------------------------
-     nvimz: Treesitter Parser Manager
-    --------------------------------------------------
-    ✅ c: Already installed
-    ✅ cpp: Already installed
-    ✅ go: Already installed
-    ✅ rust: Already installed
-    ✅ python: Already installed
-    ✅ typescript: Already installed
-    ✅ tsx: Already installed
-    ✅ lua: Already installed
-    ✅ vim: Already installed
-    ✅ vimdoc: Already installed
-    ✅ gitcommit: Already installed
-    ✅ markdown: Already installed
-    --------------------------------------------------
-    Done! Restart Neovim to apply changes.
-
-## 2. Lockfile Validation
+## 1. Lockfile Validation
 ✅ Lockfile (`nvim-pack-lock.json`) is valid JSON.
 
-## 3. Environment Health
+## 2. Environment Health
 ```
 ────────────────────────────────────────────────────────────
  Core
@@ -48,6 +27,27 @@ Date: Tue May 26 08:51:15 +07 2026
 ────────────────────────────────────────────────────────────
  golangci-lint          OK         golangci-lint has version 2.12.2 built with go1.26.2 from c0d3ddc on 2026-05-06T11:01:25Z```
 
-## 4. Startup Benchmark
-Total startup time: **010.732ms** (Target: <20ms)
+## 3. Startup Benchmark
+Total startup time: **011.536ms** (Target: <20ms)
+
+## 4. Parser Validation
+```
+--------------------------------------------------
+ nvimz: Treesitter Parser Manager
+--------------------------------------------------
+✅ c: Already installed
+✅ cpp: Already installed
+✅ go: Already installed
+✅ rust: Already installed
+✅ python: Already installed
+✅ typescript: Already installed
+✅ tsx: Already installed
+✅ lua: Already installed
+✅ vim: Already installed
+✅ vimdoc: Already installed
+✅ gitcommit: Already installed
+✅ markdown: Already installed
+--------------------------------------------------
+Done! Restart Neovim to apply changes.
+```
 

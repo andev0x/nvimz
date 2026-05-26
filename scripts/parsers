@@ -27,6 +27,11 @@ LANGS=(
 mkdir -p "$PARSER_DIR"
 mkdir -p "$TMP_DIR"
 
+CHECK_ONLY=0
+if [[ "${1:-}" == "--check" ]]; then
+  CHECK_ONLY=1
+fi
+
 echo "--------------------------------------------------"
 echo " nvimz: Treesitter Parser Manager"
 echo "--------------------------------------------------"
@@ -38,6 +43,11 @@ for entry in "${LANGS[@]}"; do
   
   if [ -f "$TARGET" ]; then
     echo "✅ $lang: Already installed"
+    continue
+  fi
+
+  if [[ $CHECK_ONLY -eq 1 ]]; then
+    echo "❌ $lang: MISSING"
     continue
   fi
 
