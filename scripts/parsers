@@ -20,7 +20,7 @@ LANGS=(
   "lua:tree-sitter-grammars/tree-sitter-lua:src"
   "vim:neovim/tree-sitter-vim:src"
   "vimdoc:neovim/tree-sitter-vimdoc:src"
-  "gitcommit:the-mikedavis/tree-sitter-gitcommit:src"
+  "gitcommit:gbprod/tree-sitter-gitcommit:src"
   "markdown:tree-sitter-grammars/tree-sitter-markdown:tree-sitter-markdown/src"
 )
 
