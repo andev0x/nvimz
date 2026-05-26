@@ -2,7 +2,7 @@
 
 > A blazing-fast, minimalist Neovim configuration for DevOps engineers and backend developers.
 
-**nvimz** is a high-performance Neovim setup optimized for **Neovim 0.12+** that prioritizes speed, structural simplicity, and developer experience. With a strict startup target under **10ms**, it replaces heavy plugin ecosystems with native APIs, the lightweight `mini.nvim` suite, and the built-in `vim.pack` package manager.
+**nvimz** is a high-performance Neovim setup optimized for **Neovim 0.12+** that prioritizes speed, structural simplicity, and developer experience. With a strict startup target under **15ms**, it replaces heavy plugin ecosystems with native APIs, the lightweight `mini.nvim` suite, and the built-in `vim.pack` package manager.
 
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Neovim](https://img.shields.io/badge/Neovim-%3E=0.12.0-blueviolet?logo=neovim)
@@ -15,7 +15,10 @@ Unlike heavy configurations that rely on Mason for runtime isolation, **nvimz** 
 - **Predictable & Reproducible:** Your development environment is managed deterministically by your system's package manager (`Homebrew`, `Nix`, `APT`).
 - **Zero Startup Overhead:** Eliminates execution delays caused by third-party managers checking binaries at startup.
 - **Native-First Stability:** Leverages Neovim 0.12+ built-in features to drastically reduce plugin surface area and minimize breaking changes.
-- **Phase-Driven Loading:** Strategic use of event-driven triggers (`BufReadPre`, `InsertEnter`) and `vim.schedule` ensures the core initialization path remains completely unblocked.
+- **Phase-Driven Loading:** Strategic 3-phase loading ensures the core initialization path remains completely unblocked:
+    1. **UI Phase:** Deferred to the first idle period (Theme, Icons, Statusline).
+    2. **Editing Phase:** Triggered by file access (LSP, Formatting).
+    3. **Extra Phase:** Triggered by user interaction (DAP, AI, Git).
 
 ## Screenshots
 
@@ -30,7 +33,7 @@ Unlike heavy configurations that rely on Mason for runtime isolation, **nvimz** 
 
 - **Neovim 0.12.0+**
 - **System tools:** `git`, `rg` (ripgrep), `fd`
-- **Optional External Binaries:** [Ollama](https://ollama.com/) (for local AI features), `stylua`, `black`, `shfmt`, `gofmt` (for formatting).
+- **Optional External Binaries:** [Ollama](https://ollama.com/) (for local AI), `stylua`, `black`, `shfmt`, `gofmt` (for formatting).
 
 ### 2. Installation
 
@@ -39,12 +42,11 @@ Unlike heavy configurations that rely on Mason for runtime isolation, **nvimz** 
 mv ~/.config/nvim ~/.config/nvim.bak
 
 # Clone and launch nvimz
-git clone [https://github.com/andev0x/nvimz.git](https://github.com/andev0x/nvimz.git) ~/.config/nvim
+git clone https://github.com/andev0x/nvimz.git ~/.config/nvim
 nvim
-
 ```
 
-The configuration uses the built-in `vim.pack` system to manage plugins. On first launch, packages will be automatically initialized and installed.
+On first launch, plugins will be automatically initialized and installed via the built-in `vim.pack` system.
 
 For Arch Linux or Ubuntu users, dedicated installation scripts are available:
 
@@ -56,68 +58,60 @@ For Arch Linux or Ubuntu users, dedicated installation scripts are available:
 ./scripts/ubuntu-install
 ```
 
-These scripts will install all necessary system dependencies via `pacman` or `apt`.
-
 ### 3. Verification & Maintenance
 
-**nvimz** includes robust scripts for automated maintenance and health reporting:
+**nvimz** features a centralized orchestration layer in `lua/infra/deps.lua` that manages the entire package lifecycle. It uses a deterministic update strategy:
 
 ```bash
-# Update plugins and Treesitter parsers in one command
+# Update plugins via CLI wrapper
+# This invokes the nvim orchestration layer in headless mode
 ./scripts/update-plugins
 
-# Run a full validation suite (updates, health checks, benchmarks)
-# Generates a detailed MAINTENANCE_REPORT.md
+# Run the full validation pipeline
+# Updates plugins -> Regenerates lockfile -> Validates environment -> Benchmarks
 ./scripts/validate
 ```
 
-You can also manage your environment using native Neovim commands:
+**Key Orchestration Features:**
+
+* **Deterministic Updates:** Plugins are updated via `git reset --hard` to their remote default branch, ensuring a clean and predictable state.
+* **Source of Truth:** The on-disk git state is the absolute source of truth.
+* **Generated Lockfile:** `nvim-pack-lock.json` is a generated snapshot of your exact environment, not cached metadata.
+* **Maintenance Report:** Every validation run generates `MAINTENANCE_REPORT.md`, providing a transparent audit of your setup's health and performance.
+
+**Native Commands:**
 
 * `:ToolDoctor` – Show environment tooling health (LSP, formatters, etc.).
-* `:PackUpdate` – Update all managed plugins.
-* `:PackClean` – Remove unused plugins from your local disk.
-* `:ParsersUpdate` – Download and compile Tree-sitter parsers directly via native APIs.
+* `:PackUpdate` – Invoke the full orchestration workflow: check, update, relock, and validate.
+* `:PackClean` – Remove unused plugins from local disk.
+* `:ParsersUpdate` – Update and compile Tree-sitter parsers directly.
 
 ## Features
 
 ### Performance & Minimalism
 
-* **Sub-10ms Startup Time:** Achieved via strict bytecode caching and event-driven lazy loading through native `vim.pack`.
-* **Persistent State Caching:** Centralized caching in `lua/infra/cache.lua` persists startup metrics, plugin loading history, and machine-specific configurations to JSON, ensuring a consistent and optimized experience across restarts.
-* **Ultra-Low Latency:** Optimized redraw cycles (`lazyredraw`), smooth scrolling, and throttled statusline updates to eliminate runtime frame drops.
-* **Smart Resource Allocation:** Automatic Tree-sitter throttling for large files (greater than 500KB) and optimized diagnostic polling rates.
-* **High-Throughput LSP:** Non-blocking attach logic and asynchronous diagnostic rendering for an instantaneous editing response.
-* **Zero Ecosystem Bloat:** Replaces heavy third-party dependency chains with modules from the unified `mini.nvim` suite.
-* **Bare-Metal Tree-sitter:** Interacts directly with Neovim 0.12's native syntax highlighting and folding engine without bulky wrapper plugins.
+* **Sub-15ms Startup Time:** Achieved via bytecode caching and a 3-phase event-driven lazy loading system.
+* **Persistent State Caching:** Centralized caching in `lua/infra/cache.lua` persists startup metrics and plugin states.
+* **Lifecycle Orchestration:** `lua/infra/deps.lua` acts as the primary package lifecycle manager, handling everything from on-disk git state validation to automated maintenance reporting.
+* **Bare-Metal Tree-sitter:** Direct interaction with Neovim 0.12's native syntax highlighting and folding.
+* **Zero Ecosystem Bloat:** Replaces heavy third-party dependency chains with the unified `mini.nvim` suite.
+* **High-Throughput LSP:** Non-blocking attach logic using native `vim.lsp.start` for instantaneous response.
 
 ### Development Workflow
 
-* **Fluid File Explorer:** Rapid, modal file navigation using `mini.files`. Press `a` inside the explorer to instantly create new files or folders.
-* **Fuzzy Finding:** Instant search for files, live grep patterns, and buffers powered by `mini.pick`.
-* **Git Operations:** Comprehensive version control tracking directly from the buffer with `mini.git` and `mini.diff`.
-* **Scratch Terminal:** Instant floating shell access mapped to `<leader>t`.
-* **Asynchronous Formatting:** Managed cleanly via `conform.nvim` leveraging your system's global binaries.
-* **Context completion:** Lightweight, low-overhead LSP autocompletion with `mini.completion`.
+* **Fluid File Explorer:** Rapid navigation using `mini.files`. Press `a` to create new files/folders.
+* **Fuzzy Finding:** Instant search for files, grep patterns, and buffers powered by `mini.pick`.
+* **Git Operations:** Version control tracking directly from the buffer with `mini.git` and `mini.diff`.
+* **Scratch Terminal:** Instant floating shell access (`<leader>tt`) and bottom terminal (`<leader>tb`).
+* **Asynchronous Formatting:** Managed via `conform.nvim` leveraging system-wide binaries.
+* **Smart Diagnostics:** Clean diagnostic hover popups triggered gracefully on cursor-hold events.
 
 ### Advanced Capabilities
 
-* **Advanced Debugging:** Pre-configured `nvim-dap` architecture complete with UI overlays and specialized Go debugging workflows.
-* **Local AI Context:** Deep integration with local LLMs via [Ollama](https://ollama.com/) using `gp.nvim`. Includes an auto-start script if the local daemon is idle.
+* **Interactive Debugging:** Pre-configured `nvim-dap` with UI overlays and specialized Go workflows.
+* **Local AI Context:** Deep integration with Ollama via `gp.nvim`.
 * **GitHub Copilot:** Native integration with `copilot.lua` for contextual inline suggestions.
-* **Smart Diagnostics:** Clean diagnostic hover popups triggered gracefully on cursor-hold events.
-
-## Tech Stack
-
-| Component | Technology |
-| --- | --- |
-| **Package Manager** | Native Neovim package architecture (`vim.pack`) |
-| **Core Ecosystem** | `mini.nvim` suite *(files, pick, completion, git, diff, extra)* |
-| **LSP Layer** | Native Neovim `vim.lsp` engine + `lspconfig` |
-| **Code Formatting** | `conform.nvim` *(bound directly to system binaries)* |
-| **Debugging (DAP)** | `nvim-dap` + `nvim-dap-ui` |
-| **Syntax & Highlighting** | Native `vim.treesitter` API + custom manual parser compilation |
-| **AI Integration** | `gp.nvim` *(Ollama)* + `copilot.lua` |
-| **Color Scheme** | `tokyonight` |
+* **Inlay Hints:** Native LSP inlay hints support, toggleable via `<leader>uh`.
 
 ## Keybindings
 
@@ -127,15 +121,15 @@ You can also manage your environment using native Neovim commands:
 | --- | --- |
 | `<leader>ds` | Open startup dashboard |
 | `<leader>w` | Write current buffer |
-| `<leader>qq` | Close active window |
-| `<leader>h` | Clear active search highlights |
+| `<leader>qq` | Quit active window |
+| `<leader>h` | Clear search highlights |
 | `<leader>bd` | Close current buffer |
-| `<leader>bn` / `bp` | Navigate to Next / Previous buffer |
-| `<C-h/j/k/l>` | Navigate across window splits |
-| `<C-d/u>` | Page down / Page up with automatic cursor centering |
+| `<leader>bn` / `bp` | Next / Previous buffer |
+| `<C-h/j/k/l>` | Navigate window splits |
+| `<C-d/u>` | Scroll down / up and center |
 | `<leader>z` | Toggle code fold |
 | `<leader>tt` | Toggle floating scratch terminal |
-| `<leader>tb` | Toggle bottom layout terminal |
+| `<leader>tb` | Toggle bottom terminal |
 
 ### Splits & Layouts
 
@@ -143,9 +137,9 @@ You can also manage your environment using native Neovim commands:
 | --- | --- |
 | `<leader>sv` | Split window vertically |
 | `<leader>sh` | Split window horizontally |
-| `<leader>se` | Equalize size of all active splits |
-| `<leader>rj/rk` | Resize window height (Down / Up) |
+| `<leader>se` | Equalize all active splits |
 | `<leader>rh/rl` | Resize window width (Left / Right) |
+| `<leader>rj/rk` | Resize window height (Down / Up) |
 
 ### Files & Searching
 
@@ -154,89 +148,75 @@ You can also manage your environment using native Neovim commands:
 | `<leader>e` | Toggle file explorer (`mini.files`) |
 | `<leader>ff` | Search files by name (`mini.pick`) |
 | `<leader>fg` | Live project grep search |
-| `<leader>fb` | List active open buffers |
+| `<leader>fb` | List active buffers |
 | `<leader>fh` | Query documentation help tags |
+| `<leader>fd` | Search buffer diagnostics |
 | `<leader>cp` | Copy relative path to clipboard |
 | `<leader>cP` | Copy absolute path to clipboard |
-| `<leader>cn` | Copy active filename to clipboard |
+| `<leader>cn` | Copy filename to clipboard |
 | `<leader>cd` | Copy parent directory path to clipboard |
 
-### LSP & Code Diagnostics
+### LSP & Code Intelligence
 
 | Key | Action |
 | --- | --- |
 | `gd` | Go to definition |
 | `gD` | Go to declaration |
-| `K` | Trigger hover documentation card |
-| `<leader>rn` | Rename active symbol across project |
-| `<leader>ca` | Open contextual code actions |
-| `<leader>fm` | Format active buffer manually |
+| `K` | Trigger hover documentation |
+| `<leader>rn` | Rename active symbol |
+| `<leader>ca` | Open code actions |
+| `<leader>fm` | Format buffer manually |
 | `<leader>uh` | Toggle global inlay hints |
-| `gl` | Show line-specific diagnostics |
-| `<leader>fd` | Search buffer diagnostics via picker |
+| `gl` | Show line diagnostics float |
+| `<leader>lr` | Locate references (Picker) |
+| `<leader>ld` | Locate definition (Picker) |
+| `<leader>ly` | Locate type definition (Picker) |
+| `<leader>li` | Locate interface implementation (Picker) |
 | `<leader>cs` | Document symbols outline |
-| `<leader>cS` | Query workspace wide symbols |
-| `<leader>lr` | Locate references via picker |
-| `<leader>ld` | Locate definition via picker |
-| `<leader>ly` | Locate type definition via picker |
-| `<leader>li` | Locate interface implementation via picker |
+| `<leader>cS` | Workspace symbols search |
 
-### Git Architecture
+### Git & AI
 
 | Key | Action |
 | --- | --- |
-| `<leader>gs` | Open interactive Git status window |
-| `<leader>gb` | Trigger inline Git blame overlay at cursor |
+| `<leader>gs` | Open interactive Git status |
+| `<leader>gb` | Trigger inline Git blame |
 | `<leader>gd` | Toggle side-by-side diff overlay |
-| `<leader>gc` | Browse commits history via picker |
-| `<leader>gh` | Browse changed Git hunks via picker |
+| `<leader>gc` | Browse commits history |
+| `<leader>gh` | Browse changed Git hunks |
+| `<leader>aa` | Open AI chat window (Ollama) |
+| `<leader>aq` | Toggle AI chat visibility |
+| `<leader>at` | Toggle GitHub Copilot engine |
+| `<leader>a3` | Hot-swap to Ollama 3B model |
+| `<leader>a7` | Hot-swap to Ollama 7B model |
 
-### Interactive Debugging (DAP)
-
-| Key | Action |
-| --- | --- |
-| `<leader>db` | Toggle breakpoint on current line |
-| `<leader>dc` | Continue debugging execution |
-| `<leader>di` / `do` | Step Into / Step Over execution blocks |
-| `<leader>du` | Step Out of current function scope |
-| `<leader>dr` | Open interactive DAP REPL console |
-| `<leader>dt` | Target debug execution test (Go language specialized) |
-
-### AI Engineering
+### Debugging (DAP)
 
 | Key | Action |
 | --- | --- |
-| `<leader>aa` | Open a new dedicated AI chat window (Ollama backend) |
-| `<leader>aq` | Toggle active AI chat window visibility |
-| `<leader>at` | Toggle GitHub Copilot engine state |
-| `<leader>a3` | Hot-swap active LLM agent context to Ollama 3B model |
-| `<leader>a7` | Hot-swap active LLM agent context to Ollama 7B model |
-
-To audit or debug all active runtime mappings for structural conflicts, you can dump your current keymap assignments into a text file using:
-
-```vim
-:redir! > keymaps.txt | silent map | redir END
-
-```
+| `<leader>db` | Toggle breakpoint |
+| `<leader>dc` | Continue execution |
+| `<leader>di` | Step Into |
+| `<leader>do` | Step Over |
+| `<leader>du` | Step Out |
+| `<leader>dr` | Open DAP REPL console |
+| `<leader>dt` | Debug test (Go specialized) |
 
 ## Customization
 
 ### Local Machine Overrides
 
-You can declare environment-specific variables or overrides using `lua/machine/local.lua`. This isolated module is ignored by version control to prevent dotfile pollution across different development rigs.
-
-Example structure for `lua/machine/local.lua`:
+Environment-specific variables can be declared in `lua/machine/local.lua` (ignored by git).
 
 ```lua
 return {
     python_path = "/usr/bin/python3",
 }
-
 ```
 
-### Extending Language Servers
+### Extending LSP & Formatters
 
-Incorporate new language servers by tracking them cleanly within `lua/infra/spec.lua`. Ensure the respective binary exists in your host shell `$PATH`.
+Add new language servers or formatters in `lua/infra/spec.lua`. Ensure the binary is in your `$PATH`.
 
 ```lua
 M.lsp_servers = {
@@ -247,21 +227,11 @@ M.lsp_servers = {
     },
 }
 
-```
-
-### Extending Formatters
-
-Map additional engines inside `lua/infra/spec.lua`. They will be instantly ingested and managed downstream by `conform.nvim`.
-
-```lua
 M.formatters_by_ft = {
     lua = { "stylua" },
 }
-
 ```
 
 ## License
 
 MIT © [andev0x](https://github.com/andev0x)
-
-

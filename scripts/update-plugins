@@ -2,8 +2,10 @@
 
 set -euo pipefail
 
-echo "Updating Neovim plugins..."
-nvim --headless -c "lua require('infra.deps').setup()" -c "PackUpdate" -c "qa"
+echo "󰚰 Invoking nvimz orchestration layer..."
+echo
 
-echo "Updating Treesitter parsers..."
-./scripts/parsers
+nvim --headless -c "lua require('infra.deps').pack_update()" -c "qa"
+
+echo
+echo "󰄬 Done."
