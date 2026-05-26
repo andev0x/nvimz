@@ -1,5 +1,5 @@
 # nvimz Maintenance Report
-Date: Tue May 26 10:26:28 +07 2026
+Date: Tue May 26 10:33:21 +07 2026
 
 ## 1. Lockfile Validation
 ✅ Lockfile (`nvim-pack-lock.json`) is valid JSON.
@@ -28,7 +28,7 @@ Date: Tue May 26 10:26:28 +07 2026
  golangci-lint          OK         golangci-lint has version 2.12.2 built with go1.26.2 from c0d3ddc on 2026-05-06T11:01:25Z```
 
 ## 3. Startup Benchmark
-Total startup time: **011.536ms** (Target: <20ms)
+Total startup time: **010.147ms** (Target: <20ms)
 
 ## 4. Parser Validation
 ```
