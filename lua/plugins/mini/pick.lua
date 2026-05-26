@@ -1,11 +1,15 @@
 local M = {}
 
+local MiniPick = require("mini.pick")
+local MiniExtra = require("mini.extra")
+
 function M.setup()
-	require("mini.pick").setup({
+	MiniPick.setup({
 		window = {
 			config = function()
 				local height = math.floor(0.618 * vim.o.lines)
 				local width = math.floor(0.618 * vim.o.columns)
+
 				return {
 					anchor = "NW",
 					height = height,
@@ -15,6 +19,7 @@ function M.setup()
 				}
 			end,
 		},
+
 		options = {
 			content_from_bottom = true,
 		},
@@ -24,28 +29,36 @@ function M.setup()
 	local function grep_gitignored_hidden()
 		local rg_config_path = vim.fs.joinpath(vim.fn.stdpath("config"), "rg-hidden.conf")
 		local previous_rg_config = vim.env.RIPGREP_CONFIG_PATH
+
 		vim.env.RIPGREP_CONFIG_PATH = rg_config_path
+
 		vim.api.nvim_create_autocmd("User", {
 			pattern = "MiniPickStop",
 			once = true,
+
 			callback = function()
 				vim.env.RIPGREP_CONFIG_PATH = previous_rg_config
 			end,
 		})
+
 		MiniPick.builtin.grep_live({ tool = "rg" }, { source = { name = "Grep hidden (gitignored)" } })
 	end
 
 	local function files_hidden()
 		local rg_config_path = vim.fs.joinpath(vim.fn.stdpath("config"), "rg-hidden-files.conf")
 		local previous_rg_config = vim.env.RIPGREP_CONFIG_PATH
+
 		vim.env.RIPGREP_CONFIG_PATH = rg_config_path
+
 		vim.api.nvim_create_autocmd("User", {
 			pattern = "MiniPickStop",
 			once = true,
+
 			callback = function()
 				vim.env.RIPGREP_CONFIG_PATH = previous_rg_config
 			end,
 		})
+
 		MiniPick.builtin.files({ tool = "rg" }, { source = { name = "Files (hidden)" } })
 	end
 
@@ -57,32 +70,27 @@ function M.setup()
 	vim.keymap.set("n", "<leader>fh", "<cmd>Pick help<cr>", { desc = "Help tags" })
 	vim.keymap.set("n", "<leader>fd", "<cmd>Pick diagnostic<cr>", { desc = "Find diagnostics" })
 
-	require("mini.extra").setup()
-	vim.keymap.set("n", "<leader>gc", "<cmd>lua MiniExtra.pickers.git_commits()<cr>", { desc = "Git commits" })
-	vim.keymap.set("n", "<leader>gh", "<cmd>lua MiniExtra.pickers.git_hunks()<cr>", { desc = "Git hunks" })
+	MiniExtra.setup()
+
+	vim.keymap.set("n", "<leader>gc", function()
+		MiniExtra.pickers.git_commits()
+	end, { desc = "Git commits" })
+
+	vim.keymap.set("n", "<leader>gh", function()
+		MiniExtra.pickers.git_hunks()
+	end, { desc = "Git hunks" })
 
 	-- LSP Pickers
-	vim.keymap.set("n", "<leader>lr", "<cmd>Pick lsp scope='references'<cr>", { desc = "LSP References (Picker)" })
-	vim.keymap.set("n", "<leader>ld", "<cmd>Pick lsp scope='definition'<cr>", { desc = "LSP Definition (Picker)" })
-	vim.keymap.set(
-		"n",
-		"<leader>ly",
-		"<cmd>Pick lsp scope='type_definition'<cr>",
-		{ desc = "LSP Type Definition (Picker)" }
-	)
-	vim.keymap.set(
-		"n",
-		"<leader>li",
-		"<cmd>Pick lsp scope='implementation'<cr>",
-		{ desc = "LSP Implementation (Picker)" }
-	)
-	vim.keymap.set(
-		"n",
-		"<leader>cs",
-		"<cmd>Pick lsp scope='document_symbol'<cr>",
-		{ desc = "LSP Document Symbols (Outline)" }
-	)
-	vim.keymap.set("n", "<leader>cS", "<cmd>Pick lsp scope='workspace_symbol'<cr>", { desc = "LSP Workspace Symbols" })
+	vim.keymap.set("n", "<leader>lr", "<cmd>Pick lsp scope='references'<cr>", { desc = "LSP References" })
+	vim.keymap.set("n", "<leader>ld", "<cmd>Pick lsp scope='definition'<cr>", { desc = "LSP Definition" })
+
+	vim.keymap.set("n", "<leader>ly", "<cmd>Pick lsp scope='type_definition'<cr>", { desc = "LSP Type Definition" })
+
+	vim.keymap.set("n", "<leader>li", "<cmd>Pick lsp scope='implementation'<cr>", { desc = "LSP Implementation" })
+
+	vim.keymap.set("n", "<leader>cs", "<cmd>Pick lsp scope='document_symbol'<cr>", { desc = "Document Symbols" })
+
+	vim.keymap.set("n", "<leader>cS", "<cmd>Pick lsp scope='workspace_symbol'<cr>", { desc = "Workspace Symbols" })
 end
 
 return M
