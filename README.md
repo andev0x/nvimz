@@ -81,10 +81,20 @@ For Arch Linux or Ubuntu users, dedicated installation scripts are available:
 
 **Native Commands:**
 
-* `:ToolDoctor` – Show environment tooling health (LSP, formatters, etc.).
-* `:PackUpdate` – Invoke the full orchestration workflow: check, update, relock, and validate.
-* `:PackClean` – Remove unused plugins from local disk.
-* `:ParsersUpdate` – Update and compile Tree-sitter parsers directly.
+| Command | Description |
+| --- | --- |
+| `:PackSync` | Fetch and check plugin updates without applying them. |
+| `:PackUpdate` | Apply updates, relock, validate, and regenerate reports. |
+| `:PackValidate` | Comprehensive runtime integrity and config health check. |
+| `:PackDoctor` | Run system-wide health diagnostics. |
+| `:PackBenchmark`| Measure startup and module performance history. |
+| `:PackRollback` | Restore plugins from `nvim-pack-lock.json` state. |
+| `:PackStatus` | Quick overview of package and environment health. |
+| `:PackClean` | Remove unused plugins and stale cache files. |
+| `:PackSnapshot` | Generate a system and state snapshot in `snapshots/`. |
+| `:PackReport` | Manually regenerate the `MAINTENANCE_REPORT.md`. |
+| `:ParsersUpdate`| Update and compile Tree-sitter parsers directly. |
+| `:ToolDoctor` | Show environment tooling health (LSP, formatters, etc.). |
 
 ## Features
 
@@ -130,6 +140,7 @@ For Arch Linux or Ubuntu users, dedicated installation scripts are available:
 | `<leader>z` | Toggle code fold |
 | `<leader>tt` | Toggle floating scratch terminal |
 | `<leader>tb` | Toggle bottom terminal |
+| `<Esc><Esc>` | Exit terminal mode (Terminal only) |
 
 ### Splits & Layouts
 
@@ -138,15 +149,16 @@ For Arch Linux or Ubuntu users, dedicated installation scripts are available:
 | `<leader>sv` | Split window vertically |
 | `<leader>sh` | Split window horizontally |
 | `<leader>se` | Equalize all active splits |
-| `<leader>rh/rl` | Resize window width (Left / Right) |
-| `<leader>rj/rk` | Resize window height (Down / Up) |
+| `<leader>rh` / `rl` | Resize window width (Left / Right) |
+| `<leader>rj` / `rk` | Resize window height (Down / Up) |
 
-### Files & Searching
+### Files & Searching (`mini.pick` & `mini.files`)
 
 | Key | Action |
 | --- | --- |
 | `<leader>e` | Toggle file explorer (`mini.files`) |
-| `<leader>ff` | Search files by name (`mini.pick`) |
+| `a` | Create new file/folder (inside `mini.files`) |
+| `<leader>ff` | Search files by name |
 | `<leader>fg` | Live project grep search |
 | `<leader>fb` | List active buffers |
 | `<leader>fh` | Query documentation help tags |
@@ -182,13 +194,15 @@ For Arch Linux or Ubuntu users, dedicated installation scripts are available:
 | `<leader>gs` | Open interactive Git status |
 | `<leader>gb` | Trigger inline Git blame |
 | `<leader>gd` | Toggle side-by-side diff overlay |
-| `<leader>gc` | Browse commits history |
-| `<leader>gh` | Browse changed Git hunks |
+| `<leader>gc` | Browse commits history (Picker) |
+| `<leader>gh` | Browse changed Git hunks (Picker) |
 | `<leader>aa` | Open AI chat window (Ollama) |
 | `<leader>aq` | Toggle AI chat visibility |
 | `<leader>at` | Toggle GitHub Copilot engine |
 | `<leader>a3` | Hot-swap to Ollama 3B model |
-| `<leader>a7` | Hot-swap to Ollama 7B model |
+| `<leader>a7" | Hot-swap to Ollama 7B model |
+| `<M-S-right>`| Accept Copilot suggestion |
+| `<M-]>` / `<M-[>` | Next / Previous Copilot suggestion |
 
 ### Debugging (DAP)
 

@@ -1,33 +1,40 @@
-# Skip swap files, backup files, and undo history
+# Editor artifacts
 *.swp
 *.swo
 *~
 *.un~
 
-# Skip Neovim's automatic state databases (saves cursor position, history, etc.)
-# Usually stored in ~/.local/share/nvim/shada/ but sometimes leaks into config
+# Neovim state
 *.shada
 *.shada.tmp
 
-# Skip temporary log files generated during development or startup profiling
+# Logs
 *.log
-startup.log
 
-# DO NOT commit the actual downloaded plugin source codes
-# Under Neovim's package path (if you happen to bootstrap inside the config dir)
-pack/
-share/
-state/
+# Runtime state
+.state/cache/
+.state/logs/
+.state/tmp/
+.state/snapshots/
 
-# Skip local LSP server caches and workspace databases
-.lsp/
-.elixir_ls/
-.pyenv/
+# Local plugin installs
+.local/share/nvim/site/pack/
+
+# Environment
 .env
+.env*.local
 .venv/
 node_modules/
 
-# Skip local credential or secret files if you write custom scripts
-.env*.local
-.commit_suggest_history.json
+# LSP / tooling
+.lsp/
+.elixir_ls/
+.pyenv/
 
+# Build/cache
+.cache/
+tmp/
+dist/
+
+# Misc
+.commit_suggest_history.json
