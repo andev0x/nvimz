@@ -22,8 +22,8 @@ LANGS=(
   "vim:neovim/tree-sitter-vim:src"
   "vimdoc:neovim/tree-sitter-vimdoc:src"
   "gitcommit:gbprod/tree-sitter-gitcommit:src"
-  "git_rebase:gbprod/tree-sitter-git_rebase:src"
-  "diff:tree-sitter/tree-sitter-diff:src"
+  "git_rebase:the-mikedavis/tree-sitter-git-rebase:src"
+  "diff:the-mikedavis/tree-sitter-diff:src"
   "markdown:tree-sitter-grammars/tree-sitter-markdown:tree-sitter-markdown/src"
 )
 

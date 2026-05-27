@@ -2,7 +2,7 @@
 
 > A blazing-fast, minimalist Neovim configuration for DevOps engineers and backend developers.
 
-**nvimz** is a high-performance Neovim setup optimized for **Neovim 0.12+** that prioritizes speed, structural simplicity, and developer experience. With a strict startup target under **15ms**, it replaces heavy plugin ecosystems with native APIs, the lightweight `mini.nvim` suite, and the built-in `vim.pack` package manager.
+**nvimz** is a high-performance Neovim setup optimized for **Neovim 0.12+** that prioritizes speed, structural simplicity, and developer experience. With a strict startup target under **20ms**, it replaces heavy plugin ecosystems with native APIs, the lightweight `mini.nvim` suite, and the built-in `vim.pack` package manager.
 
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Neovim](https://img.shields.io/badge/Neovim-%3E=0.12.0-blueviolet?logo=neovim)
@@ -33,7 +33,10 @@ Unlike heavy configurations that rely on Mason for runtime isolation, **nvimz** 
 
 - **Neovim 0.12.0+**
 - **System tools:** `git`, `rg` (ripgrep), `fd`
-- **Optional External Binaries:** [Ollama](https://ollama.com/) (for local AI), `stylua`, `black`, `shfmt`, `gofmt` (for formatting).
+- **Optional language tooling (install what you use):**
+  - **LSP servers:** `gopls`, `lua-language-server`, `pyright`, `typescript-language-server`, `rust-analyzer`, `terraform-ls`, `yaml-language-server`
+  - **Formatters:** `stylua`, `black`, `shfmt`, `gofmt`, `terraform` (for `terraform fmt`)
+  - **AI:** [Ollama](https://ollama.com/) (local models), GitHub Copilot (requires login)
 
 ### 2. Installation
 
@@ -58,6 +61,12 @@ For Arch Linux or Ubuntu users, dedicated installation scripts are available:
 ./scripts/ubuntu-install
 ```
 
+To auto-detect your package manager and install common tooling:
+
+```bash
+./scripts/bootstrap
+```
+
 ### 3. Verification & Maintenance
 
 **nvimz** features a centralized orchestration layer in `lua/infra/deps.lua` that manages the entire package lifecycle. It uses a deterministic update strategy:
@@ -70,6 +79,12 @@ For Arch Linux or Ubuntu users, dedicated installation scripts are available:
 # Run the full validation pipeline
 # Updates plugins -> Regenerates lockfile -> Validates environment -> Benchmarks
 ./scripts/validate
+
+# Check system tooling health (CLI)
+./scripts/doctor
+
+# Install/verify Tree-sitter parsers and queries
+./scripts/parsers
 ```
 
 **Key Orchestration Features:**
@@ -100,7 +115,7 @@ For Arch Linux or Ubuntu users, dedicated installation scripts are available:
 
 ### Performance & Minimalism
 
-* **Sub-15ms Startup Time:** Achieved via bytecode caching and a 3-phase event-driven lazy loading system.
+* **<20ms Startup Target:** Achieved via bytecode caching and a 3-phase event-driven lazy loading system.
 * **Persistent State Caching:** Centralized caching in `lua/infra/cache.lua` persists startup metrics and plugin states.
 * **Lifecycle Orchestration:** `lua/infra/deps.lua` acts as the primary package lifecycle manager, handling everything from on-disk git state validation to automated maintenance reporting.
 * **Bare-Metal Tree-sitter:** Direct interaction with Neovim 0.12's native syntax highlighting and folding.
@@ -122,6 +137,18 @@ For Arch Linux or Ubuntu users, dedicated installation scripts are available:
 * **Local AI Context:** Deep integration with Ollama via `gp.nvim`.
 * **GitHub Copilot:** Native integration with `copilot.lua` for contextual inline suggestions.
 * **Inlay Hints:** Native LSP inlay hints support, toggleable via `<leader>uh`.
+
+### Preconfigured Language Support
+
+The default spec in `lua/infra/spec.lua` includes LSP and formatter wiring for:
+
+* **Go** (`gopls`, `gofmt`)
+* **Lua** (`lua-language-server`, `stylua`)
+* **Python** (`pyright`, `black`)
+* **JavaScript/TypeScript** (`typescript-language-server`)
+* **Rust** (`rust-analyzer`)
+* **Terraform/HCL** (`terraform-ls`, `terraform fmt`)
+* **YAML** (`yaml-language-server`)
 
 ## Keybindings
 
@@ -159,7 +186,9 @@ For Arch Linux or Ubuntu users, dedicated installation scripts are available:
 | `<leader>e` | Toggle file explorer (`mini.files`) |
 | `a` | Create new file/folder (inside `mini.files`) |
 | `<leader>ff` | Search files by name |
+| `<leader>fe` | Search files including hidden |
 | `<leader>fg` | Live project grep search |
+| `<leader>fr` | Live grep including gitignored |
 | `<leader>fb` | List active buffers |
 | `<leader>fh` | Query documentation help tags |
 | `<leader>fd` | Search buffer diagnostics |
@@ -200,7 +229,7 @@ For Arch Linux or Ubuntu users, dedicated installation scripts are available:
 | `<leader>aq` | Toggle AI chat visibility |
 | `<leader>at` | Toggle GitHub Copilot engine |
 | `<leader>a3` | Hot-swap to Ollama 3B model |
-| `<leader>a7" | Hot-swap to Ollama 7B model |
+| `<leader>a7` | Hot-swap to Ollama 7B model |
 | `<M-S-right>`| Accept Copilot suggestion |
 | `<M-]>` / `<M-[>` | Next / Previous Copilot suggestion |
 
@@ -221,6 +250,11 @@ For Arch Linux or Ubuntu users, dedicated installation scripts are available:
 ### Local Machine Overrides
 
 Environment-specific variables can be declared in `lua/machine/local.lua` (ignored by git).
+Create it quickly with:
+
+```bash
+./scripts/setup-machine
+```
 
 ```lua
 return {
