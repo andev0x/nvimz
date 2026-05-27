@@ -4,6 +4,7 @@ set -euo pipefail
 
 # Configuration
 PARSER_DIR="${HOME}/.local/share/nvim/site/parser"
+QUERY_ROOT="${HOME}/.config/nvim/queries"
 TMP_DIR="/tmp/nvimz-parsers"
 CC="${CC:-cc}"
 
@@ -21,15 +22,14 @@ LANGS=(
   "vim:neovim/tree-sitter-vim:src"
   "vimdoc:neovim/tree-sitter-vimdoc:src"
   "gitcommit:gbprod/tree-sitter-gitcommit:src"
+  "git_rebase:gbprod/tree-sitter-git_rebase:src"
+  "diff:tree-sitter/tree-sitter-diff:src"
   "markdown:tree-sitter-grammars/tree-sitter-markdown:tree-sitter-markdown/src"
 )
 
-PYTHON_QUERY_DIR="${HOME}/.config/nvim/queries/python"
-PYTHON_HIGHLIGHTS_URL="https://raw.githubusercontent.com/neovim/neovim/master/runtime/queries/python/highlights.scm"
-PYTHON_HIGHLIGHTS_FILE="${PYTHON_QUERY_DIR}/highlights.scm"
-
 mkdir -p "$PARSER_DIR"
 mkdir -p "$TMP_DIR"
+mkdir -p "$QUERY_ROOT"
 
 CHECK_ONLY=0
 if [[ "${1:-}" == "--check" ]]; then
@@ -44,57 +44,77 @@ for entry in "${LANGS[@]}"; do
   IFS=":" read -r lang repo subpath <<< "$entry"
   
   TARGET="$PARSER_DIR/$lang.so"
+  QUERY_DIR="$QUERY_ROOT/$lang"
   
+  PARSER_EXISTS=0
   if [ -f "$TARGET" ]; then
+    PARSER_EXISTS=1
+  fi
+
+  QUERY_EXISTS=0
+  if [ -f "$QUERY_DIR/highlights.scm" ]; then
+    QUERY_EXISTS=1
+  fi
+
+  if [[ $CHECK_ONLY -eq 1 ]]; then
+    STATUS=""
+    if [[ $PARSER_EXISTS -eq 1 && $QUERY_EXISTS -eq 1 ]]; then
+      STATUS="✅"
+    elif [[ $PARSER_EXISTS -eq 1 ]]; then
+      STATUS="⚠️ (Missing Queries)"
+    else
+      STATUS="❌"
+    fi
+    echo "$STATUS $lang"
+    continue
+  fi
+
+  if [[ $PARSER_EXISTS -eq 1 && $QUERY_EXISTS -eq 1 ]]; then
     echo "✅ $lang: Already installed"
     continue
   fi
 
-  if [[ $CHECK_ONLY -eq 1 ]]; then
-    echo "❌ $lang: MISSING"
-    continue
+  if [[ $PARSER_EXISTS -eq 0 ]]; then
+    echo "⏳ $lang: Installing parser..."
+    REPO_DIR="$TMP_DIR/$lang"
+    rm -rf "$REPO_DIR"
+    git clone --depth 1 "https://github.com/$repo" "$REPO_DIR"
+    
+    cd "$REPO_DIR/$subpath"
+    COMPILER="$CC"
+    FILES="parser.c"
+    if [ -f "scanner.cc" ]; then
+      COMPILER="c++"
+      FILES="$FILES scanner.cc"
+    elif [ -f "scanner.c" ]; then
+      FILES="$FILES scanner.c"
+    fi
+    $COMPILER -O3 -fPIC -shared $FILES -I. -o "$lang.so"
+    mv "$lang.so" "$TARGET"
+    echo "  🔨 Parser installed to $TARGET"
   fi
 
-  echo "⏳ $lang: Installing..."
-  
-  REPO_DIR="$TMP_DIR/$lang"
-  rm -rf "$REPO_DIR"
-  
-  # Clone grammar
-  git clone --depth 1 "https://github.com/$repo" "$REPO_DIR"
-  
-  cd "$REPO_DIR/$subpath"
-  
-  # Determine compiler and files
-  COMPILER="$CC"
-  FILES="parser.c"
-  
-  if [ -f "scanner.cc" ]; then
-    COMPILER="c++"
-    FILES="$FILES scanner.cc"
-  elif [ -f "scanner.c" ]; then
-    FILES="$FILES scanner.c"
+  if [[ $QUERY_EXISTS -eq 0 ]]; then
+    echo "⏳ $lang: Downloading queries..."
+    mkdir -p "$QUERY_DIR"
+    
+    # Try nvim-treesitter as primary source for queries
+    QUERY_URL="https://raw.githubusercontent.com/nvim-treesitter/nvim-treesitter/master/queries/$lang/highlights.scm"
+    
+    # Special overrides
+    if [[ "$lang" == "python" ]]; then
+      QUERY_URL="https://raw.githubusercontent.com/neovim/neovim/master/runtime/queries/python/highlights.scm"
+    fi
+
+    if curl -fsSL -o "$QUERY_DIR/highlights.scm" "$QUERY_URL"; then
+      echo "  ✨ Highlights installed"
+      # Also try to get injections if they exist
+      curl -fsSL -o "$QUERY_DIR/injections.scm" "https://raw.githubusercontent.com/nvim-treesitter/nvim-treesitter/master/queries/$lang/injections.scm" 2>/dev/null || true
+    else
+      echo "  ⚠️  Could not download highlights for $lang"
+    fi
   fi
-
-  echo "  🔨 Compiling with $COMPILER..."
-  $COMPILER -O3 -fPIC -shared $FILES -I. -o "$lang.so"
-
-  mv "$lang.so" "$TARGET"
-  echo "✨ $lang: Successfully installed to $TARGET"
 done
-
-if [[ $CHECK_ONLY -eq 1 ]]; then
-  if [ -f "$PYTHON_HIGHLIGHTS_FILE" ]; then
-    echo "✅ python highlights: Already installed"
-  else
-    echo "❌ python highlights: MISSING"
-  fi
-else
-  echo "⏳ python highlights: Installing..."
-  mkdir -p "$PYTHON_QUERY_DIR"
-  curl -fsSL -o "$PYTHON_HIGHLIGHTS_FILE" "$PYTHON_HIGHLIGHTS_URL"
-  echo "✨ python highlights: Installed to $PYTHON_HIGHLIGHTS_FILE"
-fi
 
 echo "--------------------------------------------------"
 echo "Done! Restart Neovim to apply changes."

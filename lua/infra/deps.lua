@@ -352,7 +352,7 @@ function M.pack_validate()
 	-- 3. Check Invalid Treesitter Parsers
 	table.insert(lines, "## 3. Treesitter Parsers")
 	local parsers =
-		{ "c", "cpp", "go", "rust", "python", "typescript", "tsx", "lua", "vim", "vimdoc", "gitcommit", "markdown" }
+		{ "c", "cpp", "go", "rust", "python", "typescript", "tsx", "lua", "vim", "vimdoc", "gitcommit", "git_rebase", "diff", "markdown" }
 	local invalid_parsers = {}
 	for _, lang in ipairs(parsers) do
 		local ok, err = pcall(vim.treesitter.language.inspect, lang)
@@ -478,7 +478,7 @@ function M.pack_doctor()
 	-- 3. Parser Health
 	table.insert(lines, "## 3. Treesitter Parser Health")
 	local parsers =
-		{ "c", "cpp", "go", "rust", "python", "typescript", "tsx", "lua", "vim", "vimdoc", "gitcommit", "markdown" }
+		{ "c", "cpp", "go", "rust", "python", "typescript", "tsx", "lua", "vim", "vimdoc", "gitcommit", "git_rebase", "diff", "markdown" }
 	for _, lang in ipairs(parsers) do
 		local ok, err = pcall(vim.treesitter.language.inspect, lang)
 		local status = ok and "✅ Installed" or "❌ Missing/Invalid"
@@ -942,7 +942,7 @@ function M.pack_report()
 	table.insert(lines, " nvimz: Treesitter Parser Manager")
 	table.insert(lines, "--------------------------------------------------")
 	local parsers =
-		{ "c", "cpp", "go", "rust", "python", "typescript", "tsx", "lua", "vim", "vimdoc", "gitcommit", "markdown" }
+		{ "c", "cpp", "go", "rust", "python", "typescript", "tsx", "lua", "vim", "vimdoc", "gitcommit", "git_rebase", "diff", "markdown" }
 	for _, lang in ipairs(parsers) do
 		local ok = pcall(vim.treesitter.language.inspect, lang)
 		if ok then
