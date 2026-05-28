@@ -128,11 +128,16 @@ function M.setup()
 			add({
 				{ source = "neovim/nvim-lspconfig" },
 				{ source = "stevearc/conform.nvim" },
+				{ source = "mfussenegger/nvim-dap" },
+				{ source = "nvim-neotest/nvim-nio" },
+				{ source = "rcarriga/nvim-dap-ui" },
+				{ source = "leoluz/nvim-dap-go" },
 			})
 
 			pcall(function()
 				-- require("infra.lsp").setup() -- Handled lazily by FileType autocmd
 				require("plugins.format").setup()
+				require("plugins.dap").setup()
 			end)
 
 			state.phases[2] = true
@@ -146,16 +151,11 @@ function M.setup()
 		once = true,
 		callback = function()
 			add({
-				{ source = "mfussenegger/nvim-dap" },
-				{ source = "nvim-neotest/nvim-nio" },
-				{ source = "rcarriga/nvim-dap-ui" },
-				{ source = "leoluz/nvim-dap-go" },
 				{ source = "Robitx/gp.nvim" },
 				{ source = "zbirenbaum/copilot.lua" },
 			})
 
 			pcall(function()
-				require("plugins.dap").setup()
 				require("plugins.ai").setup()
 			end)
 
