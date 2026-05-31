@@ -1,6 +1,59 @@
 local M = {}
 
-local ui = require("infra.ui")
+local registry = require("infra.registry")
+local tools = registry.tools
+local parsers = registry.parsers
+
+local check = require("infra.health.check")
+local render = require("infra.health.render")
+local ui = require("infra.view")
+
+local function iterate(category)
+	for _, tool in ipairs(category) do
+		render.tool(check.inspect(tool))
+	end
+end
+
+function M.check()
+	local missing = {}
+
+	for _, tool in ipairs(tools.core) do
+		if tool.required and not check.executable(tool.bin) then
+			table.insert(missing, tool.bin)
+		end
+	end
+
+	if #missing == 0 then
+		return
+	end
+
+	error(table.concat({
+		"Missing critical dependencies:",
+		"  - " .. table.concat(missing, "\n  - "),
+	}, "\n"))
+end
+
+function M.run_doctor()
+	render.section("Core")
+	iterate(tools.core)
+
+	render.section("LSP")
+	iterate(tools.lsp)
+
+	render.section("Formatters")
+	iterate(tools.formatters)
+
+	render.section("Linters")
+	iterate(tools.linters)
+end
+
+function M.register_command()
+	vim.api.nvim_create_user_command("ToolDoctor", function()
+		M.run_doctor()
+	end, {
+		desc = "Show environment tooling health",
+	})
+end
 
 function M.run()
 	local lines = {
@@ -40,16 +93,16 @@ function M.run()
 
 	-- 3. Check Invalid Treesitter Parsers
 	table.insert(lines, "## 3. Treesitter Parsers")
-	local parsers =
-		{ "c", "cpp", "go", "rust", "python", "typescript", "tsx", "lua", "vim", "vimdoc", "gitcommit", "git_rebase", "diff", "markdown" }
 	local invalid_parsers = {}
-	for _, lang in ipairs(parsers) do
+	for _, lang in ipairs(parsers.required) do
 		local ok, err = pcall(vim.treesitter.language.inspect, lang)
 		if not ok then table.insert(invalid_parsers, { lang = lang, err = err }) end
 	end
 	if #invalid_parsers > 0 then
 		table.insert(lines, "❌ **The following Tree-sitter parsers are missing or invalid:**")
-		for _, ip in ipairs(invalid_parsers) do table.insert(lines, string.format("- **%s**: %s", ip.lang, tostring(ip.err))) end
+		for _, ip in ipairs(invalid_parsers) do
+			table.insert(lines, string.format("- **%s**: %s", ip.lang, tostring(ip.err)))
+		end
 	else
 		table.insert(lines, "✅ All required Tree-sitter parsers are installed and inspectable.")
 	end

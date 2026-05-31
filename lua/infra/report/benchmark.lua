@@ -1,6 +1,6 @@
 local M = {}
 
-local ui = require("infra.ui")
+local ui = require("infra.view")
 
 function M.run()
 	local lines = {

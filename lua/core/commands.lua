@@ -9,15 +9,15 @@ function M.setup()
 	vim.g.pack_commands_created = true
 
 	vim.api.nvim_create_user_command("PackSync", function()
-		require("infra.deps.sync").run()
+		require("infra.deps").sync()
 	end, { desc = "Fetch and check plugin updates" })
 
 	vim.api.nvim_create_user_command("PackUpdate", function()
-		require("infra.deps.update").run()
+		require("infra.deps").update()
 	end, { desc = "Apply plugin updates, relock, validate, and report" })
 
 	vim.api.nvim_create_user_command("PackValidate", function()
-		require("infra.validate").run()
+		require("infra.health").run()
 	end, { desc = "Validate runtime integrity and config health" })
 
 	vim.api.nvim_create_user_command("PackDoctor", function()
@@ -29,19 +29,19 @@ function M.setup()
 	end, { desc = "Measure startup and module performance" })
 
 	vim.api.nvim_create_user_command("PackRollback", function()
-		require("infra.deps.rollback").run()
+		require("infra.deps").rollback()
 	end, { desc = "Restore plugins from lockfile state" })
 
 	vim.api.nvim_create_user_command("PackStatus", function()
-		require("infra.deps.status").run()
+		require("infra.deps").status()
 	end, { desc = "Quick overview of package status" })
 
 	vim.api.nvim_create_user_command("PackClean", function()
-		require("infra.deps.clean").run()
+		require("infra.deps").clean()
 	end, { desc = "Remove inactive plugins, stale cache, and old snapshots" })
 
 	vim.api.nvim_create_user_command("PackSnapshot", function()
-		require("infra.deps.snapshot").run()
+		require("infra.deps").snapshot()
 	end, { desc = "Generate system and state snapshot" })
 
 	vim.api.nvim_create_user_command("PackReport", function()

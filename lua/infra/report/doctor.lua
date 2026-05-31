@@ -1,6 +1,6 @@
 local M = {}
 
-local ui = require("infra.ui")
+local ui = require("infra.view")
 
 function M.run()
 	local lines = {
@@ -17,7 +17,8 @@ function M.run()
 
 	-- 2. Runtime Health
 	table.insert(lines, "## 2. Runtime Health")
-	local tools = require("infra.registry.tools")
+	local registry = require("infra.registry")
+	local tools = registry.tools
 	local check = require("infra.health.check")
 
 	local function check_and_add_tools(cat_name, cat)
@@ -37,8 +38,7 @@ function M.run()
 
 	-- 3. Parser Health
 	table.insert(lines, "## 3. Treesitter Parser Health")
-	local parsers =
-		{ "c", "cpp", "go", "rust", "python", "typescript", "tsx", "lua", "vim", "vimdoc", "gitcommit", "git_rebase", "diff", "markdown" }
+	local parsers = registry.parsers.required
 	for _, lang in ipairs(parsers) do
 		local ok, _ = pcall(vim.treesitter.language.inspect, lang)
 		local status = ok and "✅ Installed" or "❌ Missing/Invalid"

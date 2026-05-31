@@ -26,7 +26,7 @@ function M.run()
 	end
 
 	local health_ok = true
-	local tools = require("infra.registry.tools")
+	local tools = require("infra.registry").tools
 	local check = require("infra.health.check")
 	for _, tool in ipairs(tools.core) do
 		if tool.required and not check.executable(tool.bin) then

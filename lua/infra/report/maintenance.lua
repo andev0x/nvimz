@@ -26,7 +26,8 @@ function M.run()
 
 	table.insert(lines, "## 2. Environment Health")
 	table.insert(lines, "```")
-	local tools = require("infra.registry.tools")
+	local registry = require("infra.registry")
+	local tools = registry.tools
 	local check = require("infra.health.check")
 
 	local function append_category(name, cat)
@@ -73,8 +74,7 @@ function M.run()
 	table.insert(lines, "--------------------------------------------------")
 	table.insert(lines, " nvimz: Treesitter Parser Manager")
 	table.insert(lines, "--------------------------------------------------")
-	local parsers =
-		{ "c", "cpp", "go", "rust", "python", "typescript", "tsx", "lua", "vim", "vimdoc", "gitcommit", "git_rebase", "diff", "markdown" }
+	local parsers = registry.parsers.required
 	for _, lang in ipairs(parsers) do
 		local ok = pcall(vim.treesitter.language.inspect, lang)
 		if ok then

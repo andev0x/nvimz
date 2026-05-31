@@ -1,6 +1,6 @@
 local M = {}
 
-local languages = require("infra.registry.languages")
+local languages = require("infra.registry").languages
 
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 local enabled_servers = {}

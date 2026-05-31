@@ -18,17 +18,17 @@ end
 function M.setup()
 	local cache = require("infra.cache")
 	local state = cache.get("plugin_state") or { phases = {} }
-	local plugins = require("infra.registry.plugins")
+	local plugins = require("infra.registry").plugins
 
 	-- Phase 1: UI
 	vim.schedule(function()
 		M.add(plugins.phase1)
 		pcall(function()
-			require("features.ui.theme").setup()
-			require("features.ui.icons").setup()
-			require("features.ui.statusline").setup()
-			require("features.ui.scope_line").setup()
-			require("features.editing.treesitter").setup()
+			require("features.interface.theme").setup()
+			require("features.interface.icons").setup()
+			require("features.interface.statusline").setup()
+			require("features.interface.scope_line").setup()
+			require("infra.treesitter").setup()
 			require("features.editing.files").setup()
 			require("features.editing.pairs").setup()
 			require("features.editing.completion").setup()

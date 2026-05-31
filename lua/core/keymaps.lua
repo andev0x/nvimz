@@ -5,7 +5,7 @@ map("n", "<leader>qq", "<cmd>quit<cr>", { desc = "Quit window", silent = true })
 map("n", "<leader>h", "<cmd>nohlsearch<cr>", { desc = "Clear search highlight", silent = true })
 
 map("n", "<leader>ds", function()
-	require("features.ui.dashboard").open()
+	require("features.interface.dashboard").open()
 end, { desc = "Open dashboard", silent = true })
 
 map("n", "<leader>bd", "<cmd>bdelete<cr>", { desc = "Close buffer", silent = true })
