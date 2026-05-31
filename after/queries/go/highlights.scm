@@ -252,3 +252,12 @@
       (interpreted_string_literal
         (interpreted_string_literal_content) @string.regexp)
     ]))
+
+; ---------------------------------------------------------------------
+; Custom Constructors & Factory Functions Patch
+; ---------------------------------------------------------------------
+((call_expression function: (identifier) @constructor)
+  (#lua-match? @constructor "^[nN]ew.+$"))
+
+((call_expression function: (identifier) @constructor)
+  (#lua-match? @constructor "^[mM]ake.+$"))

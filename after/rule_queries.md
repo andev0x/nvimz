@@ -1,3 +1,4 @@
+
 * Prefer ; extends instead of full query overrides
 * Keep captures as specific as possible
 * Avoid broad (identifier) matches unless necessary

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+cd /tmp
+
+rm -rf tree-sitter-go
+
+git clone https://github.com/tree-sitter/tree-sitter-go.git
+
+cd tree-sitter-go
+
+cc -o ~/.local/share/nvim/site/parser/go.so -I./src src/parser.c -shared -Os -fPIC
