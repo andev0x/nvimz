@@ -39,3 +39,5 @@ dist/
 
 # Misc
 .commit_suggest_history.json
+.lea
+

@@ -19,7 +19,7 @@ function M.run()
 		local entry = lock.plugins[name]
 		if entry and entry.rev then
 			print("  Resetting " .. name .. " to " .. entry.rev:sub(1, 7) .. "...")
-			vim.system({ "git", "-C", plugin.path, "reset", "--hard", entry.rev }):wait()
+			vim.system({ "git", "-C", plugin.path, "checkout", "--quiet", entry.rev }):wait()
 		else
 			print("  ⚠️ No lockfile entry for " .. name)
 		end
