@@ -34,8 +34,8 @@ Unlike heavy configurations that rely on Mason for runtime isolation, **nvimz** 
 - **Neovim 0.12.0+**
 - **System tools:** `git`, `rg` (ripgrep), `fd`
 - **Optional language tooling (install what you use):**
-  - **LSP servers:** `gopls`, `lua-language-server`, `pyright`, `typescript-language-server`, `rust-analyzer`, `terraform-ls`, `yaml-language-server`
-  - **Formatters:** `stylua`, `black`, `shfmt`, `gofmt`, `terraform` (for `terraform fmt`)
+  - **LSP servers:** `gopls`, `lua-language-server`, `pyright`, `typescript-language-server`, `jdtls`, `rust-analyzer`, `terraform-ls`, `yaml-language-server`
+  - **Formatters:** `stylua`, `black`, `shfmt`, `gofmt`, `google-java-format`, `terraform` (for `terraform fmt`)
   - **AI:** [Ollama](https://ollama.com/) (local models), GitHub Copilot (requires login)
 
 ### 2. Installation
@@ -140,11 +140,12 @@ To auto-detect your package manager and install common tooling:
 
 ### Preconfigured Language Support
 
-The default spec in `lua/infra/spec.lua` includes LSP and formatter wiring for:
+The default spec in `lua/infra/registry/languages.lua` includes LSP and formatter wiring for:
 
 * **Go** (`gopls`, `gofmt`)
 * **Lua** (`lua-language-server`, `stylua`)
 * **Python** (`pyright`, `black`)
+* **Java** (`jdtls`, `google-java-format`)
 * **JavaScript/TypeScript** (`typescript-language-server`)
 * **Rust** (`rust-analyzer`)
 * **Terraform/HCL** (`terraform-ls`, `terraform fmt`)
@@ -264,7 +265,7 @@ return {
 
 ### Extending LSP & Formatters
 
-Add new language servers or formatters in `lua/infra/spec.lua`. Ensure the binary is in your `$PATH`.
+Add new language servers or formatters in `lua/infra/registry/languages.lua`. Ensure the binary is in your `$PATH`.
 
 ```lua
 M.lsp_servers = {
