@@ -3,7 +3,7 @@ local M = {}
 local initialized = false
 
 local function setup_commands()
-	local languages = require("infra.registry.languages")
+	local languages = require("infra.registry").languages
 	local servers = require("features.lsp.servers")
 
 	vim.api.nvim_create_user_command("LspInfo", function()

@@ -1,7 +1,7 @@
 local M = {}
 
 local git = require("infra.deps.git")
-local ui = require("infra.ui")
+local ui = require("infra.view")
 
 function M.run()
 	local plugins = vim.pack.get()

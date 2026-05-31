@@ -3,7 +3,7 @@ local M = {}
 function M.setup()
 	local cache = require("infra.cache")
 	local state = cache.get("plugin_state") or { phases = {} }
-	local plugins = require("infra.registry.plugins")
+	local plugins = require("infra.registry").plugins
 	local phases = require("runtime.phases")
 
 	-- Phase 2: Core Editing (Triggered by file access)

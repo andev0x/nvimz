@@ -19,7 +19,7 @@ REPORT_FILE="MAINTENANCE_REPORT.md"
 
   echo "## 2. Environment Health"
   echo "\`\`\`"
-  nvim --headless -c "lua require('core.health').run_doctor()" -c "qa" 2>&1
+  nvim --headless -c "lua require('infra.health').run_doctor()" -c "qa" 2>&1
   echo "\`\`\`"
   echo ""
 

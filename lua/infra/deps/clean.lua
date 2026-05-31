@@ -20,11 +20,8 @@ function M.run()
 	end
 
 	local parser_dir = vim.fn.expand("~/.local/share/nvim/site/parser")
-	local valid_parsers = {
-		c = true, cpp = true, go = true, rust = true, python = true,
-		typescript = true, tsx = true, lua = true, vim = true, vimdoc = true,
-		gitcommit = true, markdown = true,
-	}
+	local parsers = require("infra.registry").parsers
+	local valid_parsers = parsers.required_set
 	if vim.fn.isdirectory(parser_dir) == 1 then
 		local files = vim.fn.globpath(parser_dir, "*.so", true, true)
 		for _, file in ipairs(files) do

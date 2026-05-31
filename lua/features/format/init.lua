@@ -1,6 +1,6 @@
 local M = {}
 
-local languages = require("infra.registry.languages")
+local languages = require("infra.registry").languages
 
 function M.setup()
 	local conform = require("conform")

@@ -56,6 +56,7 @@ function M.run()
 	end
 
 	require("infra.deps.lockfile").generate()
+	require("infra.health").run()
 	require("infra.report.maintenance").run()
 
 	-- Treesitter parsers update
