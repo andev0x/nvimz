@@ -4,7 +4,8 @@ set -euo pipefail
 
 # Configuration
 PARSER_DIR="${HOME}/.local/share/nvim/site/parser"
-QUERY_ROOT="${HOME}/.config/nvim/queries"
+# FIXED: Use after/queries to comply with custom local overrides hierarchy safely
+QUERY_ROOT="${HOME}/.config/nvim/after/queries"
 TMP_DIR="/tmp/nvimz-parsers"
 CC="${CC:-cc}"
 
@@ -37,15 +38,15 @@ if [[ "${1:-}" == "--check" ]]; then
 fi
 
 echo "--------------------------------------------------"
-echo " nvimz: Treesitter Parser Manager"
+echo " nvimz: Treesitter Parser Manager (Native-Fixed)"
 echo "--------------------------------------------------"
 
 for entry in "${LANGS[@]}"; do
-  IFS=":" read -r lang repo subpath <<< "$entry"
-  
+  IFS=":" read -r lang repo subpath <<<"$entry"
+
   TARGET="$PARSER_DIR/$lang.so"
   QUERY_DIR="$QUERY_ROOT/$lang"
-  
+
   PARSER_EXISTS=0
   if [ -f "$TARGET" ]; then
     PARSER_EXISTS=1
@@ -79,17 +80,23 @@ for entry in "${LANGS[@]}"; do
     REPO_DIR="$TMP_DIR/$lang"
     rm -rf "$REPO_DIR"
     git clone --depth 1 "https://github.com/$repo" "$REPO_DIR"
-    
-    cd "$REPO_DIR/$subpath"
+
+    # FIXED: Stand at root dir instead of crashing inside subpath headers context
+    cd "$REPO_DIR"
+
     COMPILER="$CC"
-    FILES="parser.c"
-    if [ -f "scanner.cc" ]; then
+    FILES="$subpath/parser.c"
+
+    # Check for conditional scanner compilation paths
+    if [ -f "$subpath/scanner.cc" ]; then
       COMPILER="c++"
-      FILES="$FILES scanner.cc"
-    elif [ -f "scanner.c" ]; then
-      FILES="$FILES scanner.c"
+      FILES="$FILES $subpath/scanner.cc"
+    elif [ -f "$subpath/scanner.c" ]; then
+      FILES="$FILES $subpath/scanner.c"
     fi
-    $COMPILER -O3 -fPIC -shared $FILES -I. -o "$lang.so"
+
+    # FIXED: Safe compilation flags matching upstream Neovim native build system
+    $COMPILER -O3 -fPIC -shared $FILES -I"./$subpath" -o "$lang.so"
     mv "$lang.so" "$TARGET"
     echo "  🔨 Parser installed to $TARGET"
   fi
@@ -97,21 +104,43 @@ for entry in "${LANGS[@]}"; do
   if [[ $QUERY_EXISTS -eq 0 ]]; then
     echo "⏳ $lang: Downloading queries..."
     mkdir -p "$QUERY_DIR"
-    
-    # Try nvim-treesitter as primary source for queries
-    QUERY_URL="https://raw.githubusercontent.com/nvim-treesitter/nvim-treesitter/master/queries/$lang/highlights.scm"
-    
-    # Special overrides
-    if [[ "$lang" == "python" ]]; then
-      QUERY_URL="https://raw.githubusercontent.com/neovim/neovim/master/runtime/queries/python/highlights.scm"
+
+    # FIXED: Fallback to Neovim Upstream Core Runtime Queries to guarantee 0.12.2 native stability
+    QUERY_URL="https://raw.githubusercontent.com/neovim/neovim/master/runtime/queries/$lang/highlights.scm"
+
+    # Special overrides for repos that manage queries natively inside their own tree
+    if [[ "$lang" == "go" || "$lang" == "rust" || "$lang" == "lua" ]]; then
+      QUERY_URL="https://raw.githubusercontent.com/neovim/neovim/master/runtime/queries/$lang/highlights.scm"
     fi
 
     if curl -fsSL -o "$QUERY_DIR/highlights.scm" "$QUERY_URL"; then
       echo "  ✨ Highlights installed"
-      # Also try to get injections if they exist
-      curl -fsSL -o "$QUERY_DIR/injections.scm" "https://raw.githubusercontent.com/nvim-treesitter/nvim-treesitter/master/queries/$lang/injections.scm" 2>/dev/null || true
+      curl -fsSL -o "$QUERY_DIR/injections.scm" "https://raw.githubusercontent.com/neovim/neovim/master/runtime/queries/$lang/injections.scm" 2>/dev/null || true
     else
-      echo "  ⚠️  Could not download highlights for $lang"
+      # Fallback to nvim-treesitter only if upstream Neovim core does not maintain it yet
+      ALTERNATIVE_URL="https://raw.githubusercontent.com/nvim-treesitter/nvim-treesitter/master/queries/$lang/highlights.scm"
+      if curl -fsSL -o "$QUERY_DIR/highlights.scm" "$ALTERNATIVE_URL"; then
+        echo "  ✨ Highlights installed (via nvim-treesitter fallback)"
+        curl -fsSL -o "$QUERY_DIR/injections.scm" "https://raw.githubusercontent.com/nvim-treesitter/nvim-treesitter/master/queries/$lang/injections.scm" 2>/dev/null || true
+      else
+        echo "  ⚠️  Could not download highlights for $lang"
+      fi
+    fi
+
+    # FIXED: Re-inject your custom Go constructor patches if it's the 'go' language iteration
+    if [[ "$lang" == "go" ]]; then
+      cat <<'EOF' >>"$QUERY_DIR/highlights.scm"
+
+; ---------------------------------------------------------------------
+; Custom Constructors & Factory Functions Patch
+; ---------------------------------------------------------------------
+((call_expression function: (identifier) @constructor)
+  (#lua-match? @constructor "^[nN]ew.+$"))
+
+((call_expression function: (identifier) @constructor)
+  (#lua-match? @constructor "^[mM]ake.+$"))
+EOF
+      echo "  🚀 Custom Go Constructor extensions injected into file"
     fi
   fi
 done

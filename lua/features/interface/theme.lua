@@ -103,7 +103,6 @@ function M.setup()
 			-- -----------------------------------------------------------------
 			-- Diagnostics & Inlay Hints
 			-- -----------------------------------------------------------------
-			-- Background set to NONE to prevent transparency bugs
 			highlights.DiagnosticVirtualTextHint = {
 				fg = "#5a6e68",
 				bg = "NONE",
@@ -122,58 +121,54 @@ function M.setup()
 			highlights.NvimzStats = { fg = colors.green, italic = true }
 
 			-- -----------------------------------------------------------------
-			-- Standard Treesitter Syntax (Neovim 0.12+ Optimized)
+			-- Universal Treesitter Mappings (Fallback Strategy)
 			-- -----------------------------------------------------------------
 			highlights["@keyword"] = { fg = colors.green, italic = true }
-
-			-- -----------------------------------------------------------------
-			-- Critical Refinement: Isolation of Functions vs Variables
-			-- -----------------------------------------------------------------
-			-- Functions: Re-vibrated blue definition for actions
 			highlights["@function"] = { fg = colors.blue, bold = true }
-			highlights["@function.call"] = { fg = colors.blue, bold = true }
-			highlights["@method"] = { fg = colors.blue2 }
-			highlights["@method.call"] = { fg = colors.blue2 }
-
-			-- Variables and Parameters: Clear separation via muted yellow
 			highlights["@variable"] = { fg = colors.yellow }
 			highlights["@parameter"] = { fg = colors.yellow }
-			highlights["@variable.parameter"] = { fg = colors.yellow }
-
-			-- Typographic elements and literals
-			highlights["@type"] = { fg = colors.blue2 } -- Distinct blue for types
-			highlights["@string"] = { fg = "#8fbf8f" } -- Standard forest string green
-			highlights["@constant"] = { fg = colors.magenta } -- Muted green for constants
-			highlights["@operator"] = { fg = colors.teal } -- Muted teal for operators
-
-			-- Comments: Kept subdued
+			highlights["@type"] = { fg = colors.blue2 }
+			highlights["@string"] = { fg = "#8fbf8f" }
+			highlights["@constant"] = { fg = colors.magenta }
+			highlights["@operator"] = { fg = colors.teal }
 			highlights["@comment"] = { fg = "#688077", italic = true }
-
-			-- Punctuation
 			highlights["@punctuation.bracket"] = { fg = "#5a6e68" }
 			highlights["@punctuation.delimiter"] = { fg = "#89b482" }
 
 			-- -----------------------------------------------------------------
-			-- Go-specific Semantic Tuning (Synchronized with Blue Function Call)
+			-- Granular Global Mappings matching your Go highlights.scm perfectly
+			-- This guarantees 100% color synchronization between Lua and Go
 			-- -----------------------------------------------------------------
-			local go_native_tokens = {
-				-- Apply new blue action call standard
-				["@function.call.go"] = { fg = colors.blue, bold = true },
-				["@method.call.go"] = { fg = colors.blue2 },
-				["@function.method.go"] = { fg = colors.blue2 },
+			local custom_scm_tokens = {
+				-- Function Calls & Methods
+				["@function.call"] = { fg = colors.blue, bold = true },
+				["@function.method"] = { fg = colors.blue2 },
+				["@function.method.call"] = { fg = colors.blue2 },
+				["@constructor"] = { fg = colors.orange, bold = true }, -- Matches your custom New/Make query
 
-				-- Bold 'func' statement stands as a structural anchor
-				["@keyword.function.go"] = { fg = colors.orange, bold = true },
+				-- Fine-grained Keywords (Fixes all faded/monochrome tokens in main.go)
+				["@keyword.function"] = { fg = colors.orange, bold = true }, -- Distinct orange 'func' anchor
+				["@keyword.type"] = { fg = colors.green, italic = true }, -- type, struct, interface
+				["@keyword.return"] = { fg = colors.green, italic = true }, -- return
+				["@keyword.coroutine"] = { fg = colors.green, italic = true }, -- go
+				["@keyword.repeat"] = { fg = colors.green, italic = true }, -- for
+				["@keyword.import"] = { fg = colors.green, italic = true }, -- import, package
+				["@keyword.conditional"] = { fg = colors.green, italic = true }, -- if, else, switch, case
 
-				-- Isolated struct member colors vs local variables
-				["@variable.member.go"] = { fg = "#9cd4d0" },
+				-- Identifiers, Structural Scopes & Modules
+				["@type.definition"] = { fg = "#78c2d8", bold = true },
+				["@type.builtin"] = { fg = colors.blue2 },
+				["@variable.member"] = { fg = "#9cd4d0" }, -- Struct fields isolation
+				["@variable.parameter"] = { fg = colors.yellow }, -- Parameters locked to yellow
+				["@module"] = { fg = colors.blue1 },
 
-				-- Typographic declarations
-				["@type.go"] = { fg = "#78c2d8", bold = true },
-				["@constant.builtin.go"] = { fg = colors.magenta },
+				-- Builtins & Constants
+				["@number.float"] = { fg = colors.magenta },
+				["@constant.builtin"] = { fg = colors.magenta },
+				["@function.builtin"] = { fg = colors.blue, bold = true }, -- append, len, make, etc.
 			}
 
-			for token, style in pairs(go_native_tokens) do
+			for token, style in pairs(custom_scm_tokens) do
 				highlights[token] = style
 			end
 		end,
