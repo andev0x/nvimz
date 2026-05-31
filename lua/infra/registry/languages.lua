@@ -151,33 +151,4 @@ M.formatter_binaries = {
 	terraform_fmt = "terraform",
 }
 
-local function uniq(list)
-	local out = {}
-	local seen = {}
-	for _, item in ipairs(list) do
-		if not seen[item] then
-			seen[item] = true
-			table.insert(out, item)
-		end
-	end
-	return out
-end
-
-function M.required_binaries()
-	local bins = { "git", "rg", "fd" }
-
-	-- Changed 'name' to '_' to fix the unused local warning
-	for _, server in pairs(M.lsp_servers) do
-		table.insert(bins, server.cmd[1])
-	end
-
-	for _, bin in pairs(M.formatter_binaries) do
-		table.insert(bins, bin)
-	end
-
-	local out = uniq(bins)
-	table.sort(out)
-	return out
-end
-
 return M

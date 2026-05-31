@@ -260,7 +260,7 @@ end
 -- Caching to avoid querying clients on every redraw
 -- ============================================================================
 
-local lsp_icons = require("infra.spec").lsp_icons
+local lsp_icons = require("infra.registry.languages").lsp_icons
 local lsp_cache = {
 	val = "",
 	last_update = 0,

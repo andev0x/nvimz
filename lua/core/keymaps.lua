@@ -5,7 +5,7 @@ map("n", "<leader>qq", "<cmd>quit<cr>", { desc = "Quit window", silent = true })
 map("n", "<leader>h", "<cmd>nohlsearch<cr>", { desc = "Clear search highlight", silent = true })
 
 map("n", "<leader>ds", function()
-	require("core.startup").open()
+	require("features.ui.dashboard").open()
 end, { desc = "Open dashboard", silent = true })
 
 map("n", "<leader>bd", "<cmd>bdelete<cr>", { desc = "Close buffer", silent = true })
@@ -66,10 +66,10 @@ map({ "n", "v" }, "<leader>z", "za", { desc = "Toggle fold", silent = true })
 
 -- Terminal
 map("n", "<leader>tt", function()
-	require("core.terminal").toggle()
+	require("features.editing.terminal").toggle()
 end, { desc = "Toggle floating terminal", silent = true })
 map("n", "<leader>tb", function()
-	require("core.terminal").toggle_bottom()
+	require("features.editing.terminal").toggle_bottom()
 end, { desc = "Toggle bottom terminal", silent = true })
 map("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 

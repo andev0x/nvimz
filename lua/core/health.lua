@@ -1,6 +1,6 @@
 local M = {}
 
-local tools = require("infra.tools")
+local tools = require("infra.registry.tools")
 
 local check = require("infra.health.check")
 local render = require("infra.health.render")

@@ -1,12 +1,12 @@
 local M = {}
 
-local spec = require("infra.spec")
+local languages = require("infra.registry.languages")
 
 function M.setup()
 	local conform = require("conform")
 
 	conform.setup({
-		formatters_by_ft = spec.formatters_by_ft,
+		formatters_by_ft = languages.formatters_by_ft,
 		format_on_save = {
 			timeout_ms = 400,
 			lsp_format = "never",
