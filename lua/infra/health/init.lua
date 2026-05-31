@@ -15,23 +15,44 @@ local function iterate(category)
 end
 
 function M.check()
-	local missing = {}
+	local health = require("vim.health")
 
+	health.start("infra: Core Dependencies")
 	for _, tool in ipairs(tools.core) do
-		if tool.required and not check.executable(tool.bin) then
-			table.insert(missing, tool.bin)
+		local info = check.inspect(tool)
+		if info.installed then
+			local version_str = info.version and (" (" .. info.version .. ")") or ""
+			health.ok(string.format("%s: installed%s", info.name, version_str))
+		else
+			health.error(
+				string.format("%s: missing executable '%s'", info.name, info.bin),
+				{ "Please install " .. info.name .. " and make sure it is in your PATH." }
+			)
 		end
 	end
 
-	if #missing == 0 then
-		return
+	health.start("infra: Optional Dependencies")
+	local optional_categories = {
+		{ name = "LSP", items = tools.lsp },
+		{ name = "Formatters", items = tools.formatters },
+		{ name = "Linters", items = tools.linters },
+	}
+	for _, cat in ipairs(optional_categories) do
+		for _, tool in ipairs(cat.items) do
+			local info = check.inspect(tool)
+			if info.installed then
+				local version_str = info.version and (" (" .. info.version .. ")") or ""
+				health.ok(string.format("%s: installed%s", info.name, version_str))
+			else
+				health.warn(
+					string.format("%s: missing executable '%s'", info.name, info.bin),
+					{ "Optional: install " .. info.name .. " to enable " .. cat.name .. " features." }
+				)
+			end
+		end
 	end
-
-	error(table.concat({
-		"Missing critical dependencies:",
-		"  - " .. table.concat(missing, "\n  - "),
-	}, "\n"))
 end
+
 
 function M.run_doctor()
 	render.section("Core")

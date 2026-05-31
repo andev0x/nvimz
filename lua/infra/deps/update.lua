@@ -40,7 +40,7 @@ end
 function M.apply(updates)
 	if #updates == 0 then return end
 	for _, update in ipairs(updates) do
-		vim.system({ "git", "-C", update.plugin.path, "reset", "--hard", "origin/" .. update.branch }):wait()
+		vim.system({ "git", "-C", update.plugin.path, "checkout", "--quiet", "origin/" .. update.branch }):wait()
 	end
 end
 
