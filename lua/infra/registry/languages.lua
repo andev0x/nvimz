@@ -4,6 +4,7 @@ M.lsp_icons = {
 	gopls = " ",
 	pyright = " ",
 	ts_ls = " ",
+	jdtls = " ",
 	rust_analyzer = " ",
 	terraformls = "󱁢 ",
 	yamlls = " ",
@@ -63,6 +64,18 @@ M.lsp_servers = {
 					includeInlayVariableTypeHints = true,
 				},
 			},
+		},
+	},
+	jdtls = {
+		cmd = { "jdtls" },
+		filetypes = { "java" },
+		root_markers = {
+			"pom.xml",
+			"build.gradle",
+			"build.gradle.kts",
+			"settings.gradle",
+			"settings.gradle.kts",
+			".git",
 		},
 	},
 	rust_analyzer = {
@@ -141,6 +154,7 @@ M.formatters_by_ft = {
 	go = { "gofmt" },
 	terraform = { "terraform_fmt" },
 	["terraform-vars"] = { "terraform_fmt" },
+	java = { "google_java_format" },
 }
 
 M.formatter_binaries = {
@@ -149,6 +163,7 @@ M.formatter_binaries = {
 	shfmt = "shfmt",
 	gofmt = "gofmt",
 	terraform_fmt = "terraform",
+	google_java_format = "google-java-format",
 }
 
 return M
