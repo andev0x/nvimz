@@ -55,14 +55,14 @@ function M.run()
 		print("󰄬 Plugins already up to date.")
 	end
 
-	require("infra.deps.lockfile").generate()
-	require("infra.health").run()
-	require("infra.report.maintenance").run()
-
 	-- Treesitter parsers update
 	print("󰚰 Updating Treesitter parsers...")
 	local parsers_script = vim.fn.stdpath("config") .. "/scripts/parsers"
 	vim.system({ parsers_script }):wait()
+
+	require("infra.deps.lockfile").generate()
+	require("infra.health").run()
+	require("infra.report.maintenance").run()
 
 	print("󰄬 Done. Maintenance report updated.")
 end

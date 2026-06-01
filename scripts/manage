@@ -48,23 +48,8 @@ sync_system() {
 
 generate_report() {
   info "Generating maintenance report..."
-  REPORT_FILE="MAINTENANCE_REPORT.md"
-  {
-    echo "# nvimz Maintenance Report"
-    echo "Date: $(date)"
-    echo ""
-    echo "## 1. Environment Health"
-    echo "\`\`\`"
-    nvim --headless -c "lua require('infra.health').run_doctor()" -c "qa" 2>&1
-    echo "\`\`\`"
-    echo ""
-    echo "## 2. Startup Benchmark"
-    nvim --startuptime /tmp/nvim-startup.txt --headless -c "qa"
-    STARTUP_TIME=$(grep "NVIM STARTED" /tmp/nvim-startup.txt | tail -n 1 | awk '{print $1}')
-    echo "Total startup time: **${STARTUP_TIME}ms**"
-    echo ""
-  } > "$REPORT_FILE"
-  ok "Report generated: $REPORT_FILE"
+  nvim --headless -c "lua require('infra.report.maintenance').run()" -c "qa"
+  ok "Maintenance report generated."
 }
 
 # =============================================================
@@ -93,7 +78,6 @@ case "$1" in
   --all)
     update_plugins
     sync_system
-    generate_report
     ;;
   *) usage ;;
 esac

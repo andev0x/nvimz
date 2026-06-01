@@ -15,6 +15,7 @@ M.required = {
 	"git_rebase",
 	"diff",
 	"markdown",
+	"markdown_inline",
 }
 
 M.required_set = {}
