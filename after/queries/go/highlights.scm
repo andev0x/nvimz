@@ -261,3 +261,7 @@
 
 ((call_expression function: (identifier) @constructor)
   (#lua-match? @constructor "^[mM]ake.+$"))
+((call_expression function: (identifier) @constructor) (#lua-match? @constructor "^[nN]ew.+$"))
+((call_expression function: (identifier) @constructor) (#lua-match? @constructor "^[mM]ake.+$"))
+((call_expression function: (identifier) @constructor) (#lua-match? @constructor "^[nN]ew.+$"))
+((call_expression function: (identifier) @constructor) (#lua-match? @constructor "^[mM]ake.+$"))

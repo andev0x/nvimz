@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 
+# =============================================================
+# nvimz: Treesitter Parser & Query Manager
+# =============================================================
+
 set -euo pipefail
 
-# Configuration
 PARSER_DIR="${HOME}/.local/share/nvim/site/parser"
-# FIXED: Use after/queries to comply with custom local overrides hierarchy safely
 QUERY_ROOT="${HOME}/.config/nvim/after/queries"
 TMP_DIR="/tmp/nvimz-parsers"
 CC="${CC:-cc}"
 
-# Languages to install
 # format: "lang_name:github_repo:source_subpath"
 LANGS=(
   "c:tree-sitter/tree-sitter-c:src"
@@ -28,122 +29,58 @@ LANGS=(
   "markdown:tree-sitter-grammars/tree-sitter-markdown:tree-sitter-markdown/src"
 )
 
-mkdir -p "$PARSER_DIR"
-mkdir -p "$TMP_DIR"
-mkdir -p "$QUERY_ROOT"
+mkdir -p "$PARSER_DIR" "$TMP_DIR" "$QUERY_ROOT"
 
-CHECK_ONLY=0
-if [[ "${1:-}" == "--check" ]]; then
-  CHECK_ONLY=1
-fi
+info() { printf "\033[1;34m[INFO]\033[0m %s\n" "$1"; }
+ok() { printf "\033[1;32m[OK]\033[0m %s\n" "$1"; }
 
-echo "--------------------------------------------------"
-echo " nvimz: Treesitter Parser Manager (Native-Fixed)"
-echo "--------------------------------------------------"
+build_parser() {
+  local lang=$1 repo=$2 sub=$3
+  local target="$PARSER_DIR/$lang.so"
+  
+  info "$lang: Building parser..."
+  local repo_dir="$TMP_DIR/$lang"
+  rm -rf "$repo_dir"
+  git clone --depth 1 "https://github.com/$repo" "$repo_dir" >/dev/null 2>&1
+  cd "$repo_dir"
+
+  local compiler="$CC"
+  local files="$sub/parser.c"
+  [ -f "$sub/scanner.cc" ] && compiler="c++" && files="$files $sub/scanner.cc"
+  [ -f "$sub/scanner.c" ] && files="$files $sub/scanner.c"
+
+  $compiler -O3 -fPIC -shared $files -I"./$sub" -o "$lang.so"
+  mv "$lang.so" "$target"
+}
+
+setup_queries() {
+  local lang=$1
+  local qdir="$QUERY_ROOT/$lang"
+  mkdir -p "$qdir"
+  
+  info "$lang: Downloading queries..."
+  local url="https://raw.githubusercontent.com/neovim/neovim/master/runtime/queries/$lang/highlights.scm"
+  if curl -fsSL -o "$qdir/highlights.scm" "$url"; then
+    curl -fsSL -o "$qdir/injections.scm" "https://raw.githubusercontent.com/neovim/neovim/master/runtime/queries/$lang/injections.scm" 2>/dev/null || true
+  fi
+
+  if [[ "$lang" == "go" ]]; then
+    cat <<'EOF' >>"$qdir/highlights.scm"
+((call_expression function: (identifier) @constructor) (#lua-match? @constructor "^[nN]ew.+$"))
+((call_expression function: (identifier) @constructor) (#lua-match? @constructor "^[mM]ake.+$"))
+EOF
+  fi
+}
 
 for entry in "${LANGS[@]}"; do
-  IFS=":" read -r lang repo subpath <<<"$entry"
-
-  TARGET="$PARSER_DIR/$lang.so"
-  QUERY_DIR="$QUERY_ROOT/$lang"
-
-  PARSER_EXISTS=0
-  if [ -f "$TARGET" ]; then
-    PARSER_EXISTS=1
-  fi
-
-  QUERY_EXISTS=0
-  if [ -f "$QUERY_DIR/highlights.scm" ]; then
-    QUERY_EXISTS=1
-  fi
-
-  if [[ $CHECK_ONLY -eq 1 ]]; then
-    STATUS=""
-    if [[ $PARSER_EXISTS -eq 1 && $QUERY_EXISTS -eq 1 ]]; then
-      STATUS="✅"
-    elif [[ $PARSER_EXISTS -eq 1 ]]; then
-      STATUS="⚠️ (Missing Queries)"
-    else
-      STATUS="❌"
-    fi
-    echo "$STATUS $lang"
+  IFS=":" read -r lang repo sub <<<"$entry"
+  if [[ "${1:-}" == "--check" ]]; then
+    [ -f "$PARSER_DIR/$lang.so" ] && echo "✅ $lang" || echo "❌ $lang"
     continue
   fi
-
-  if [[ $PARSER_EXISTS -eq 1 && $QUERY_EXISTS -eq 1 ]]; then
-    echo "✅ $lang: Already installed"
-    continue
-  fi
-
-  if [[ $PARSER_EXISTS -eq 0 ]]; then
-    echo "⏳ $lang: Installing parser..."
-    REPO_DIR="$TMP_DIR/$lang"
-    rm -rf "$REPO_DIR"
-    git clone --depth 1 "https://github.com/$repo" "$REPO_DIR"
-
-    # FIXED: Stand at root dir instead of crashing inside subpath headers context
-    cd "$REPO_DIR"
-
-    COMPILER="$CC"
-    FILES="$subpath/parser.c"
-
-    # Check for conditional scanner compilation paths
-    if [ -f "$subpath/scanner.cc" ]; then
-      COMPILER="c++"
-      FILES="$FILES $subpath/scanner.cc"
-    elif [ -f "$subpath/scanner.c" ]; then
-      FILES="$FILES $subpath/scanner.c"
-    fi
-
-    # FIXED: Safe compilation flags matching upstream Neovim native build system
-    $COMPILER -O3 -fPIC -shared $FILES -I"./$subpath" -o "$lang.so"
-    mv "$lang.so" "$TARGET"
-    echo "  🔨 Parser installed to $TARGET"
-  fi
-
-  if [[ $QUERY_EXISTS -eq 0 ]]; then
-    echo "⏳ $lang: Downloading queries..."
-    mkdir -p "$QUERY_DIR"
-
-    # FIXED: Fallback to Neovim Upstream Core Runtime Queries to guarantee 0.12.2 native stability
-    QUERY_URL="https://raw.githubusercontent.com/neovim/neovim/master/runtime/queries/$lang/highlights.scm"
-
-    # Special overrides for repos that manage queries natively inside their own tree
-    if [[ "$lang" == "go" || "$lang" == "rust" || "$lang" == "lua" ]]; then
-      QUERY_URL="https://raw.githubusercontent.com/neovim/neovim/master/runtime/queries/$lang/highlights.scm"
-    fi
-
-    if curl -fsSL -o "$QUERY_DIR/highlights.scm" "$QUERY_URL"; then
-      echo "  ✨ Highlights installed"
-      curl -fsSL -o "$QUERY_DIR/injections.scm" "https://raw.githubusercontent.com/neovim/neovim/master/runtime/queries/$lang/injections.scm" 2>/dev/null || true
-    else
-      # Fallback to nvim-treesitter only if upstream Neovim core does not maintain it yet
-      ALTERNATIVE_URL="https://raw.githubusercontent.com/nvim-treesitter/nvim-treesitter/master/queries/$lang/highlights.scm"
-      if curl -fsSL -o "$QUERY_DIR/highlights.scm" "$ALTERNATIVE_URL"; then
-        echo "  ✨ Highlights installed (via nvim-treesitter fallback)"
-        curl -fsSL -o "$QUERY_DIR/injections.scm" "https://raw.githubusercontent.com/nvim-treesitter/nvim-treesitter/master/queries/$lang/injections.scm" 2>/dev/null || true
-      else
-        echo "  ⚠️  Could not download highlights for $lang"
-      fi
-    fi
-
-    # FIXED: Re-inject your custom Go constructor patches if it's the 'go' language iteration
-    if [[ "$lang" == "go" ]]; then
-      cat <<'EOF' >>"$QUERY_DIR/highlights.scm"
-
-; ---------------------------------------------------------------------
-; Custom Constructors & Factory Functions Patch
-; ---------------------------------------------------------------------
-((call_expression function: (identifier) @constructor)
-  (#lua-match? @constructor "^[nN]ew.+$"))
-
-((call_expression function: (identifier) @constructor)
-  (#lua-match? @constructor "^[mM]ake.+$"))
-EOF
-      echo "  🚀 Custom Go Constructor extensions injected into file"
-    fi
-  fi
+  build_parser "$lang" "$repo" "$sub"
+  setup_queries "$lang"
 done
 
-echo "--------------------------------------------------"
-echo "Done! Restart Neovim to apply changes."
+rm -rf "$TMP_DIR"
+ok "Parsers managed."
