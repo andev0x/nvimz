@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# =============================================================
+# nvimz: Health Doctor
+# =============================================================
+
 set -euo pipefail
 
 TOOLS=(
@@ -10,28 +14,47 @@ TOOLS=(
   lua-language-server
   stylua
   shfmt
+  rustc
+  python3
+  node
+  java
+  jdtls
 )
 
-printf "\n"
+PARSERS=(
+  c
+  cpp
+  go
+  rust
+  python
+  typescript
+  tsx
+  lua
+  vim
+  vimdoc
+)
 
-for tool in "${TOOLS[@]}"; do
-  if command -v "$tool" >/dev/null 2>&1; then
-    printf "%-24s OK\n" "$tool"
-  else
-    printf "%-24s MISSING\n" "$tool"
-  fi
-done
-
-printf "\nTreesitter Parsers:\n"
-PARSERS=("c" "cpp" "go" "rust" "python" "typescript" "tsx")
 PARSER_DIR="${HOME}/.local/share/nvim/site/parser"
 
-for parser in "${PARSERS[@]}"; do
-  if [ -f "$PARSER_DIR/$parser.so" ]; then
-    printf "%-24s OK\n" "$parser"
+ok() { printf "\033[1;32m[OK]\033[0m %-24s\n" "$1"; }
+err() { printf "\033[1;31m[MISSING]\033[0m %-24s\n" "$1"; }
+
+echo -e "\n--- Core Tools ---"
+for tool in "${TOOLS[@]}"; do
+  if command -v "$tool" >/dev/null 2>&1; then
+    ok "$tool"
   else
-    printf "%-24s MISSING\n" "$parser"
+    err "$tool"
   fi
 done
 
-printf "\n"
+echo -e "\n--- Treesitter Parsers ---"
+for parser in "${PARSERS[@]}"; do
+  if [ -f "$PARSER_DIR/$parser.so" ]; then
+    ok "$parser"
+  else
+    err "$parser"
+  fi
+done
+
+echo ""
