@@ -32,13 +32,10 @@ Unlike heavy configurations that rely on Mason for runtime isolation, **nvimz** 
 ### 1. Requirements
 
 - **Neovim 0.12.0+**
-- **System tools:** `git`, `rg` (ripgrep), `fd`
-- **Optional language tooling (install what you use):**
-  - **LSP servers:** `gopls`, `lua-language-server`, `pyright`, `typescript-language-server`, `jdtls`, `rust-analyzer`, `terraform-ls`, `yaml-language-server`
-  - **Formatters:** `stylua`, `black`, `shfmt`, `gofmt`, `google-java-format`, `terraform` (for `terraform fmt`)
-  - **AI:** [Ollama](https://ollama.com/) (local models), GitHub Copilot (requires login)
+- **System tools:** `git`, `rg` (ripgrep), `fd`, `build-essential` (or `base-devel`)
+- **Optional language tooling:** (Automatically handled by the setup script)
 
-### 2. Installation
+### 2. Installation & Setup
 
 ```bash
 # Backup your existing configuration
@@ -46,53 +43,44 @@ mv ~/.config/nvim ~/.config/nvim.bak
 
 # Clone and launch nvimz
 git clone https://github.com/andev0x/nvimz.git ~/.config/nvim
-nvim
-```
+cd ~/.config/nvim
 
-On first launch, plugins will be automatically initialized and installed via the built-in `vim.pack` system.
-
-For Arch Linux or Ubuntu users, dedicated installation scripts are available:
-
-```bash
-# Arch Linux
-./scripts/arch-install
-
-# Ubuntu / Debian
-./scripts/ubuntu-install
-```
-
-To auto-detect your package manager and install common tooling:
-
-```bash
-./scripts/bootstrap
+# Run the universal setup script
+# This handles OS detection, toolchain installation (Go, Rust, Python, Java, Node),
+# and shell configuration for macOS, Arch, and Ubuntu.
+./scripts/setup
 ```
 
 ### 3. Verification & Maintenance
 
-**nvimz** features a centralized orchestration layer in `lua/infra/deps.lua` that manages the entire package lifecycle. It uses a deterministic update strategy:
+**nvimz** features a centralized management layer in `scripts/manage` and `lua/infra/deps.lua`.
 
 ```bash
-# Update plugins via CLI wrapper
-# This invokes the nvim orchestration layer in headless mode
-./scripts/update-plugins
+# Update plugins only
+./scripts/manage --update
 
-# Run the full validation pipeline
-# Updates plugins -> Regenerates lockfile -> Validates environment -> Benchmarks
-./scripts/validate
+# Sync system packages (brew, pacman, apt)
+./scripts/manage --sync
+
+# Generate a comprehensive health and benchmark report
+./scripts/manage --report
+
+# Run the full maintenance pipeline (Update -> Sync -> Report)
+./scripts/manage --all
 
 # Check system tooling health (CLI)
 ./scripts/doctor
 
-# Install/verify Tree-sitter parsers and queries
+# Build/verify pinned Tree-sitter parsers and sync queries
 ./scripts/parsers
 ```
 
 **Key Orchestration Features:**
 
-* **Deterministic Updates:** Plugins are updated via `git reset --hard` to their remote default branch, ensuring a clean and predictable state.
-* **Source of Truth:** The on-disk git state is the absolute source of truth.
-* **Generated Lockfile:** `nvim-pack-lock.json` is a generated snapshot of your exact environment, not cached metadata.
-* **Maintenance Report:** Every validation run generates `MAINTENANCE_REPORT.md`, providing a transparent audit of your setup's health and performance.
+* **Deterministic Updates:** Plugins are updated via `git reset --hard` to their remote default branch.
+* **Source-Built Treesitter:** `scripts/parsers` compiles parsers from source with pinned revisions and bundles optimized queries in the root `queries/` directory.
+* **Universal Setup:** `scripts/setup` provides a zero-config path for bootstrapping a complete development environment across multiple Linux distributions and macOS.
+* **Maintenance Report:** Every `--report` run generates `MAINTENANCE_REPORT.md`, providing a transparent audit of your setup's health and performance.
 
 **Native Commands:**
 
@@ -108,7 +96,7 @@ To auto-detect your package manager and install common tooling:
 | `:PackClean` | Remove unused plugins and stale cache files. |
 | `:PackSnapshot` | Generate a system and state snapshot in `snapshots/`. |
 | `:PackReport` | Manually regenerate the `MAINTENANCE_REPORT.md`. |
-| `:ParsersUpdate`| Update and compile Tree-sitter parsers directly. |
+| `:ParsersUpdate`| Update, compile, and sync Tree-sitter parsers/queries. |
 | `:ToolDoctor` | Show environment tooling health (LSP, formatters, etc.). |
 
 ## Features
@@ -116,11 +104,10 @@ To auto-detect your package manager and install common tooling:
 ### Performance & Minimalism
 
 * **<20ms Startup Target:** Achieved via bytecode caching and a 3-phase event-driven lazy loading system.
-* **Persistent State Caching:** Centralized caching in `lua/infra/cache.lua` persists startup metrics and plugin states.
-* **Lifecycle Orchestration:** `lua/infra/deps.lua` acts as the primary package lifecycle manager, handling everything from on-disk git state validation to automated maintenance reporting.
-* **Bare-Metal Tree-sitter:** Direct interaction with Neovim 0.12's native syntax highlighting and folding.
+* **Persistent State Caching:** Centralized caching in `lua/infra/cache.lua` persists startup metrics.
+* **Pinned Treesitter:** Uses specific parser revisions compiled locally for maximum stability and performance. Optimized queries are decoupled from Neovim's runtime and managed in the project root.
 * **Zero Ecosystem Bloat:** Replaces heavy third-party dependency chains with the unified `mini.nvim` suite.
-* **High-Throughput LSP:** Non-blocking attach logic using native `vim.lsp.start` for instantaneous response.
+* **High-Throughput LSP:** Non-blocking attach logic using native `vim.lsp.start`.
 
 ### Development Workflow
 
@@ -229,8 +216,8 @@ The default spec in `lua/infra/registry/languages.lua` includes LSP and formatte
 | `<leader>aa` | Open AI chat window (Ollama) |
 | `<leader>aq` | Toggle AI chat visibility |
 | `<leader>at` | Toggle GitHub Copilot engine |
-| `<leader>a3` | Hot-swap to Ollama 3B model |
-| `<leader>a7` | Hot-swap to Ollama 7B model |
+| `<leader>a3` | Hot-swap to Qwen 2.5 Coder 3B |
+| `<leader>a7` | Hot-swap to Qwen 2.5 Coder 7B |
 | `<M-S-right>`| Accept Copilot suggestion |
 | `<M-]>` / `<M-[>` | Next / Previous Copilot suggestion |
 
@@ -251,10 +238,11 @@ The default spec in `lua/infra/registry/languages.lua` includes LSP and formatte
 ### Local Machine Overrides
 
 Environment-specific variables can be declared in `lua/machine/local.lua` (ignored by git).
-Create it quickly with:
+The universal setup script (`./scripts/setup`) creates this automatically from the example.
+To create it manually:
 
 ```bash
-./scripts/setup-machine
+cp lua/machine/example.lua lua/machine/local.lua
 ```
 
 ```lua
