@@ -4,83 +4,319 @@
 # nvimz: Treesitter Parser & Query Manager
 # =============================================================
 
-set -euo pipefail
+set -Eeuo pipefail
+
+# =============================================================
+# Configuration
+# =============================================================
 
 PARSER_DIR="${HOME}/.local/share/nvim/site/parser"
-QUERY_ROOT="${HOME}/.config/nvim/after/queries"
-TMP_DIR="/tmp/nvimz-parsers"
+QUERY_DIR="${HOME}/.config/nvim/queries"
+CACHE_DIR="${HOME}/.cache/nvimz/parsers"
+
 CC="${CC:-cc}"
 
-# format: "lang_name:github_repo:source_subpath"
+# format:
+# "lang:repo:subdir:revision"
 LANGS=(
-  "c:tree-sitter/tree-sitter-c:src"
-  "cpp:tree-sitter/tree-sitter-cpp:src"
-  "go:tree-sitter/tree-sitter-go:src"
-  "rust:tree-sitter/tree-sitter-rust:src"
-  "python:tree-sitter/tree-sitter-python:src"
-  "typescript:tree-sitter/tree-sitter-typescript:typescript/src"
-  "tsx:tree-sitter/tree-sitter-typescript:tsx/src"
-  "lua:tree-sitter-grammars/tree-sitter-lua:src"
-  "vim:neovim/tree-sitter-vim:src"
-  "vimdoc:neovim/tree-sitter-vimdoc:src"
-  "gitcommit:gbprod/tree-sitter-gitcommit:src"
-  "git_rebase:the-mikedavis/tree-sitter-git-rebase:src"
-  "diff:the-mikedavis/tree-sitter-diff:src"
-  "markdown:tree-sitter-grammars/tree-sitter-markdown:tree-sitter-markdown/src"
+  "c:tree-sitter/tree-sitter-c:src:v0.24.1"
+  "cpp:tree-sitter/tree-sitter-cpp:src:v0.23.4"
+  "go:tree-sitter/tree-sitter-go:src:v0.23.4"
+  "rust:tree-sitter/tree-sitter-rust:src:v0.24.0"
+  "python:tree-sitter/tree-sitter-python:src:v0.25.0"
+
+  "typescript:tree-sitter/tree-sitter-typescript:typescript/src:v0.23.2"
+  "tsx:tree-sitter/tree-sitter-typescript:tsx/src:v0.23.2"
+
+  "lua:tree-sitter-grammars/tree-sitter-lua:src:v0.2.0"
+
+  "vim:neovim/tree-sitter-vim:src:master"
+  "vimdoc:neovim/tree-sitter-vimdoc:src:master"
+
+  "gitcommit:gbprod/tree-sitter-gitcommit:src:main"
+  "git_rebase:the-mikedavis/tree-sitter-git-rebase:src:main"
+  "diff:the-mikedavis/tree-sitter-diff:src:main"
+
+  "markdown:tree-sitter-grammars/tree-sitter-markdown:tree-sitter-markdown/src:split_parser"
+  "markdown_inline:tree-sitter-grammars/tree-sitter-markdown:tree-sitter-markdown-inline/src:split_parser"
 )
 
-mkdir -p "$PARSER_DIR" "$TMP_DIR" "$QUERY_ROOT"
+mkdir -p \
+  "$PARSER_DIR" \
+  "$QUERY_DIR" \
+  "$CACHE_DIR"
 
-info() { printf "\033[1;34m[INFO]\033[0m %s\n" "$1"; }
-ok() { printf "\033[1;32m[OK]\033[0m %s\n" "$1"; }
+# =============================================================
+# Platform Detection
+# =============================================================
+
+case "$(uname -s)" in
+Darwin)
+  LIB_EXT="so"
+  SHARED_FLAGS=(-dynamiclib)
+  ;;
+*)
+  LIB_EXT="so"
+  SHARED_FLAGS=(-shared)
+  ;;
+esac
+
+# =============================================================
+# Logging
+# =============================================================
+
+info() {
+  printf "\033[1;34m[INFO]\033[0m %s\n" "$1" >&2
+}
+
+ok() {
+  printf "\033[1;32m[ OK ]\033[0m %s\n" "$1" >&2
+}
+
+warn() {
+  printf "\033[1;33m[WARN]\033[0m %s\n" "$1" >&2
+}
+
+err() {
+  printf "\033[1;31m[ERR ]\033[0m %s\n" "$1" >&2
+}
+
+trap 'err "Failed at line $LINENO"' ERR
+
+# =============================================================
+# Dependencies
+# =============================================================
+
+require() {
+  command -v "$1" >/dev/null 2>&1 || {
+    err "Missing dependency: $1"
+    exit 1
+  }
+}
+
+require git
+require find
+require cp
+
+# =============================================================
+# Cleanup Legacy Queries
+# =============================================================
+
+cleanup_legacy_queries() {
+  local legacy="${HOME}/.config/nvim/after/queries"
+
+  if [[ -d "$legacy" ]]; then
+    warn "Removing legacy after/queries..."
+    rm -rf "$legacy"
+  fi
+}
+
+# =============================================================
+# Repository Sync
+# =============================================================
+
+sync_repo() {
+  local lang=$1
+  local repo=$2
+  local rev=$3
+
+  local repo_dir="$CACHE_DIR/$lang"
+
+  if [[ -d "$repo_dir/.git" ]]; then
+    info "$lang: Updating repository..."
+
+    git -C "$repo_dir" fetch \
+      --all \
+      --tags \
+      --force \
+      --prune >/dev/null 2>&1
+  else
+    info "$lang: Cloning repository..."
+
+    git clone \
+      --filter=blob:none \
+      "https://github.com/$repo" \
+      "$repo_dir" >/dev/null 2>&1
+  fi
+
+  if ! git -C "$repo_dir" checkout "$rev" >/dev/null 2>&1; then
+    if [[ "$rev" == "master" ]]; then
+      warn "$lang: 'master' not found, trying 'main'..."
+
+      git -C "$repo_dir" checkout main >/dev/null 2>&1 || {
+        err "$lang: Failed to checkout revision '$rev'"
+        return 1
+      }
+    else
+      err "$lang: Failed to checkout revision '$rev'"
+      return 1
+    fi
+  fi
+
+  printf '%s\n' "$repo_dir"
+}
+
+# =============================================================
+# Parser Build
+# =============================================================
 
 build_parser() {
-  local lang=$1 repo=$2 sub=$3
-  local target="$PARSER_DIR/$lang.so"
-  
+  local lang=$1
+  local repo_dir=$2
+  local subdir=$3
+
+  local output="$PARSER_DIR/$lang.$LIB_EXT"
+
   info "$lang: Building parser..."
-  local repo_dir="$TMP_DIR/$lang"
-  rm -rf "$repo_dir"
-  git clone --depth 1 "https://github.com/$repo" "$repo_dir" >/dev/null 2>&1
-  cd "$repo_dir"
 
   local compiler="$CC"
-  local files="$sub/parser.c"
-  [ -f "$sub/scanner.cc" ] && compiler="c++" && files="$files $sub/scanner.cc"
-  [ -f "$sub/scanner.c" ] && files="$files $sub/scanner.c"
+  local files=()
 
-  $compiler -O3 -fPIC -shared $files -I"./$sub" -o "$lang.so"
-  mv "$lang.so" "$target"
+  files+=("$repo_dir/$subdir/parser.c")
+
+  if [[ -f "$repo_dir/$subdir/scanner.c" ]]; then
+    files+=("$repo_dir/$subdir/scanner.c")
+  fi
+
+  if [[ -f "$repo_dir/$subdir/scanner.cc" ]]; then
+    compiler="c++"
+    files+=("$repo_dir/$subdir/scanner.cc")
+  fi
+
+  "$compiler" \
+    -O3 \
+    -fPIC \
+    "${SHARED_FLAGS[@]}" \
+    "${files[@]}" \
+    -I"$repo_dir/$subdir" \
+    -o "$output"
+
+  ok "$lang: Parser installed."
 }
 
-setup_queries() {
+# =============================================================
+# Query Sync
+# =============================================================
+
+copy_queries() {
   local lang=$1
-  local qdir="$QUERY_ROOT/$lang"
-  mkdir -p "$qdir"
-  
-  info "$lang: Downloading queries..."
-  local url="https://raw.githubusercontent.com/neovim/neovim/master/runtime/queries/$lang/highlights.scm"
-  if curl -fsSL -o "$qdir/highlights.scm" "$url"; then
-    curl -fsSL -o "$qdir/injections.scm" "https://raw.githubusercontent.com/neovim/neovim/master/runtime/queries/$lang/injections.scm" 2>/dev/null || true
+  local repo_dir=$2
+
+  local src="$repo_dir/queries"
+  local dst="$QUERY_DIR/$lang"
+
+  # -----------------------------------------------------------
+  # Markdown special handling
+  # -----------------------------------------------------------
+
+  case "$lang" in
+  markdown)
+    src="$repo_dir/tree-sitter-markdown/queries"
+    ;;
+  markdown_inline)
+    src="$repo_dir/tree-sitter-markdown-inline/queries"
+    ;;
+  esac
+
+  if [[ ! -d "$src" ]]; then
+    warn "$lang: No queries directory found."
+    return
   fi
+
+  mkdir -p "$dst"
+
+  info "$lang: Syncing queries..."
+
+  find "$src" -type f -name "*.scm" | while read -r file; do
+    cp "$file" "$dst/"
+  done
+
+  # -----------------------------------------------------------
+  # Custom Go constructor highlights
+  # -----------------------------------------------------------
 
   if [[ "$lang" == "go" ]]; then
-    cat <<'EOF' >>"$qdir/highlights.scm"
-((call_expression function: (identifier) @constructor) (#lua-match? @constructor "^[nN]ew.+$"))
-((call_expression function: (identifier) @constructor) (#lua-match? @constructor "^[mM]ake.+$"))
+    cat <<'EOF' >>"$dst/highlights.scm"
+
+; nvimz custom constructor highlights
+
+((call_expression
+  function: (identifier) @constructor)
+  (#lua-match? @constructor "^[nN]ew.+$"))
+
+((call_expression
+  function: (identifier) @constructor)
+  (#lua-match? @constructor "^[mM]ake.+$"))
+
 EOF
   fi
+
+  ok "$lang: Queries synced."
 }
 
-for entry in "${LANGS[@]}"; do
-  IFS=":" read -r lang repo sub <<<"$entry"
-  if [[ "${1:-}" == "--check" ]]; then
-    [ -f "$PARSER_DIR/$lang.so" ] && echo "✅ $lang" || echo "❌ $lang"
-    continue
-  fi
-  build_parser "$lang" "$repo" "$sub"
-  setup_queries "$lang"
-done
+# =============================================================
+# Parser Validation
+# =============================================================
 
-rm -rf "$TMP_DIR"
-ok "Parsers managed."
+validate_parser() {
+  local lang=$1
+
+  local parser="$PARSER_DIR/$lang.$LIB_EXT"
+
+  if [[ ! -f "$parser" ]]; then
+    err "$lang: Parser missing."
+    return 1
+  fi
+
+  ok "$lang: Parser validated."
+}
+
+# =============================================================
+# Check Mode
+# =============================================================
+
+check_parsers() {
+  for entry in "${LANGS[@]}"; do
+    IFS=":" read -r lang _ <<<"$entry"
+
+    if [[ -f "$PARSER_DIR/$lang.$LIB_EXT" ]]; then
+      ok "$lang"
+    else
+      err "$lang"
+    fi
+  done
+}
+
+# =============================================================
+# Main
+# =============================================================
+
+main() {
+  cleanup_legacy_queries
+
+  if [[ "${1:-}" == "--check" ]]; then
+    check_parsers
+    exit 0
+  fi
+
+  for entry in "${LANGS[@]}"; do
+    IFS=":" read -r lang repo subdir rev <<<"$entry"
+
+    repo_dir=$(sync_repo "$lang" "$repo" "$rev")
+
+    build_parser \
+      "$lang" \
+      "$repo_dir" \
+      "$subdir"
+
+    copy_queries \
+      "$lang" \
+      "$repo_dir"
+
+    validate_parser "$lang"
+  done
+
+  ok "All parsers installed successfully."
+}
+
+main "$@"
