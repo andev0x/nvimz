@@ -40,4 +40,7 @@ dist/
 # Misc
 .commit_suggest_history.json
 .lea
+.lynx
+.fastembed_cache/
+
 

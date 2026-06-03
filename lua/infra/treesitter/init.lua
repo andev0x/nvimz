@@ -4,8 +4,8 @@ function M.setup()
 	local group = vim.api.nvim_create_augroup("native_treesitter", { clear = true })
 
 	local function enable_treesitter(bufnr)
-		-- Skip special buffers and invalid filetypes
-		if vim.bo[bufnr].buftype ~= "" or vim.bo[bufnr].filetype == "" then
+		-- Skip special buffers, invalid filetypes, or large files
+		if vim.bo[bufnr].buftype ~= "" or vim.bo[bufnr].filetype == "" or vim.b[bufnr].large_file then
 			return
 		end
 
