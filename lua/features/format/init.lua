@@ -7,10 +7,12 @@ function M.setup()
 
 	conform.setup({
 		formatters_by_ft = languages.formatters_by_ft,
-		format_on_save = {
-			timeout_ms = 400,
-			lsp_format = "never",
-		},
+		format_on_save = function(bufnr)
+			if vim.b[bufnr].large_file then
+				return
+			end
+			return { timeout_ms = 400, lsp_format = "never" }
+		end,
 	})
 
 	vim.keymap.set("n", "<leader>fm", function()
