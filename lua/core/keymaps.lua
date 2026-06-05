@@ -57,6 +57,13 @@ map("n", "<C-l>", "<C-w>l", { desc = "Go to right window", silent = true })
 map("n", "<C-d>", "<C-d>zz", { desc = "Scroll down and center", silent = true })
 map("n", "<C-u>", "<C-u>zz", { desc = "Scroll up and center", silent = true })
 
+-- Move lines
+map("n", "<A-j>", "<cmd>m .+1<cr>==", { desc = "Move line down", silent = true })
+map("n", "<A-k>", "<cmd>m .-2<cr>==", { desc = "Move line up", silent = true })
+
+map("v", "<A-j>", ":m '>+1<cr>gv=gv", { desc = "Move selection down", silent = true })
+map("v", "<A-k>", ":m '<-2<cr>gv=gv", { desc = "Move selection up", silent = true })
+
 -- Folding
 map({ "n", "v" }, "<leader>z", "za", { desc = "Toggle fold", silent = true })
 
