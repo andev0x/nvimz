@@ -154,7 +154,7 @@ M.formatters_by_ft = {
 	go = { "gofmt" },
 	terraform = { "terraform_fmt" },
 	["terraform-vars"] = { "terraform_fmt" },
-	java = { "google_java_format" },
+	java = { "google-java-format" },
 }
 
 M.formatter_binaries = {
