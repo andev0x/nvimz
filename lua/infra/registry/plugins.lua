@@ -3,6 +3,7 @@ local M = {}
 M.phase1 = {
 	{ source = "folke/tokyonight.nvim", name = "tokyonight" },
 	{ source = "echasnovski/mini.nvim" },
+	{ source = "MeanderingProgrammer/render-markdown.nvim" },
 }
 
 M.phase2 = {

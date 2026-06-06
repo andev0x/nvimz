@@ -135,6 +135,12 @@ function M.setup()
 			highlights["@punctuation.bracket"] = { fg = "#5a6e68" }
 			highlights["@punctuation.delimiter"] = { fg = "#89b482" }
 
+			-- Disable/Mute markdown-specific highlights that render-markdown.nvim will handle
+			highlights["@markdown.heading"] = { fg = "#d7e3dc", bold = true } -- Neutralize heading colors
+			highlights["@markdown.quote"] = { fg = "#688077" } -- Mute quote colors
+			highlights["@markdown.punctuation"] = { fg = "#5a6e68" } -- Mute punctuation highlights
+			highlights["@markdown.fence"] = { fg = "#5a6e68" } -- Mute code fence highlights
+
 			-- -----------------------------------------------------------------
 			-- Granular Global Mappings matching your Go highlights.scm perfectly
 			-- This guarantees 100% color synchronization between Lua and Go
