@@ -1,5 +1,5 @@
 # nvimz Maintenance Report
-Date: 2026-06-05 23:20:47
+Date: 2026-06-06 14:32:57
 
 ## 1. Lockfile Validation
 ✅ Lockfile (`nvim-pack-lock.json`) is valid JSON.
@@ -22,6 +22,7 @@ Date: 2026-06-05 23:20:47
 ────────────────────────────────────────────────────────────
  stylua                 OK         stylua 2.5.2
  shfmt                  OK         3.13.1
+ prettier               OK         3.8.3
 ────────────────────────────────────────────────────────────
  Linters
 ────────────────────────────────────────────────────────────
@@ -29,7 +30,7 @@ Date: 2026-06-05 23:20:47
 ```
 
 ## 3. Startup Benchmark
-Total startup time: **013.173ms** (Target: <20ms)
+Total startup time: **012.897ms** (Target: <20ms)
 
 ## 4. Parser Validation
 ```
@@ -51,6 +52,7 @@ Total startup time: **013.173ms** (Target: <20ms)
 ✅ diff: Already installed
 ✅ markdown: Already installed
 ✅ markdown_inline: Already installed
+✅ json: Already installed
 --------------------------------------------------
 ```
 

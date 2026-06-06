@@ -52,6 +52,13 @@ return {
 			version = { "shfmt", "--version" },
 			required = false,
 		},
+
+		{
+			name = "prettier",
+			bin = "prettier",
+			version = { "prettier", "--version" },
+			required = false,
+		},
 	},
 
 	linters = {

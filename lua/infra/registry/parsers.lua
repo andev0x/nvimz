@@ -16,6 +16,7 @@ M.required = {
 	"diff",
 	"markdown",
 	"markdown_inline",
+	"json",
 }
 
 M.required_set = {}
