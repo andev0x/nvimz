@@ -79,7 +79,7 @@ function M.setup()
 			-- -----------------------------------------------------------------
 			highlights.Normal = { bg = "NONE" }
 			highlights.NormalFloat = { bg = "NONE" }
-			highlights.SignColumn = { bg = "NONE" }
+			highlights.SignColumn = { bg = colors.bg }
 			highlights.EndOfBuffer = { fg = colors.bg_dark }
 
 			-- Soft selections and unobtrusive cursorlines
@@ -99,6 +99,13 @@ function M.setup()
 				bg = colors.bg_highlight,
 				bold = true,
 			}
+
+			-- -----------------------------------------------------------------
+			-- Git Signs (mini.diff)
+			-- -----------------------------------------------------------------
+			highlights.MiniDiffSignAdd = { fg = colors.teal }
+			highlights.MiniDiffSignChange = { fg = colors.orange }
+			highlights.MiniDiffSignDelete = { fg = colors.red }
 
 			-- -----------------------------------------------------------------
 			-- Diagnostics & Inlay Hints
