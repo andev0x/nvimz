@@ -103,8 +103,8 @@ function M.setup()
 			-- -----------------------------------------------------------------
 			-- Git Signs (mini.diff)
 			-- -----------------------------------------------------------------
-			highlights.MiniDiffSignAdd = { fg = colors.teal }
-			highlights.MiniDiffSignChange = { fg = colors.orange }
+			highlights.MiniDiffSignAdd = { fg = colors.green }
+			highlights.MiniDiffSignChange = { fg = colors.blue }
 			highlights.MiniDiffSignDelete = { fg = colors.red }
 
 			-- -----------------------------------------------------------------

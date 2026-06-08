@@ -1,5 +1,5 @@
 # nvimz Maintenance Report
-Date: 2026-06-06 15:01:35
+Date: 2026-06-08 10:53:20
 
 ## 1. Lockfile Validation
 ✅ Lockfile (`nvim-pack-lock.json`) is valid JSON.
@@ -30,7 +30,7 @@ Date: 2026-06-06 15:01:35
 ```
 
 ## 3. Startup Benchmark
-Total startup time: **012.777ms** (Target: <20ms)
+Total startup time: **013.903ms** (Target: <20ms)
 
 ## 4. Parser Validation
 ```
