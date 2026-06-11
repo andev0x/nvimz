@@ -76,6 +76,8 @@ function M.setup()
 		vim.cmd("GpAgent Ollama-7B")
 		vim.notify("Switched to Ollama-7B")
 	end, "AI 7B")
+	-- New mapping: Alt+Enter to respond in the current chat
+	map("<A-CR>", ":GpChatRespond<CR>", "AI Respond")
 end
 
 return M
