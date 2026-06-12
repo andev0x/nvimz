@@ -9,7 +9,6 @@ local function is_ignored(path)
 	end
 
 	-- Check if the path is ignored by git
-	-- Use 'git check-ignore' which is reliable but requires a process call
 	local handle = io.popen("git check-ignore " .. vim.fn.shellescape(path) .. " 2>/dev/null")
 	if not handle then
 		return false
@@ -25,7 +24,6 @@ end
 
 function M.setup()
 	require("oil").setup({
-		-- Let oil take over directory buffers
 		default_file_explorer = true,
 		columns = {
 			"icon",
@@ -35,7 +33,7 @@ function M.setup()
 		},
 		view_options = {
 			show_hidden = true,
-			highlight_filename = function(entry, is_hidden, is_link_target, is_link_orphan)
+			highlight_filename = function(entry, _, _, _)
 				local dir = require("oil").get_current_dir()
 				if dir then
 					local path = dir .. entry.name
@@ -46,19 +44,45 @@ function M.setup()
 				return nil
 			end,
 		},
+
+		-- ★ FIXED: Correct structure for the floating window API in oil.nvim
+		float = {
+			padding = 0,
+			border = "rounded",
+			-- Fix width to 30% of screen, height to 85% to look balanced
+			max_width = math.floor(vim.o.columns * 0.30),
+			max_height = math.floor(vim.o.lines * 0.85),
+
+			-- Override to force the window to attach directly to the top-left corner
+			override = function(conf)
+				conf.anchor = "NW"
+				conf.col = 0
+				conf.row = 1 -- Leaves 1 line from top so it doesn't clip the tabline/header
+				return conf
+			end,
+		},
 	})
 
+	-- Initialize git status integration
 	require("oil-git-status").setup()
 
+	-- Link the highlight group to the theme's Comment color
 	vim.api.nvim_set_hl(0, "OilGitIgnored", { link = "Comment" })
 
-	vim.keymap.set("n", "<leader>e", function()
+	------------------------------------------------------------------------
+	-- Helper that toggles the *floating* Oil window
+	------------------------------------------------------------------------
+	local function toggle_oil_float()
 		if vim.bo.filetype == "oil" then
 			require("oil").close()
-		else
-			require("oil").open()
+			return
 		end
-	end, { desc = "Toggle Oil" })
+
+		require("oil").open_float()
+	end
+
+	-- Toggle shortcut
+	vim.keymap.set("n", "<leader>e", toggle_oil_float, { desc = "Toggle Oil (rounded left float)" })
 end
 
 return M
