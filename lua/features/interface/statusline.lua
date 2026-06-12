@@ -108,16 +108,16 @@ end
 -- ============================================================================
 
 local mode_map = {
-	n = { label = "NORMAL", hl = "MiniStatuslineModeNormal" },
-	i = { label = "INSERT", hl = "MiniStatuslineModeInsert" },
-	v = { label = "VISUAL", hl = "MiniStatuslineModeVisual" },
-	V = { label = "VISUAL", hl = "MiniStatuslineModeVisual" },
-	[""] = { label = "V-BLOCK", hl = "MiniStatuslineModeVisual" },
-	c = { label = "COMMAND", hl = "MiniStatuslineModeCommand" },
-	R = { label = "REPLACE", hl = "MiniStatuslineModeReplace" },
-	s = { label = "SELECT", hl = "MiniStatuslineModeVisual" },
-	S = { label = "SELECT", hl = "MiniStatuslineModeVisual" },
-	t = { label = "TERMINAL", hl = "MiniStatuslineInactive" },
+	n = { label = "●", hl = "MiniStatuslineModeNormal" },
+	i = { label = "✎", hl = "MiniStatuslineModeInsert" },
+	v = { label = "▣", hl = "MiniStatuslineModeVisual" },
+	V = { label = "▤", hl = "MiniStatuslineModeVisual" },
+	["\22"] = { label = "▥", hl = "MiniStatuslineModeVisual" },
+	c = { label = "⌘", hl = "MiniStatuslineModeCommand" },
+	R = { label = "↺", hl = "MiniStatuslineModeReplace" },
+	s = { label = "◇", hl = "MiniStatuslineModeVisual" },
+	S = { label = "◆", hl = "MiniStatuslineModeVisual" },
+	t = { label = "⊞", hl = "MiniStatuslineInactive" },
 }
 
 local function get_mode()
