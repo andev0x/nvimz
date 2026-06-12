@@ -57,12 +57,12 @@ The leader key in **nvimz** is configured to **`<Space>`**.
 | `<leader>rh` / `rl` | Resize window width (Left / Right) |
 | `<leader>rj` / `rk` | Resize window height (Down / Up) |
 
-### Files & Searching (`mini.pick` & `mini.files`)
+### Files & Searching (`mini.pick` & `oil.nvim`)
 
 | Key | Action |
 | --- | --- |
-| `<leader>e` | Toggle file explorer (`mini.files`) |
-| `a` | Create new file/folder (inside `mini.files`) |
+| `<leader>e` | Toggle file explorer (`oil.nvim`) |
+| `o` / `O` | Add new line to create new file/folder (save with `:w` inside `oil.nvim`) |
 | `<leader>ff` | Search files by name |
 | `<leader>fe` | Search files including hidden |
 | `<leader>fg` | Live project grep search |

@@ -40,7 +40,7 @@ vim.api.nvim_create_autocmd("BufReadPre", {
 			-- Disable regex syntax highlighting
 			vim.opt_local.syntax = "off"
 
-			-- Only notify if the file is the current active buffer (prevents mini.files preview spam)
+			-- Only notify if the file is the current active buffer (prevents oil.nvim preview spam)
 			vim.schedule(function()
 				if vim.api.nvim_buf_is_valid(args.buf) and vim.api.nvim_get_current_buf() == args.buf then
 					local size_mb = stats.size / (1024 * 1024)

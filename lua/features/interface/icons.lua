@@ -2,7 +2,7 @@ local M = {}
 
 function M.setup()
 	-- We load and register mini.icons first. This automatically provides icons
-	-- to mini.files, mini.pick, and mini.statusline.
+	-- to oil.nvim, mini.pick, and mini.statusline.
 	require("mini.icons").setup({
 		-- Style: 'glyph' (standard) or 'ascii'
 		style = "glyph",

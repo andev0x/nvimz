@@ -37,7 +37,7 @@ Unlike heavy configurations that rely on Mason for runtime isolation, **nvimz** 
 
 - **Ultra-Fast Performance:** Achieves <20ms startup times via dynamic event caching and a deferred, 3-phase lazy loading pipeline.
 - **Unified Ecosystem:** Eliminates plugin bloat by substituting heavy external dependency chains with the lightweight, unified `mini.nvim` suite.
-- **Power-user Workflows:** Out-of-the-box support for a fuzzy finder (`mini.pick`), fluid directory explorer (`mini.files`), floating/split terminals, and built-in Git staging/blaming.
+- **Power-user Workflows:** Out-of-the-box support for a fuzzy finder (`mini.pick`), fluid directory explorer (`oil.nvim`), floating/split terminals, and built-in Git staging/blaming.
 - **Native Code Intelligence:** Clean diagnostic hovers, LSP inlay hints, and smart completions, powered natively without third-party abstraction layers.
 - **Advanced Features:** Interactive DAP-driven debugging, Copilot integration, and deep Local AI/Ollama chat windows.
 

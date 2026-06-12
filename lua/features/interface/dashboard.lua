@@ -227,7 +227,7 @@ function M.setup()
 	end, map_opts)
 
 	vim.keymap.set("n", "e", function()
-		require("mini.files").open()
+		require("oil").open()
 	end, map_opts)
 
 	vim.keymap.set("n", "q", "<cmd>qa<cr>", map_opts)

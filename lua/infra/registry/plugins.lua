@@ -4,6 +4,8 @@ M.phase1 = {
 	{ source = "folke/tokyonight.nvim", name = "tokyonight" },
 	{ source = "echasnovski/mini.nvim" },
 	{ source = "MeanderingProgrammer/render-markdown.nvim" },
+	{ source = "stevearc/oil.nvim" },
+	{ source = "refractalize/oil-git-status.nvim" },
 }
 
 M.phase2 = {
