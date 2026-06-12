@@ -269,15 +269,6 @@ function M.open()
 	M.setup()
 end
 
--- ============================================================================
--- Auto-open Dashboard on Startup
--- ============================================================================
 
-vim.api.nvim_create_autocmd("VimEnter", {
-	once = true,
-	callback = function()
-		M.setup()
-	end,
-})
 
 return M

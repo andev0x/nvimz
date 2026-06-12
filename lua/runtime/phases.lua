@@ -20,22 +20,23 @@ function M.add(specs)
 end
 
 function M.setup()
-	local cache = require("infra.cache")
-	local state = cache.get("plugin_state") or { phases = {} }
-	local plugins = require("infra.registry").plugins
-
 	------------------------------------------------------------------
 	-- Phase 1: UI + Core Editing
 	------------------------------------------------------------------
 	vim.schedule(function()
+		local is_headless = #vim.api.nvim_list_uis() == 0
+		local registry = require("infra.registry")
+		local plugins = registry.plugins
 		M.add(plugins.phase1)
 
 		pcall(function()
-			-- UI
-			require("features.interface.theme").setup()
-			require("features.interface.icons").setup()
-			require("features.interface.statusline").setup()
-			require("features.interface.scope_line").setup()
+			-- UI (Only if not headless)
+			if not is_headless then
+				require("features.interface.theme").setup()
+				require("features.interface.icons").setup()
+				require("features.interface.statusline").setup()
+				require("features.interface.scope_line").setup()
+			end
 
 			-- Core editing
 			require("infra.treesitter").setup()
@@ -48,8 +49,12 @@ function M.setup()
 			require("features.git").setup()
 		end)
 
-		state.phases[1] = true
-		cache.set("plugin_state", state)
+		local cache = require("infra.cache")
+		local state = cache.get("plugin_state") or { phases = {} }
+		if not state.phases[1] then
+			state.phases[1] = true
+			cache.set("plugin_state", state)
+		end
 	end)
 
 	------------------------------------------------------------------
@@ -73,6 +78,8 @@ function M.setup()
 		group = vim.api.nvim_create_augroup("PackPhase2", { clear = true }),
 		once = true,
 		callback = function()
+			local registry = require("infra.registry")
+			local plugins = registry.plugins
 			M.add(plugins.phase2)
 
 			pcall(function()
@@ -80,8 +87,12 @@ function M.setup()
 				require("features.dap").setup()
 			end)
 
-			state.phases[2] = true
-			cache.set("plugin_state", state)
+			local cache = require("infra.cache")
+			local state = cache.get("plugin_state") or { phases = {} }
+			if not state.phases[2] then
+				state.phases[2] = true
+				cache.set("plugin_state", state)
+			end
 		end,
 	})
 
@@ -92,14 +103,20 @@ function M.setup()
 		group = vim.api.nvim_create_augroup("PackPhase3", { clear = true }),
 		once = true,
 		callback = function()
+			local registry = require("infra.registry")
+			local plugins = registry.plugins
 			M.add(plugins.phase3)
 
 			pcall(function()
 				require("features.ai").setup()
 			end)
 
-			state.phases[3] = true
-			cache.set("plugin_state", state)
+			local cache = require("infra.cache")
+			local state = cache.get("plugin_state") or { phases = {} }
+			if not state.phases[3] then
+				state.phases[3] = true
+				cache.set("plugin_state", state)
+			end
 		end,
 	})
 end

@@ -260,7 +260,7 @@ end
 -- Caching to avoid querying clients on every redraw
 -- ============================================================================
 
-local lsp_icons = require("infra.registry").languages.lsp_icons
+local lsp_icons = nil
 local lsp_cache = {
 	val = "",
 	last_update = 0,
@@ -277,6 +277,10 @@ local function get_lsp()
 	if #clients == 0 then
 		lsp_cache.val = ""
 	else
+		if not lsp_icons then
+			local ok, registry = pcall(require, "infra.registry")
+			lsp_icons = ok and registry.languages.lsp_icons or {}
+		end
 		local names = {}
 		for _, client in ipairs(clients) do
 			if client.name ~= "copilot" then

@@ -13,7 +13,9 @@ vim.opt.smartcase = true
 vim.opt.incsearch = true
 vim.opt.hlsearch = true
 
-vim.opt.clipboard = "unnamedplus"
+vim.schedule(function()
+	vim.opt.clipboard = "unnamedplus"
+end)
 vim.opt.termguicolors = true
 vim.opt.mouse = "a" -- Enable mouse support
 vim.opt.scrolloff = 4
@@ -53,17 +55,19 @@ vim.opt.backup = false
 vim.opt.foldmethod = "indent"
 vim.opt.foldlevel = 99
 
-local cache = require("infra.cache")
-local machine = cache.get("machine_state")
+vim.schedule(function()
+	local cache = require("infra.cache")
+	local machine = cache.get("machine_state")
 
-if not machine then
-	local ok, local_machine = pcall(require, "machine.local")
-	if ok and type(local_machine) == "table" then
-		machine = local_machine
-		cache.set("machine_state", machine)
+	if not machine then
+		local ok, local_machine = pcall(require, "machine.local")
+		if ok and type(local_machine) == "table" then
+			machine = local_machine
+			cache.set("machine_state", machine)
+		end
 	end
-end
 
-if machine and type(machine.python_path) == "string" then
-	vim.g.python3_host_prog = machine.python_path
-end
+	if machine and type(machine.python_path) == "string" then
+		vim.g.python3_host_prog = machine.python_path
+	end
+end)
