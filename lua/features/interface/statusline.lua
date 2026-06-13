@@ -14,12 +14,41 @@ local function setup_highlights()
 	local base_bg = colors.bg_statusline
 
 	-- ── Mode pills (High focus, actionable) ─────────────────────────────────
-	set_hl(0, "MiniStatuslineModeNormal", { fg = colors.bg_dark, bg = colors.blue, bold = true })
-	set_hl(0, "MiniStatuslineModeInsert", { fg = colors.bg_dark, bg = colors.green, bold = true })
-	set_hl(0, "MiniStatuslineModeVisual", { fg = colors.bg_dark, bg = colors.magenta, bold = true })
-	set_hl(0, "MiniStatuslineModeReplace", { fg = colors.bg_dark, bg = colors.red, bold = true })
-	set_hl(0, "MiniStatuslineModeCommand", { fg = colors.bg_dark, bg = colors.yellow, bold = true })
-	set_hl(0, "MiniStatuslineModeTerminal", { fg = colors.bg_dark, bg = colors.teal, bold = true })
+	set_hl(0, "MiniStatuslineModeNormal", {
+		fg = colors.bg_dark,
+		bg = colors.blue,
+		bold = true,
+	})
+
+	set_hl(0, "MiniStatuslineModeInsert", {
+		fg = colors.bg_dark,
+		bg = colors.green,
+		bold = true,
+	})
+
+	set_hl(0, "MiniStatuslineModeVisual", {
+		fg = colors.bg_dark,
+		bg = "#9d7cd8", -- softer purple, refined contrast
+		bold = true,
+	})
+
+	set_hl(0, "MiniStatuslineModeReplace", {
+		fg = colors.bg_dark,
+		bg = colors.red1, -- better than colors.red for moon
+		bold = true,
+	})
+
+	set_hl(0, "MiniStatuslineModeCommand", {
+		fg = colors.bg_dark,
+		bg = colors.orange, -- stronger warmth than yellow
+		bold = true,
+	})
+
+	set_hl(0, "MiniStatuslineModeTerminal", {
+		fg = colors.bg_dark,
+		bg = colors.teal,
+		bold = true,
+	})
 
 	-- ── Primary Content (Filename takes center stage) ───────────────────────
 	set_hl(0, "MiniStatuslineFilename", { fg = colors.fg, bg = base_bg, bold = true })
