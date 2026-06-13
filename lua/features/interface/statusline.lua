@@ -2,51 +2,55 @@ local M = {}
 
 -- ============================================================================
 -- HIGHLIGHTS
--- Premium typography-focused design with strict contrast hierarchy
+-- Minimalist, focus-driven design. High contrast reserved for Modes & Errors.
 -- ============================================================================
 
 local function setup_highlights()
 	local set_hl = vim.api.nvim_set_hl
 	local colors = require("tokyonight.colors").setup({ style = "moon" })
 
+	-- We use a slightly darker, muted background for the statusline
+	-- to separate it from the code buffer without needing a harsh border.
 	local base_bg = colors.bg_statusline
 
-	-- ── Mode pills (Clean, focused colors) ──────────────────────────────────
+	-- ── Mode pills (High focus, actionable) ─────────────────────────────────
 	set_hl(0, "MiniStatuslineModeNormal", { fg = colors.bg_dark, bg = colors.blue, bold = true })
 	set_hl(0, "MiniStatuslineModeInsert", { fg = colors.bg_dark, bg = colors.green, bold = true })
-	set_hl(0, "MiniStatuslineModeVisual", { fg = colors.bg_dark, bg = "#bb9af7", bold = true })
-	set_hl(0, "MiniStatuslineModeReplace", { fg = colors.bg_dark, bg = colors.red1, bold = true })
-	set_hl(0, "MiniStatuslineModeCommand", { fg = colors.bg_dark, bg = colors.orange, bold = true })
+	set_hl(0, "MiniStatuslineModeVisual", { fg = colors.bg_dark, bg = colors.magenta, bold = true })
+	set_hl(0, "MiniStatuslineModeReplace", { fg = colors.bg_dark, bg = colors.red, bold = true })
+	set_hl(0, "MiniStatuslineModeCommand", { fg = colors.bg_dark, bg = colors.yellow, bold = true })
 	set_hl(0, "MiniStatuslineModeTerminal", { fg = colors.bg_dark, bg = colors.teal, bold = true })
 
 	-- ── Primary Content (Filename takes center stage) ───────────────────────
 	set_hl(0, "MiniStatuslineFilename", { fg = colors.fg, bg = base_bg, bold = true })
 	set_hl(0, "MiniStatuslineFilenameModified", { fg = colors.yellow, bg = base_bg, bold = true })
-	set_hl(0, "MiniStatuslinePath", { fg = colors.dark3, bg = base_bg, italic = true })
-	set_hl(0, "MiniStatuslineGit", { fg = colors.comment, bg = base_bg })
+	set_hl(0, "MiniStatuslinePath", { fg = colors.dark3, bg = base_bg })
 
-	-- ── Diagnostics (Flat, clean semantics) ──────────────────────────────────
-	set_hl(0, "MiniStatuslineDiagBase", { fg = colors.fg_dark, bg = base_bg })
+	-- ── Greeting Message (Gentle, inviting) ─────────────────────────────────
+	set_hl(0, "MiniStatuslineWelcome", { fg = colors.blue, bg = base_bg, bold = true })
+
+	-- ── Diagnostics (Flat, clean semantics) ─────────────────────────────────
 	set_hl(0, "MiniStatuslineError", { fg = colors.error, bg = base_bg, bold = true })
 	set_hl(0, "MiniStatuslineWarning", { fg = colors.warning, bg = base_bg, bold = true })
 
-	-- ── Telemetry Metadata ───────────────────────────────────────────────────
-	set_hl(0, "MiniStatuslineLSP", { fg = colors.comment, bg = base_bg })
-	set_hl(0, "MiniStatuslineFileinfo", { fg = colors.comment, bg = base_bg })
+	-- ── Telemetry Metadata (Recessed, low cognitive load) ───────────────────
+	set_hl(0, "MiniStatuslineGit", { fg = colors.dark5, bg = base_bg })
+	set_hl(0, "MiniStatuslineLSP", { fg = colors.dark5, bg = base_bg })
+	set_hl(0, "MiniStatuslineFileinfo", { fg = colors.dark5, bg = base_bg })
 
-	-- ── Premium Right Pill (Matches Tmux capsule look perfectly) ─────────────
+	-- ── Premium Right Pill (Matches Tmux capsule look perfectly) ────────────
 	set_hl(0, "MiniStatuslineRightPill", { fg = colors.purple, bg = colors.bg_highlight, bold = true })
 	set_hl(0, "MiniStatuslineLocation", { fg = colors.fg, bg = colors.bg_highlight, bold = true })
-	set_hl(0, "MiniStatuslineProgress", { fg = colors.blue1, bg = colors.bg_highlight, bold = true })
+	set_hl(0, "MiniStatuslineProgress", { fg = colors.dark5, bg = colors.bg_highlight })
 
-	-- ── Spacers ──────────────────────────────────────────────────────────────
+	-- ── Spacers ─────────────────────────────────────────────────────────────
 	set_hl(0, "MiniStatuslineSecondary", { fg = base_bg, bg = base_bg })
-	set_hl(0, "MiniStatuslineInactive", { fg = colors.dark3, bg = base_bg, italic = true })
+	set_hl(0, "MiniStatuslineInactive", { fg = colors.dark3, bg = base_bg })
 end
 
 -- ============================================================================
 -- MODES CONFIGURATION
--- Typography-focused indicator map using minimal geometric & standard glyphs
+-- Typography-focused indicator map
 -- ============================================================================
 
 local mode_map = {
@@ -71,19 +75,19 @@ local function get_mode()
 end
 
 -- ============================================================================
--- BIOLOGICAL CLOCK ENGINE (Ambient tracking cached every 60s)
+-- BIOLOGICAL CLOCK ENGINE
 -- ============================================================================
 
 local _time = { icon = "󰭎", ts = 0 }
 local TIME_SLOTS = {
-	{ from = 5, to = 7, icon = "󰖚 " }, -- Dawn
-	{ from = 7, to = 11, icon = "󰖨 " }, -- Morning session
-	{ from = 11, to = 13, icon = "󰩰 " }, -- Lunch break
-	{ from = 13, to = 17, icon = "󱍄 " }, -- Afternoon grind
-	{ from = 17, to = 19, icon = "󰖚 " }, -- Dusk
-	{ from = 19, to = 22, icon = "󰅶 " }, -- Evening push
-	{ from = 22, to = 24, icon = "󰖔 " }, -- Late night coding
-	{ from = 0, to = 5, icon = "󰒲 " }, -- Deep night shift
+	{ from = 5, to = 7, icon = "󰖚 " },
+	{ from = 7, to = 11, icon = "󰖨 " },
+	{ from = 11, to = 13, icon = "󰩰 " },
+	{ from = 13, to = 17, icon = "󱍄 " },
+	{ from = 17, to = 19, icon = "󰖚 " },
+	{ from = 19, to = 22, icon = "󰅶 " },
+	{ from = 22, to = 24, icon = "󰖔 " },
+	{ from = 0, to = 5, icon = "󰒲 " },
 }
 
 local function get_time_icon()
@@ -109,15 +113,42 @@ end
 
 local function get_filename()
 	local name = vim.fn.expand("%:t")
-	if name == "" then
-		return "scratch", "", false
-	end
+	local ft = vim.bo.filetype
 	local modified = vim.bo.modified
+
+	-- Intercept if empty name buffer, or explicitly on a dashboard screen
+	if name == "" or ft == "dashboard" or ft == "alpha" or ft == "starter" then
+		if not modified then
+			local username = vim.env.USER or vim.env.USERNAME or "User"
+			local h = tonumber(os.date("%H"))
+			local greeting = ""
+			local icon = ""
+
+			-- Dynamic Time-Based Greeting
+			if h >= 5 and h < 12 then
+				greeting = "Good morning"
+				icon = "󰖨"
+			elseif h >= 12 and h < 18 then
+				greeting = "Good afternoon"
+				icon = "󰖚"
+			elseif h >= 18 and h < 22 then
+				greeting = "Good evening"
+				icon = "󰅶"
+			else
+				greeting = "Good night"
+				icon = "󰖔"
+			end
+
+			return icon .. " " .. greeting .. ", @" .. username, "", false, true
+		end
+		return "scratch", "", false, false
+	end
+
 	local suffix = modified and " ●" or ""
 	if vim.bo.readonly then
 		suffix = suffix .. " 󰌾"
 	end
-	return name, suffix, modified
+	return name, suffix, modified, false
 end
 
 local function get_filepath()
@@ -225,7 +256,7 @@ end
 
 local function build_active(MiniStatusline)
 	local mode = get_mode()
-	local fname, fsuffix, modified = get_filename()
+	local fname, fsuffix, modified, is_welcome = get_filename()
 	local fpath = get_filepath()
 	local git = get_git(MiniStatusline)
 	local diag = get_diagnostics()
@@ -233,39 +264,46 @@ local function build_active(MiniStatusline)
 	local fsize = get_filesize()
 	local time_icon = get_time_icon()
 
-	local fname_hl = modified and "MiniStatuslineFilenameModified" or "MiniStatuslineFilename"
 	local s = ""
 
 	-- ── LEFT SIDE: Core Identity Focus ───────────────────────────────────────
 	s = s .. "%#" .. mode.hl .. "#" .. mode.label
 	s = s .. "%#MiniStatuslineSecondary# "
-	s = s .. "%#" .. fname_hl .. "#" .. fname .. (fsuffix or "")
 
-	if fpath ~= "" then
-		s = s .. " %#MiniStatuslinePath# " .. fpath
+	if is_welcome then
+		-- Clean, time-sensitive greeting string displayed on the left
+		s = s .. "%#MiniStatuslineWelcome#" .. fname
+	else
+		-- Standard editing view
+		local fname_hl = modified and "MiniStatuslineFilenameModified" or "MiniStatuslineFilename"
+		s = s .. "%#" .. fname_hl .. "#" .. fname .. (fsuffix or "")
+
+		if fpath ~= "" then
+			s = s .. " %#MiniStatuslinePath# " .. fpath
+		end
+
+		if git ~= "" then
+			s = s .. " %#MiniStatuslineGit# " .. git
+		end
 	end
 
-	if git ~= "" then
-		s = s .. " %#MiniStatuslineGit# " .. git
-	end
-
-	-- ── SPRING CENTER SPACER ──────────────────────────────────────────────────
+	-- ── SPRING CENTER SPACER ────────────────────────────────────────────────
 	s = s .. "%#MiniStatuslineSecondary#%<%="
 
-	-- ── RIGHT SIDE: Micro Telemetry ──────────────────────────────────────────
-	if diag ~= "" then
-		s = s .. diag .. "  "
+	-- ── RIGHT SIDE: Micro Telemetry ─────────────────────────────────────────
+	if not is_welcome then
+		if diag ~= "" then
+			s = s .. diag .. "  "
+		end
+		if lsp ~= "" then
+			s = s .. "%#MiniStatuslineLSP#" .. lsp .. "  "
+		end
+		if fsize ~= "" then
+			s = s .. "%#MiniStatuslineFileinfo#󰈐 " .. fsize .. "  "
+		end
 	end
 
-	if lsp ~= "" then
-		s = s .. "%#MiniStatuslineLSP#" .. lsp .. "  "
-	end
-
-	if fsize ~= "" then
-		s = s .. "%#MiniStatuslineFileinfo#󰈐 " .. fsize .. "  "
-	end
-
-	-- ── BENTO PILL BRACKET (Symmetric to Tmux) ───────────────────────────────
+	-- ── BENTO PILL BRACKET (Always visible) ─────────────────────────────────
 	s = s .. "%#MiniStatuslineRightPill# " .. time_icon .. " "
 	s = s .. "%#MiniStatuslineLocation# %l:%c "
 	s = s .. "%#MiniStatuslineProgress#%p%% "
@@ -274,7 +312,11 @@ local function build_active(MiniStatusline)
 end
 
 local function build_inactive()
-	local fname, fsuffix = get_filename()
+	local fname, fsuffix, _, is_welcome = get_filename()
+	if is_welcome then
+		return "%#MiniStatuslineInactive# %="
+	end
+
 	local suffix_str = (type(fsuffix) == "string") and fsuffix or ""
 	return "%#MiniStatuslineInactive#  " .. fname .. suffix_str .. " %="
 end
@@ -294,16 +336,12 @@ function M.setup()
 		callback = setup_highlights,
 	})
 
-	local MS = statusline
-
 	statusline.config.content.active = function()
-		return build_active(MS)
+		return build_active(statusline)
 	end
-
 	statusline.config.content.inactive = function()
 		return build_inactive()
 	end
-
 	statusline.section_location = function()
 		return "%l:%c"
 	end
