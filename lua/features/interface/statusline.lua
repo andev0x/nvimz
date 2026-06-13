@@ -2,75 +2,46 @@ local M = {}
 
 -- ============================================================================
 -- HIGHLIGHTS
--- Minimalist, focus-driven design. High contrast reserved for Modes & Errors.
+-- Premium, flat minimalist design. High contrast reserved for active blocks.
 -- ============================================================================
 
 local function setup_highlights()
 	local set_hl = vim.api.nvim_set_hl
 	local colors = require("tokyonight.colors").setup({ style = "moon" })
 
-	-- We use a slightly darker, muted background for the statusline
-	-- to separate it from the code buffer without needing a harsh border.
+	-- Uniform flat background across the entire statusline
 	local base_bg = colors.bg_statusline
 
-	-- ── Mode pills (High focus, actionable) ─────────────────────────────────
-	set_hl(0, "MiniStatuslineModeNormal", {
-		fg = colors.bg_dark,
-		bg = colors.blue,
-		bold = true,
-	})
+	-- Subtle, professional dark block for the rightmost anchor pill
+	local right_pill_bg = colors.bg_highlight
 
-	set_hl(0, "MiniStatuslineModeInsert", {
-		fg = colors.bg_dark,
-		bg = colors.green,
-		bold = true,
-	})
+	-- ── Mode pills (High focus, rectangle block on the left) ────────────────
+	set_hl(0, "MiniStatuslineModeNormal", { fg = colors.bg_dark, bg = colors.blue, bold = true })
+	set_hl(0, "MiniStatuslineModeInsert", { fg = colors.bg_dark, bg = colors.green, bold = true })
+	set_hl(0, "MiniStatuslineModeVisual", { fg = colors.bg_dark, bg = "#9d7cd8", bold = true })
+	set_hl(0, "MiniStatuslineModeReplace", { fg = colors.bg_dark, bg = colors.red1, bold = true })
+	set_hl(0, "MiniStatuslineModeCommand", { fg = colors.bg_dark, bg = colors.orange, bold = true })
+	set_hl(0, "MiniStatuslineModeTerminal", { fg = colors.bg_dark, bg = colors.teal, bold = true })
 
-	set_hl(0, "MiniStatuslineModeVisual", {
-		fg = colors.bg_dark,
-		bg = "#9d7cd8", -- softer purple, refined contrast
-		bold = true,
-	})
-
-	set_hl(0, "MiniStatuslineModeReplace", {
-		fg = colors.bg_dark,
-		bg = colors.red1, -- better than colors.red for moon
-		bold = true,
-	})
-
-	set_hl(0, "MiniStatuslineModeCommand", {
-		fg = colors.bg_dark,
-		bg = colors.orange, -- stronger warmth than yellow
-		bold = true,
-	})
-
-	set_hl(0, "MiniStatuslineModeTerminal", {
-		fg = colors.bg_dark,
-		bg = colors.teal,
-		bold = true,
-	})
-
-	-- ── Primary Content (Filename takes center stage) ───────────────────────
+	-- ── Primary Content (Left Side - Flat) ──────────────────────────────────
 	set_hl(0, "MiniStatuslineFilename", { fg = colors.fg, bg = base_bg, bold = true })
 	set_hl(0, "MiniStatuslineFilenameModified", { fg = colors.yellow, bg = base_bg, bold = true })
 	set_hl(0, "MiniStatuslinePath", { fg = colors.dark3, bg = base_bg })
-
-	-- ── Greeting Message (Gentle, inviting) ─────────────────────────────────
 	set_hl(0, "MiniStatuslineWelcome", { fg = colors.blue, bg = base_bg, bold = true })
+	set_hl(0, "MiniStatuslineGit", { fg = colors.dark5, bg = base_bg })
 
-	-- ── Diagnostics (Flat, clean semantics) ─────────────────────────────────
+	-- ── Diagnostics (Semantic flat alerts) ──────────────────────────────────
 	set_hl(0, "MiniStatuslineError", { fg = colors.error, bg = base_bg, bold = true })
 	set_hl(0, "MiniStatuslineWarning", { fg = colors.warning, bg = base_bg, bold = true })
 
-	-- ── Telemetry Metadata (Recessed, low cognitive load) ───────────────────
-	set_hl(0, "MiniStatuslineGit", { fg = colors.dark5, bg = base_bg })
-	set_hl(0, "MiniStatuslineLSP", { fg = colors.dark5, bg = base_bg })
+	-- ── Telemetry Metadata (Recessed, low cognitive load text) ──────────────
+	set_hl(0, "MiniStatuslineLSP", { fg = colors.fg_dark, bg = base_bg })
 	set_hl(0, "MiniStatuslineFileinfo", { fg = colors.dark5, bg = base_bg })
 
-	-- ── Premium Right Pill (Matches Tmux capsule look perfectly) ────────────
-	set_hl(0, "MiniStatuslineRightPill", { fg = colors.purple, bg = colors.bg_highlight, bold = true })
-	set_hl(0, "MiniStatuslineLocation", { fg = colors.fg, bg = colors.bg_highlight, bold = true })
-	set_hl(0, "MiniStatuslineProgress", { fg = colors.dark5, bg = colors.bg_highlight })
+	-- ── Premium Right Anchor Pill (Rectangular, seamlessly integrated) ──────
+	set_hl(0, "MiniStatuslineRightPill", { fg = colors.purple, bg = right_pill_bg, bold = true })
+	set_hl(0, "MiniStatuslineLocation", { fg = colors.fg, bg = right_pill_bg, bold = true })
+	set_hl(0, "MiniStatuslineProgress", { fg = colors.dark5, bg = right_pill_bg })
 
 	-- ── Spacers ─────────────────────────────────────────────────────────────
 	set_hl(0, "MiniStatuslineSecondary", { fg = base_bg, bg = base_bg })
@@ -145,7 +116,6 @@ local function get_filename()
 	local ft = vim.bo.filetype
 	local modified = vim.bo.modified
 
-	-- Intercept if empty name buffer, or explicitly on a dashboard screen
 	if name == "" or ft == "dashboard" or ft == "alpha" or ft == "starter" then
 		if not modified then
 			local username = vim.env.USER or vim.env.USERNAME or "User"
@@ -153,7 +123,6 @@ local function get_filename()
 			local greeting = ""
 			local icon = ""
 
-			-- Dynamic Time-Based Greeting
 			if h >= 5 and h < 12 then
 				greeting = "Good morning"
 				icon = "󰖨"
@@ -186,7 +155,6 @@ local function get_filepath()
 		return ""
 	end
 
-	-- Gracefully truncate deep absolute paths while preserving root context
 	local parts = vim.split(path, "/", { plain = true })
 	if #parts > 2 then
 		path = parts[1] .. "/…/" .. parts[#parts - 1] .. "/" .. parts[#parts]
@@ -240,7 +208,20 @@ local function get_lsp()
 				table.insert(parts, c.name)
 			end
 		end
-		_lsp.val = #parts > 0 and "󰒋 " .. table.concat(parts, ",") or ""
+		if #parts > 0 then
+			local server_names = table.concat(parts, ",")
+			local ft = vim.bo.filetype
+
+			local has_mini_icons, MiniIcons = pcall(require, "mini.icons")
+			if has_mini_icons then
+				local icon, hl = MiniIcons.get("filetype", ft)
+				_lsp.val = string.format("%%#%s#%s %%#MiniStatuslineLSP#%s", hl, icon, server_names)
+			else
+				_lsp.val = "%#MiniStatuslineLSP#󰒋 " .. server_names
+			end
+		else
+			_lsp.val = ""
+		end
 	end
 	_lsp.ts = now
 	return _lsp.val
@@ -300,10 +281,8 @@ local function build_active(MiniStatusline)
 	s = s .. "%#MiniStatuslineSecondary# "
 
 	if is_welcome then
-		-- Clean, time-sensitive greeting string displayed on the left
 		s = s .. "%#MiniStatuslineWelcome#" .. fname
 	else
-		-- Standard editing view
 		local fname_hl = modified and "MiniStatuslineFilenameModified" or "MiniStatuslineFilename"
 		s = s .. "%#" .. fname_hl .. "#" .. fname .. (fsuffix or "")
 
@@ -319,22 +298,23 @@ local function build_active(MiniStatusline)
 	-- ── SPRING CENTER SPACER ────────────────────────────────────────────────
 	s = s .. "%#MiniStatuslineSecondary#%<%="
 
-	-- ── RIGHT SIDE: Micro Telemetry ─────────────────────────────────────────
+	-- ── RIGHT SIDE: Seamless Flat Telemetry ──────────────────────────────────
 	if not is_welcome then
 		if diag ~= "" then
 			s = s .. diag .. "  "
 		end
 		if lsp ~= "" then
-			s = s .. "%#MiniStatuslineLSP#" .. lsp .. "  "
+			s = s .. lsp .. "  "
 		end
 		if fsize ~= "" then
 			s = s .. "%#MiniStatuslineFileinfo#󰈐 " .. fsize .. "  "
 		end
 	end
 
-	-- ── BENTO PILL BRACKET (Always visible) ─────────────────────────────────
-	s = s .. "%#MiniStatuslineRightPill# " .. time_icon .. " "
-	s = s .. "%#MiniStatuslineLocation# %l:%c "
+	-- ── PREMIUM RIGHT ANCHOR PILL (Solid rectangular widget) ────────────────
+	-- Tweaked spaces to prevent the clock icon from choking the line number
+	s = s .. "%#MiniStatuslineRightPill# " .. time_icon .. "  "
+	s = s .. "%#MiniStatuslineLocation#%l:%c  "
 	s = s .. "%#MiniStatuslineProgress#%p%% "
 
 	return s
@@ -359,6 +339,13 @@ function M.setup()
 	})
 
 	setup_highlights()
+
+	vim.api.nvim_create_autocmd({ "LspAttach", "LspDetach" }, {
+		group = vim.api.nvim_create_augroup("slc_lsp_icon", { clear = true }),
+		callback = function()
+			vim.cmd("redrawstatus")
+		end,
+	})
 
 	vim.api.nvim_create_autocmd("ColorScheme", {
 		group = vim.api.nvim_create_augroup("slc_recolor", { clear = true }),
