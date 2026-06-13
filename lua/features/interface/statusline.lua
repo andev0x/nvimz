@@ -2,480 +2,282 @@ local M = {}
 
 -- ============================================================================
 -- HIGHLIGHTS
--- Soft modern colors designed for long coding sessions
+-- Premium typography-focused design with strict contrast hierarchy
 -- ============================================================================
 
 local function setup_highlights()
 	local set_hl = vim.api.nvim_set_hl
 	local colors = require("tokyonight.colors").setup({ style = "moon" })
 
-	-- Main mode colors - High vibrancy
-	set_hl(0, "MiniStatuslineModeNormal", {
-		fg = colors.bg,
-		bg = colors.blue,
-		bold = true,
-	})
+	local base_bg = colors.bg_statusline
 
-	set_hl(0, "MiniStatuslineModeInsert", {
-		fg = colors.bg,
-		bg = colors.green,
-		bold = true,
-	})
+	-- ── Mode pills (Clean, focused colors) ──────────────────────────────────
+	set_hl(0, "MiniStatuslineModeNormal", { fg = colors.bg_dark, bg = colors.blue, bold = true })
+	set_hl(0, "MiniStatuslineModeInsert", { fg = colors.bg_dark, bg = colors.green, bold = true })
+	set_hl(0, "MiniStatuslineModeVisual", { fg = colors.bg_dark, bg = "#bb9af7", bold = true })
+	set_hl(0, "MiniStatuslineModeReplace", { fg = colors.bg_dark, bg = colors.red1, bold = true })
+	set_hl(0, "MiniStatuslineModeCommand", { fg = colors.bg_dark, bg = colors.orange, bold = true })
+	set_hl(0, "MiniStatuslineModeTerminal", { fg = colors.bg_dark, bg = colors.teal, bold = true })
 
-	set_hl(0, "MiniStatuslineModeVisual", {
-		fg = colors.bg,
-		bg = "#ad8ee6",
-		bold = true,
-	})
+	-- ── Primary Content (Filename takes center stage) ───────────────────────
+	set_hl(0, "MiniStatuslineFilename", { fg = colors.fg, bg = base_bg, bold = true })
+	set_hl(0, "MiniStatuslineFilenameModified", { fg = colors.yellow, bg = base_bg, bold = true })
+	set_hl(0, "MiniStatuslinePath", { fg = colors.dark3, bg = base_bg, italic = true })
+	set_hl(0, "MiniStatuslineGit", { fg = colors.comment, bg = base_bg })
 
-	set_hl(0, "MiniStatuslineModeReplace", {
-		fg = colors.bg,
-		bg = colors.red,
-		bold = true,
-	})
+	-- ── Diagnostics (Flat, clean semantics) ──────────────────────────────────
+	set_hl(0, "MiniStatuslineDiagBase", { fg = colors.fg_dark, bg = base_bg })
+	set_hl(0, "MiniStatuslineError", { fg = colors.error, bg = base_bg, bold = true })
+	set_hl(0, "MiniStatuslineWarning", { fg = colors.warning, bg = base_bg, bold = true })
 
-	set_hl(0, "MiniStatuslineModeCommand", {
-		fg = colors.bg,
-		bg = colors.yellow,
-		bold = true,
-	})
+	-- ── Telemetry Metadata ───────────────────────────────────────────────────
+	set_hl(0, "MiniStatuslineLSP", { fg = colors.comment, bg = base_bg })
+	set_hl(0, "MiniStatuslineFileinfo", { fg = colors.comment, bg = base_bg })
 
-	-- Neutral sections - Synchronized with theme
-	set_hl(0, "MiniStatuslineFilename", {
-		fg = colors.fg,
-		bg = colors.bg_highlight,
-		bold = true,
-	})
+	-- ── Premium Right Pill (Matches Tmux capsule look perfectly) ─────────────
+	set_hl(0, "MiniStatuslineRightPill", { fg = colors.purple, bg = colors.bg_highlight, bold = true })
+	set_hl(0, "MiniStatuslineLocation", { fg = colors.fg, bg = colors.bg_highlight, bold = true })
+	set_hl(0, "MiniStatuslineProgress", { fg = colors.blue1, bg = colors.bg_highlight, bold = true })
 
-	set_hl(0, "MiniStatuslineDevinfo", {
-		fg = colors.fg_dark,
-		bg = colors.bg_highlight,
-	})
-
-	set_hl(0, "MiniStatuslineFileinfo", {
-		fg = colors.blue,
-		bg = colors.bg_highlight,
-	})
-
-	set_hl(0, "MiniStatuslineDiagnostics", {
-		fg = colors.fg_dark,
-		bg = colors.bg_highlight,
-	})
-
-	set_hl(0, "MiniStatuslineError", {
-		fg = colors.error,
-		bg = colors.bg_highlight,
-		bold = true,
-	})
-
-	set_hl(0, "MiniStatuslineWarning", {
-		fg = colors.warning,
-		bg = colors.bg_highlight,
-		bold = true,
-	})
-
-	set_hl(0, "MiniStatuslineHint", {
-		fg = colors.hint,
-		bg = colors.bg_highlight,
-		bold = true,
-	})
-
-	set_hl(0, "MiniStatuslineInfo", {
-		fg = colors.info,
-		bg = colors.bg_highlight,
-		bold = true,
-	})
-
-	set_hl(0, "MiniStatuslineTime", {
-		fg = colors.green,
-		bg = colors.bg_highlight,
-	})
-
-	set_hl(0, "MiniStatuslineInactive", {
-		fg = colors.dark3,
-		bg = colors.bg_statusline,
-	})
-
-	set_hl(0, "MiniStatuslinePath", {
-		fg = colors.comment,
-		bg = colors.bg_highlight,
-		italic = true,
-	})
+	-- ── Spacers ──────────────────────────────────────────────────────────────
+	set_hl(0, "MiniStatuslineSecondary", { fg = base_bg, bg = base_bg })
+	set_hl(0, "MiniStatuslineInactive", { fg = colors.dark3, bg = base_bg, italic = true })
 end
 
 -- ============================================================================
--- MODE
+-- MODES CONFIGURATION
+-- Typography-focused indicator map using minimal geometric & standard glyphs
 -- ============================================================================
 
 local mode_map = {
-	n = { label = "●", hl = "MiniStatuslineModeNormal" },
-	i = { label = "✎", hl = "MiniStatuslineModeInsert" },
-	v = { label = "▣", hl = "MiniStatuslineModeVisual" },
-	V = { label = "▤", hl = "MiniStatuslineModeVisual" },
-	["\22"] = { label = "▥", hl = "MiniStatuslineModeVisual" },
-	c = { label = "⌘", hl = "MiniStatuslineModeCommand" },
-	R = { label = "↺", hl = "MiniStatuslineModeReplace" },
-	s = { label = "◇", hl = "MiniStatuslineModeVisual" },
-	S = { label = "◆", hl = "MiniStatuslineModeVisual" },
-	t = { label = "⊞", hl = "MiniStatuslineInactive" },
+	n = { label = " ● ", hl = "MiniStatuslineModeNormal" },
+	no = { label = " ● ", hl = "MiniStatuslineModeNormal" },
+	i = { label = " ✎ ", hl = "MiniStatuslineModeInsert" },
+	ic = { label = " ✎ ", hl = "MiniStatuslineModeInsert" },
+	v = { label = " ◈ ", hl = "MiniStatuslineModeVisual" },
+	V = { label = " ◆ ", hl = "MiniStatuslineModeVisual" },
+	["\22"] = { label = " ■ ", hl = "MiniStatuslineModeVisual" },
+	c = { label = " ⌘ ", hl = "MiniStatuslineModeCommand" },
+	R = { label = " ↺ ", hl = "MiniStatuslineModeReplace" },
+	Rv = { label = " ↺ ", hl = "MiniStatuslineModeReplace" },
+	s = { label = " ◇ ", hl = "MiniStatuslineModeVisual" },
+	S = { label = " ◆ ", hl = "MiniStatuslineModeVisual" },
+	t = { label = " ▸ ", hl = "MiniStatuslineModeTerminal" },
 }
 
 local function get_mode()
-	local mode = vim.fn.mode()
-	return mode_map[mode] or mode_map.n
+	local raw = vim.fn.mode(1)
+	return mode_map[raw] or mode_map[vim.fn.mode()] or mode_map.n
 end
 
 -- ============================================================================
--- TIME ICON
--- Ambient biological clock with caching for smoothness
+-- BIOLOGICAL CLOCK ENGINE (Ambient tracking cached every 60s)
 -- ============================================================================
 
-local cached_time_icon = ""
-local last_time_update = 0
+local _time = { icon = "󰭎", ts = 0 }
+local TIME_SLOTS = {
+	{ from = 5, to = 7, icon = "󰖚 " }, -- Dawn
+	{ from = 7, to = 11, icon = "󰖨 " }, -- Morning session
+	{ from = 11, to = 13, icon = "󰩰 " }, -- Lunch break
+	{ from = 13, to = 17, icon = "󱍄 " }, -- Afternoon grind
+	{ from = 17, to = 19, icon = "󰖚 " }, -- Dusk
+	{ from = 19, to = 22, icon = "󰅶 " }, -- Evening push
+	{ from = 22, to = 24, icon = "󰖔 " }, -- Late night coding
+	{ from = 0, to = 5, icon = "󰒲 " }, -- Deep night shift
+}
 
 local function get_time_icon()
 	local now = vim.uv.now()
-	if now - last_time_update < 60000 then -- Update every 60 seconds
-		return cached_time_icon
+	if now - _time.ts < 60000 then
+		return _time.icon
 	end
-
-	local hour = tonumber(os.date("%H"))
-
-	-- Dawn
-	if hour >= 5 and hour < 7 then
-		cached_time_icon = "󰖚"
-	-- Morning focus
-	elseif hour >= 7 and hour < 9 then
-		cached_time_icon = "󰖨"
-	-- Productive work
-	elseif hour >= 9 and hour < 12 then
-		cached_time_icon = "󰄉"
-	-- Lunch time
-	elseif hour >= 12 and hour < 13 then
-		cached_time_icon = "󰩰"
-	-- Hydration / refresh
-	elseif hour >= 13 and hour < 14 then
-		cached_time_icon = ""
-	-- Work
-	elseif hour >= 14 and hour < 17 then
-		cached_time_icon = "󱍄"
-	-- Afternoon
-	elseif hour >= 17 and hour < 18 then
-		cached_time_icon = "󰖚"
-	-- Dinner / relax
-	elseif hour >= 18 and hour < 20 then
-		cached_time_icon = "󰅶"
-	-- Calm evening
-	elseif hour >= 20 and hour < 23 then
-		cached_time_icon = "󰖔"
-	-- Sleep soon
-	elseif hour >= 23 and hour < 24 then
-		cached_time_icon = "󰒲"
-	-- Deep night
-	else
-		cached_time_icon = "󰭎"
+	local h = tonumber(os.date("%H"))
+	_time.icon = "󰭎 "
+	for _, s in ipairs(TIME_SLOTS) do
+		if h >= s.from and h < s.to then
+			_time.icon = s.icon
+			break
+		end
 	end
-
-	last_time_update = now
-	return cached_time_icon
+	_time.ts = now
+	return _time.icon
 end
 
 -- ============================================================================
--- FILE NAME
+-- CORE COMPONENTS
 -- ============================================================================
 
 local function get_filename()
-	local filename = vim.fn.expand("%:t")
-
-	if filename == "" then
-		filename = "Hello, welcome back!"
+	local name = vim.fn.expand("%:t")
+	if name == "" then
+		return "scratch", "", false
 	end
-
-	if vim.bo.modified then
-		filename = filename .. " [+]"
+	local modified = vim.bo.modified
+	local suffix = modified and " ●" or ""
+	if vim.bo.readonly then
+		suffix = suffix .. " 󰌾"
 	end
-
-	return filename
+	return name, suffix, modified
 end
-
--- ============================================================================
--- FILE PATH
--- Current working path visualization
--- ============================================================================
 
 local function get_filepath()
 	local path = vim.fn.expand("%:~:.:h")
-
 	if path == "." or path == "" then
 		return ""
 	end
 
-	return "󰉋 " .. path
-end
-
--- ============================================================================
--- FILE SIZE
--- Caching to avoid frequent syscalls during redraw
--- ============================================================================
-
-local filesize_cache = {}
-
-local function update_filesize_cache(bufnr)
-	bufnr = bufnr or vim.api.nvim_get_current_buf()
-	local path = vim.api.nvim_buf_get_name(bufnr)
-	if path == "" then
-		filesize_cache[bufnr] = ""
-		return
+	-- Gracefully truncate deep absolute paths while preserving root context
+	local parts = vim.split(path, "/", { plain = true })
+	if #parts > 2 then
+		path = parts[1] .. "/…/" .. parts[#parts - 1] .. "/" .. parts[#parts]
+	elseif #parts > 1 then
+		path = parts[1] .. "/" .. parts[#parts]
 	end
 
-	local size = vim.fn.getfsize(path)
-	if size <= 0 then
-		filesize_cache[bufnr] = ""
-	elseif size < 1024 then
-		filesize_cache[bufnr] = size .. "B"
-	elseif size < 1024 * 1024 then
-		filesize_cache[bufnr] = string.format("%.1fKB", size / 1024)
-	else
-		filesize_cache[bufnr] = string.format("%.1fMB", size / (1024 * 1024))
-	end
+	return path
 end
 
+local _sizes = {}
 vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost", "BufEnter" }, {
-	group = vim.api.nvim_create_augroup("statusline_cache", { clear = true }),
-	callback = function(args)
-		update_filesize_cache(args.buf)
+	group = vim.api.nvim_create_augroup("slc_filesize", { clear = true }),
+	callback = function(ev)
+		local p = vim.api.nvim_buf_get_name(ev.buf)
+		if p == "" then
+			_sizes[ev.buf] = ""
+			return
+		end
+		local sz = vim.fn.getfsize(p)
+		if sz <= 0 then
+			_sizes[ev.buf] = ""
+		elseif sz < 1024 then
+			_sizes[ev.buf] = sz .. "B"
+		elseif sz < 1048576 then
+			_sizes[ev.buf] = string.format("%.1fKB", sz / 1024)
+		else
+			_sizes[ev.buf] = string.format("%.1fMB", sz / 1048576)
+		end
 	end,
 })
 
 local function get_filesize()
-	local bufnr = vim.api.nvim_get_current_buf()
-	if not filesize_cache[bufnr] then
-		update_filesize_cache(bufnr)
-	end
-	return filesize_cache[bufnr] or ""
+	local b = vim.api.nvim_get_current_buf()
+	return _sizes[b] or ""
 end
 
--- ============================================================================
--- LSP
--- Caching to avoid querying clients on every redraw
--- ============================================================================
-
-local lsp_icons = nil
-local lsp_cache = {
-	val = "",
-	last_update = 0,
-}
-
+local _lsp = { val = "", ts = 0 }
 local function get_lsp()
 	local now = vim.uv.now()
-	if now - lsp_cache.last_update < 1000 then -- Update every second
-		return lsp_cache.val
+	if now - _lsp.ts < 1500 then
+		return _lsp.val
 	end
-
 	local clients = vim.lsp.get_clients({ bufnr = 0 })
-
 	if #clients == 0 then
-		lsp_cache.val = ""
+		_lsp.val = ""
 	else
-		if not lsp_icons then
-			local ok, registry = pcall(require, "infra.registry")
-			lsp_icons = ok and registry.languages.lsp_icons or {}
-		end
-		local names = {}
-		for _, client in ipairs(clients) do
-			if client.name ~= "copilot" then
-				local icon = lsp_icons[client.name] or "󰒋"
-				table.insert(names, icon .. " " .. client.name)
+		local parts = {}
+		for _, c in ipairs(clients) do
+			if c.name ~= "copilot" then
+				table.insert(parts, c.name)
 			end
 		end
-		lsp_cache.val = table.concat(names, " ")
+		_lsp.val = #parts > 0 and "󰒋 " .. table.concat(parts, ",") or ""
 	end
-
-	lsp_cache.last_update = now
-	return lsp_cache.val
+	_lsp.ts = now
+	return _lsp.val
 end
 
--- ============================================================================
--- DIAGNOSTICS
--- Caching to reduce pressure during rapid redraws
--- ============================================================================
-
-local diag_cache = {
-	val = "",
-	last_update = 0,
-}
-
+local _diag = { val = "", ts = 0 }
 local function get_diagnostics()
 	local now = vim.uv.now()
-	if now - diag_cache.last_update < 100 then -- Update max 10 times per second
-		return diag_cache.val
+	if now - _diag.ts < 150 then
+		return _diag.val
 	end
-
-	local count = vim.diagnostic.count(0)
-	local errors = count[vim.diagnostic.severity.ERROR] or 0
-	local warns = count[vim.diagnostic.severity.WARN] or 0
-	local hints = count[vim.diagnostic.severity.HINT] or 0
-	local infos = count[vim.diagnostic.severity.INFO] or 0
-
+	local c = vim.diagnostic.count(0)
+	local E = c[vim.diagnostic.severity.ERROR] or 0
+	local W = c[vim.diagnostic.severity.WARN] or 0
 	local parts = {}
-	if errors > 0 then
-		table.insert(parts, "%#MiniStatuslineError# " .. errors)
+	if E > 0 then
+		table.insert(parts, "%#MiniStatuslineError# " .. E)
 	end
-	if warns > 0 then
-		table.insert(parts, "%#MiniStatuslineWarning# " .. warns)
+	if W > 0 then
+		table.insert(parts, "%#MiniStatuslineWarning# " .. W)
 	end
-	if hints > 0 then
-		table.insert(parts, "%#MiniStatuslineHint#󰠠 " .. hints)
-	end
-	if infos > 0 then
-		table.insert(parts, "%#MiniStatuslineInfo# " .. infos)
-	end
+	_diag.val = #parts > 0 and table.concat(parts, " ") or ""
+	_diag.ts = now
+	return _diag.val
+end
 
-	if #parts > 0 then
-		diag_cache.val = " " .. table.concat(parts, " ") .. " "
-	else
-		diag_cache.val = ""
+local _git = { val = "", ts = 0 }
+local function get_git(MiniStatusline)
+	local now = vim.uv.now()
+	if now - _git.ts < 2000 then
+		return _git.val
 	end
-
-	diag_cache.last_update = now
-	return diag_cache.val
+	local raw = MiniStatusline.section_git({ trunc_width = 60 })
+	_git.val = raw ~= "" and raw or ""
+	_git.ts = now
+	return _git.val
 end
 
 -- ============================================================================
--- FILE INFO
+-- RENDER CONTROL
 -- ============================================================================
 
-local function get_fileinfo()
-	local ft = vim.bo.filetype ~= "" and vim.bo.filetype or "text"
-	return string.format("%s • %%p%%%%", ft)
-end
+local function build_active(MiniStatusline)
+	local mode = get_mode()
+	local fname, fsuffix, modified = get_filename()
+	local fpath = get_filepath()
+	local git = get_git(MiniStatusline)
+	local diag = get_diagnostics()
+	local lsp = get_lsp()
+	local fsize = get_filesize()
+	local time_icon = get_time_icon()
 
--- ============================================================================
--- LOCATION
--- ============================================================================
+	local fname_hl = modified and "MiniStatuslineFilenameModified" or "MiniStatuslineFilename"
+	local s = ""
 
--- Will be set in setup function
+	-- ── LEFT SIDE: Core Identity Focus ───────────────────────────────────────
+	s = s .. "%#" .. mode.hl .. "#" .. mode.label
+	s = s .. "%#MiniStatuslineSecondary# "
+	s = s .. "%#" .. fname_hl .. "#" .. fname .. (fsuffix or "")
 
--- ============================================================================
--- ACTIVE STATUSLINE
--- ============================================================================
-
-local function setup_active_statusline(statusline, MiniStatusline)
-	statusline.section_location = function()
-		return "%l:%c"
+	if fpath ~= "" then
+		s = s .. " %#MiniStatuslinePath# " .. fpath
 	end
 
-	statusline.config.content.active = function()
-		local mode = get_mode()
-
-		local git = MiniStatusline.section_git({
-			trunc_width = 40,
-		})
-
-		local location = MiniStatusline.section_location({
-			trunc_width = 75,
-		})
-
-		return MiniStatusline.combine_groups({
-			-- Left section
-			{
-				hl = mode.hl,
-				strings = {
-					" " .. mode.label .. " ",
-				},
-			},
-
-			{
-				hl = "MiniStatuslineFilename",
-				strings = {
-					" " .. get_filename() .. " ",
-				},
-			},
-
-			{
-				hl = "MiniStatuslinePath",
-				strings = {
-					" " .. get_filepath() .. " ",
-				},
-			},
-
-			{
-				hl = "MiniStatuslineDevinfo",
-				strings = {
-					git,
-				},
-			},
-
-			"%<",
-
-			"%=",
-
-			-- Right section
-			{
-				hl = "MiniStatuslineDiagnostics",
-				strings = {
-					get_diagnostics(),
-				},
-			},
-
-			{
-				hl = "MiniStatuslineDevinfo",
-				strings = {
-					" " .. get_lsp() .. " ",
-				},
-			},
-
-			{
-				hl = "MiniStatuslineFileinfo",
-				strings = {
-					" " .. get_filesize() .. " ",
-				},
-			},
-
-			{
-				hl = "MiniStatuslineFileinfo",
-				strings = {
-					" " .. get_fileinfo() .. " ",
-				},
-			},
-
-			{
-				hl = "MiniStatuslineTime",
-				strings = {
-					" " .. get_time_icon() .. " ",
-				},
-			},
-
-			{
-				hl = "MiniStatuslineInactive",
-				strings = {
-					" " .. location .. " ",
-				},
-			},
-		})
+	if git ~= "" then
+		s = s .. " %#MiniStatuslineGit# " .. git
 	end
+
+	-- ── SPRING CENTER SPACER ──────────────────────────────────────────────────
+	s = s .. "%#MiniStatuslineSecondary#%<%="
+
+	-- ── RIGHT SIDE: Micro Telemetry ──────────────────────────────────────────
+	if diag ~= "" then
+		s = s .. diag .. "  "
+	end
+
+	if lsp ~= "" then
+		s = s .. "%#MiniStatuslineLSP#" .. lsp .. "  "
+	end
+
+	if fsize ~= "" then
+		s = s .. "%#MiniStatuslineFileinfo#󰈐 " .. fsize .. "  "
+	end
+
+	-- ── BENTO PILL BRACKET (Symmetric to Tmux) ───────────────────────────────
+	s = s .. "%#MiniStatuslineRightPill# " .. time_icon .. " "
+	s = s .. "%#MiniStatuslineLocation# %l:%c "
+	s = s .. "%#MiniStatuslineProgress#%p%% "
+
+	return s
 end
 
--- ============================================================================
--- INACTIVE STATUSLINE
--- ============================================================================
-
-local function setup_inactive_statusline(statusline, MiniStatusline)
-	statusline.config.content.inactive = function()
-		return MiniStatusline.combine_groups({
-			{
-				hl = "MiniStatuslineInactive",
-				strings = {
-					" " .. get_filename() .. " ",
-				},
-			},
-		})
-	end
+local function build_inactive()
+	local fname, fsuffix = get_filename()
+	local suffix_str = (type(fsuffix) == "string") and fsuffix or ""
+	return "%#MiniStatuslineInactive#  " .. fname .. suffix_str .. " %="
 end
-
--- ============================================================================
--- MAIN SETUP
--- ============================================================================
 
 function M.setup()
 	local statusline = require("mini.statusline")
@@ -485,11 +287,26 @@ function M.setup()
 		set_vim_settings = false,
 	})
 
-	local MiniStatusline = statusline
-
 	setup_highlights()
-	setup_active_statusline(statusline, MiniStatusline)
-	setup_inactive_statusline(statusline, MiniStatusline)
+
+	vim.api.nvim_create_autocmd("ColorScheme", {
+		group = vim.api.nvim_create_augroup("slc_recolor", { clear = true }),
+		callback = setup_highlights,
+	})
+
+	local MS = statusline
+
+	statusline.config.content.active = function()
+		return build_active(MS)
+	end
+
+	statusline.config.content.inactive = function()
+		return build_inactive()
+	end
+
+	statusline.section_location = function()
+		return "%l:%c"
+	end
 end
 
 return M
