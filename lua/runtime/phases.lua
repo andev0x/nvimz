@@ -48,6 +48,7 @@ local function setup_phase_1()
 	end
 
 	require("infra.treesitter").setup()
+	require("features.lsp").setup()
 	require("features.editing.files").setup()
 	require("features.editing.pairs").setup()
 	require("features.editing.completion").setup()
