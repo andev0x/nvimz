@@ -1,19 +1,25 @@
 local M = {}
 
-function M.setup()
-	-- Auto start Ollama if not running
-	if vim.fn.executable("ollama") == 1 then
-		local check_cmd = { "nc", "-z", "127.0.0.1", "11434" }
-		if vim.fn.executable("nc") ~= 1 then
-			check_cmd = { "sh", "-c", "command -v nc >/dev/null && nc -z 127.0.0.1 11434" }
-		end
-
-		vim.system(check_cmd, { text = true }, function(result)
-			if result.code ~= 0 then
-				vim.uv.spawn("ollama", { args = { "serve" }, detached = true }, function() end)
-			end
-		end)
+local function ensure_ollama_running()
+	if vim.fn.executable("ollama") ~= 1 then
+		return
 	end
+
+	local health_check = vim.fn.executable("nc") == 1 and { "nc", "-z", "127.0.0.1", "11434" } or { "sh", "-c", "command -v nc >/dev/null && nc -z 127.0.0.1 11434" }
+
+	vim.system(health_check, { text = true }, function(result)
+		if result.code ~= 0 then
+			vim.uv.spawn("ollama", { args = { "serve" }, detached = true }, function() end)
+		end
+	end)
+end
+
+local function map_ai_key(lhs, rhs, description)
+	vim.keymap.set({ "n", "v" }, lhs, rhs, { desc = description, silent = true })
+end
+
+function M.setup()
+	ensure_ollama_running()
 
 	require("gp").setup({
 		providers = {
@@ -61,23 +67,18 @@ function M.setup()
 		panel = { enabled = false },
 	})
 
-	local map = function(lhs, rhs, desc)
-		vim.keymap.set({ "n", "v" }, lhs, rhs, { desc = desc, silent = true })
-	end
-
-	map("<leader>aa", "<cmd>GpChatNew<cr>", "AI Chat")
-	map("<leader>aq", "<cmd>GpChatToggle<cr>", "AI Toggle")
-	map("<leader>at", "<cmd>Copilot toggle<cr>", "AI Copilot Toggle")
-	map("<leader>a3", function()
+	map_ai_key("<leader>aa", "<cmd>GpChatNew<cr>", "AI Chat")
+	map_ai_key("<leader>aq", "<cmd>GpChatToggle<cr>", "AI Toggle")
+	map_ai_key("<leader>at", "<cmd>Copilot toggle<cr>", "AI Copilot Toggle")
+	map_ai_key("<leader>a3", function()
 		vim.cmd("GpAgent Ollama-3B")
 		vim.notify("Switched to Ollama-3B")
 	end, "AI 3B")
-	map("<leader>a7", function()
+	map_ai_key("<leader>a7", function()
 		vim.cmd("GpAgent Ollama-7B")
 		vim.notify("Switched to Ollama-7B")
 	end, "AI 7B")
-	-- New mapping: Alt+Enter to respond in the current chat
-	map("<A-CR>", ":GpChatRespond<CR>", "AI Respond")
+	map_ai_key("<A-CR>", ":GpChatRespond<CR>", "AI Respond")
 end
 
 return M

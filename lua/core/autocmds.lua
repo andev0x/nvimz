@@ -1,4 +1,5 @@
 local group = vim.api.nvim_create_augroup("nvim_zen", { clear = true })
+local LARGE_FILE_BYTES = 1.5 * 1024 * 1024
 
 vim.api.nvim_create_autocmd("TextYankPost", {
 	group = group,
@@ -14,38 +15,29 @@ vim.api.nvim_create_autocmd("VimResized", {
 	command = "tabdo wincmd =",
 })
 
--- ============================================================================
--- Large File Optimizer (Performance Boost for > 1.5MB files)
--- ============================================================================
-
-local MAX_FILESIZE = 1.5 * 1024 * 1024 -- 1.5 MB threshold
-
+-- Disable expensive buffer features for large files.
 vim.api.nvim_create_autocmd("BufReadPre", {
 	group = group,
 	desc = "Detect large files and disable buffer-local heavy features",
 	callback = function(args)
-		local path = vim.api.nvim_buf_get_name(args.buf)
-		if path == "" then
+		local filepath = vim.api.nvim_buf_get_name(args.buf)
+		if filepath == "" then
 			return
 		end
 
-		local ok, stats = pcall(vim.uv.fs_stat, path)
-		if ok and stats and stats.size > MAX_FILESIZE then
+		local ok, file_stats = pcall(vim.uv.fs_stat, filepath)
+		if ok and file_stats and file_stats.size > LARGE_FILE_BYTES then
 			vim.b[args.buf].large_file = true
 
-			-- Disable swap and undo file creation to prevent write lag
 			vim.opt_local.swapfile = false
 			vim.opt_local.undofile = false
-
-			-- Disable regex syntax highlighting
 			vim.opt_local.syntax = "off"
 
-			-- Only notify if the file is the current active buffer (prevents oil.nvim preview spam)
 			vim.schedule(function()
 				if vim.api.nvim_buf_is_valid(args.buf) and vim.api.nvim_get_current_buf() == args.buf then
-					local size_mb = stats.size / (1024 * 1024)
+					local size_mb = file_stats.size / (1024 * 1024)
 					vim.notify(
-						string.format("Large file detected (%.2f MB). Disabling Treesitter, LSP, Line numbers, and syntax highlighting.", size_mb),
+						string.format("Large file detected (%.2f MB). Disabling Treesitter, LSP, line numbers, and syntax highlighting.", size_mb),
 						vim.log.levels.WARN,
 						{ title = "Performance Guard" }
 					)
@@ -82,26 +74,18 @@ vim.api.nvim_create_autocmd("LspAttach", {
 	end,
 })
 
--- ============================================================================
--- Neovim 0.12 FileType-Based Lazy-Start
--- ============================================================================
-
 vim.api.nvim_create_autocmd("FileType", {
 	group = group,
 	desc = "Lazy-start language tools (LSP, formatters, etc.)",
 	callback = function(args)
-		local ft = args.match
+		local filetype = args.match
 
-		-- Skip special buffers, invalid filetypes, or large files
-		if vim.bo[args.buf].buftype ~= "" or ft == "" or vim.b[args.buf].large_file then
+		if vim.bo[args.buf].buftype ~= "" or filetype == "" or vim.b[args.buf].large_file then
 			return
 		end
 
-		-- Silently call the startup command for the language
-		-- This runs asynchronously in the background
 		pcall(function()
-			require("features.lsp").start(ft, args.buf)
+			require("features.lsp").start(filetype, args.buf)
 		end)
 	end,
 })
-

@@ -1,6 +1,5 @@
 local M = {}
 
--- Create helper commands
 function M.setup()
 	if vim.g.pack_commands_created then
 		return

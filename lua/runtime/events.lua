@@ -1,10 +1,17 @@
 local M = {}
 
---- Centralized runtime event orchestration
---- This module manages global events and coordination between different parts of the runtime.
-
 function M.setup()
-	-- Event definitions and handlers will go here
+    -- Existing (currently empty) setup logic can stay.
+    -- -------------------------------------------------
+    -- NEW: Register :License command
+    vim.api.nvim_create_user_command(
+        "License",
+        function()
+            require("infra.license").show()
+        end,
+        { desc = "Show the project LICENSE" }
+    )
+    -- -------------------------------------------------
 end
 
 return M

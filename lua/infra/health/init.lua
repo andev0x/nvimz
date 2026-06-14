@@ -14,6 +14,24 @@ local function iterate(category)
 	end
 end
 
+local function read_startup_time(report_path)
+	local startup_file = io.open(report_path, "r")
+	if not startup_file then
+		return nil
+	end
+
+	local startup_ms
+	for line in startup_file:lines() do
+		if line:find("NVIM STARTED") then
+			startup_ms = line:match("^%s*(%d+%.%d+)")
+			break
+		end
+	end
+
+	startup_file:close()
+	return startup_ms
+end
+
 function M.check()
 	local health = require("vim.health")
 
@@ -21,8 +39,8 @@ function M.check()
 	for _, tool in ipairs(tools.core) do
 		local info = check.inspect(tool)
 		if info.installed then
-			local version_str = info.version and (" (" .. info.version .. ")") or ""
-			health.ok(string.format("%s: installed%s", info.name, version_str))
+			local version_note = info.version and (" (" .. info.version .. ")") or ""
+			health.ok(string.format("%s: installed%s", info.name, version_note))
 		else
 			health.error(
 				string.format("%s: missing executable '%s'", info.name, info.bin),
@@ -37,22 +55,21 @@ function M.check()
 		{ name = "Formatters", items = tools.formatters },
 		{ name = "Linters", items = tools.linters },
 	}
-	for _, cat in ipairs(optional_categories) do
-		for _, tool in ipairs(cat.items) do
+	for _, category in ipairs(optional_categories) do
+		for _, tool in ipairs(category.items) do
 			local info = check.inspect(tool)
 			if info.installed then
-				local version_str = info.version and (" (" .. info.version .. ")") or ""
-				health.ok(string.format("%s: installed%s", info.name, version_str))
+				local version_note = info.version and (" (" .. info.version .. ")") or ""
+				health.ok(string.format("%s: installed%s", info.name, version_note))
 			else
 				health.warn(
 					string.format("%s: missing executable '%s'", info.name, info.bin),
-					{ "Optional: install " .. info.name .. " to enable " .. cat.name .. " features." }
+					{ "Optional: install " .. info.name .. " to enable " .. category.name .. " features." }
 				)
 			end
 		end
 	end
 end
-
 
 function M.run_doctor()
 	render.section("Core")
@@ -83,7 +100,6 @@ function M.run()
 		"",
 	}
 
-	-- 1. Check Startup Errors
 	table.insert(lines, "## 1. Startup Errors")
 	local result = vim.system({ "nvim", "--headless", "-c", "qa" }, { text = true }):wait()
 	if result.stderr and result.stderr ~= "" then
@@ -96,96 +112,92 @@ function M.run()
 	end
 	table.insert(lines, "")
 
-	-- 2. Check Missing Plugins
 	table.insert(lines, "## 2. Missing Plugins")
-	local missing = {}
-	for _, p in ipairs(vim.pack.get()) do
-		if vim.fn.isdirectory(p.path) == 0 then
-			table.insert(missing, p.spec.name or p.spec.src)
+	local missing_plugins = {}
+	for _, plugin in ipairs(vim.pack.get()) do
+		if vim.fn.isdirectory(plugin.path) == 0 then
+			table.insert(missing_plugins, plugin.spec.name or plugin.spec.src)
 		end
 	end
-	if #missing > 0 then
+	if #missing_plugins > 0 then
 		table.insert(lines, "❌ **The following plugins are registered but missing from disk:**")
-		for _, m in ipairs(missing) do table.insert(lines, "- " .. m) end
+		for _, missing_plugin in ipairs(missing_plugins) do
+			table.insert(lines, "- " .. missing_plugin)
+		end
 	else
 		table.insert(lines, "✅ All registered plugins are installed on disk.")
 	end
 	table.insert(lines, "")
 
-	-- 3. Check Invalid Treesitter Parsers
 	table.insert(lines, "## 3. Treesitter Parsers")
-	local invalid_parsers = {}
+	local invalid_parser_diagnostics = {}
 	for _, lang in ipairs(parsers.required) do
 		local ok, err = pcall(vim.treesitter.language.inspect, lang)
-		if not ok then table.insert(invalid_parsers, { lang = lang, err = err }) end
+		if not ok then
+			table.insert(invalid_parser_diagnostics, { lang = lang, err = err })
+		end
 	end
-	if #invalid_parsers > 0 then
+	if #invalid_parser_diagnostics > 0 then
 		table.insert(lines, "❌ **The following Tree-sitter parsers are missing or invalid:**")
-		for _, ip in ipairs(invalid_parsers) do
-			table.insert(lines, string.format("- **%s**: %s", ip.lang, tostring(ip.err)))
+		for _, parser_diagnostic in ipairs(invalid_parser_diagnostics) do
+			table.insert(lines, string.format("- **%s**: %s", parser_diagnostic.lang, tostring(parser_diagnostic.err)))
 		end
 	else
 		table.insert(lines, "✅ All required Tree-sitter parsers are installed and inspectable.")
 	end
 	table.insert(lines, "")
 
-	-- 4. Check Corrupted Git Repos
 	table.insert(lines, "## 4. Git Repository Integrity")
-	local corrupted = {}
-	for _, p in ipairs(vim.pack.get()) do
-		if vim.fn.isdirectory(p.path) == 1 then
-			local res = vim.system({ "git", "-C", p.path, "status" }):wait()
-			if res.code ~= 0 then table.insert(corrupted, p.spec.name or p.spec.src) end
+	local corrupted_repositories = {}
+	for _, plugin in ipairs(vim.pack.get()) do
+		if vim.fn.isdirectory(plugin.path) == 1 then
+			local git_status = vim.system({ "git", "-C", plugin.path, "status" }):wait()
+			if git_status.code ~= 0 then
+				table.insert(corrupted_repositories, plugin.spec.name or plugin.spec.src)
+			end
 		end
 	end
-	if #corrupted > 0 then
+	if #corrupted_repositories > 0 then
 		table.insert(lines, "❌ **The following plugin repositories returned non-zero git status:**")
-		for _, c in ipairs(corrupted) do table.insert(lines, "- " .. c) end
+		for _, repository in ipairs(corrupted_repositories) do
+			table.insert(lines, "- " .. repository)
+		end
 	else
 		table.insert(lines, "✅ All plugin git repositories are healthy and accessible.")
 	end
 	table.insert(lines, "")
 
-	-- 5. Check Configuration Syntax Errors
 	table.insert(lines, "## 5. Configuration Syntax Errors")
-	local syntax_errors = {}
-	local config_path = vim.fn.stdpath("config")
-	local files = vim.fn.globpath(config_path, "**/*.lua", true, true)
-	for _, filepath in ipairs(files) do
-		local f, err = loadfile(filepath)
-		if not f then table.insert(syntax_errors, { file = filepath, err = err }) end
+	local syntax_diagnostics = {}
+	local config_dir = vim.fn.stdpath("config")
+	local lua_files = vim.fn.globpath(config_dir, "**/*.lua", true, true)
+	for _, lua_file in ipairs(lua_files) do
+		local chunk, err = loadfile(lua_file)
+		if not chunk then
+			table.insert(syntax_diagnostics, { file = lua_file, err = err })
+		end
 	end
-	if #syntax_errors > 0 then
+	if #syntax_diagnostics > 0 then
 		table.insert(lines, "❌ **The following configuration files contain syntax errors:**")
-		for _, se in ipairs(syntax_errors) do
-			table.insert(lines, string.format("- **%s**:", vim.fn.fnamemodify(se.file, ":.")))
-			table.insert(lines, "  ```\n  " .. se.err .. "\n  ```")
+		for _, diagnostic in ipairs(syntax_diagnostics) do
+			table.insert(lines, string.format("- **%s**:", vim.fn.fnamemodify(diagnostic.file, ":.")))
+			table.insert(lines, "  ```\n  " .. diagnostic.err .. "\n  ```")
 		end
 	else
 		table.insert(lines, "✅ All configuration Lua files compiled successfully.")
 	end
 	table.insert(lines, "")
 
-	-- 6. Benchmark Startup Performance
 	table.insert(lines, "## 6. Startup Performance Benchmark")
-	local tempfile = vim.fn.tempname()
-	local res_bench = vim.system({ "nvim", "--startuptime", tempfile, "--headless", "-c", "qa" }):wait()
-	local startup_time = nil
-	if res_bench.code == 0 then
-		local f = io.open(tempfile, "r")
-		if f then
-			for line in f:lines() do
-				if line:find("NVIM STARTED") then
-					startup_time = line:match("^%s*(%d+%.%d+)")
-					break
-				end
-			end
-			f:close()
-		end
+	local startup_report = vim.fn.tempname()
+	local startup_result = vim.system({ "nvim", "--startuptime", startup_report, "--headless", "-c", "qa" }):wait()
+	local startup_ms = nil
+	if startup_result.code == 0 then
+		startup_ms = read_startup_time(startup_report)
 	end
-	vim.fn.delete(tempfile)
-	if startup_time then
-		table.insert(lines, string.format("Benchmark startup time: **%s ms** (Target: < 20 ms)", startup_time))
+	vim.fn.delete(startup_report)
+	if startup_ms then
+		table.insert(lines, string.format("Benchmark startup time: **%s ms** (Target: < 20 ms)", startup_ms))
 	else
 		table.insert(lines, "❌ Benchmark startup failed or could not parse startup time.")
 	end

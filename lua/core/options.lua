@@ -17,57 +17,55 @@ vim.schedule(function()
 	vim.opt.clipboard = "unnamedplus"
 end)
 vim.opt.termguicolors = true
-vim.opt.mouse = "a" -- Enable mouse support
+vim.opt.mouse = "a"
 vim.opt.scrolloff = 4
 vim.opt.smoothscroll = true
 vim.opt.splitbelow = true
 vim.opt.splitright = true
 vim.opt.timeoutlen = 300
-vim.opt.updatetime = 200 -- Faster completion and diagnostics
+vim.opt.updatetime = 200
 
--- Line wrapping and special characters
 vim.opt.wrap = true
-vim.opt.linebreak = true -- Proper word wrap: don't break words
-vim.opt.breakindent = true -- Smart break indent: wrapped lines match indentation
-vim.opt.showbreak = "↳ " -- Soft curved arrow
+vim.opt.linebreak = true
+vim.opt.breakindent = true
+vim.opt.showbreak = "↳ "
 vim.opt.listchars = {
-	tab = "│ ", -- Keeps your slender vertical line
-	trail = "•", -- Slightly more visible middle dot
-	extends = "→", -- Modern clean arrow
+	tab = "│ ",
+	trail = "•",
+	extends = "→",
 	precedes = "←",
-	nbsp = "◌", -- Dotted circle for non-breaking space (cleaner than ␣)
+	nbsp = "◌",
 }
 
-vim.opt.lazyredraw = true -- Reduce redraw jitter
-vim.opt.shada = "!,'100,<50,s10,h" -- Limit ShaDa file size
-vim.opt.synmaxcol = 240 -- Don't highlight long lines
-vim.opt.redrawtime = 1500 -- Limit time for redrawing
+vim.opt.lazyredraw = true
+vim.opt.shada = "!,'100,<50,s10,h"
+vim.opt.synmaxcol = 240
+vim.opt.redrawtime = 1500
 
 vim.opt.wildmenu = true
 vim.opt.wildmode = "longest:full,full"
-vim.opt.wildchar = 9 -- <Tab>
+vim.opt.wildchar = string.byte("\t")
 
 vim.opt.undofile = true
 vim.opt.swapfile = false
 vim.opt.backup = false
 
--- Folding
 vim.opt.foldmethod = "indent"
 vim.opt.foldlevel = 99
 
 vim.schedule(function()
 	local cache = require("infra.cache")
-	local machine = cache.get("machine_state")
+	local machine_state = cache.get("machine_state")
 
-	if not machine then
+	if not machine_state then
 		local ok, local_machine = pcall(require, "machine.local")
 		if ok and type(local_machine) == "table" then
-			machine = local_machine
-			cache.set("machine_state", machine)
+			machine_state = local_machine
+			cache.set("machine_state", machine_state)
 		end
 	end
 
-	if machine and type(machine.python_path) == "string" then
-		vim.g.python3_host_prog = machine.python_path
+	if machine_state and type(machine_state.python_path) == "string" then
+		vim.g.python3_host_prog = machine_state.python_path
 	end
 end)
