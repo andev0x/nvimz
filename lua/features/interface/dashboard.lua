@@ -6,34 +6,6 @@ function M.track(start_ns)
 		callback = function()
 			local elapsed_ms = (vim.uv.hrtime() - start_ns) / 1e6
 
-			vim.schedule(function()
-				local cache = package.loaded["infra.cache"]
-				if not cache then
-					local ok
-					ok, cache = pcall(require, "infra.cache")
-					if not ok then
-						return
-					end
-				end
-
-				local stats = cache.get("startup_stats") or {}
-				stats[#stats + 1] = {
-					time = os.date("%Y-%m-%d %H:%M:%S"),
-					elapsed_ms = elapsed_ms,
-				}
-
-				local overflow = #stats - 10
-				if overflow > 0 then
-					for i = 1, #stats - overflow do
-						stats[i] = stats[i + overflow]
-					end
-					for i = #stats - overflow + 1, #stats do
-						stats[i] = nil
-					end
-				end
-				cache.set("startup_stats", stats)
-			end)
-
 			if elapsed_ms > 20 then
 				vim.schedule(function()
 					vim.notify(("nvimz startup %.2fms exceeded 20ms target"):format(elapsed_ms), vim.log.levels.WARN)

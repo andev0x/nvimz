@@ -1,5 +1,5 @@
 local group = vim.api.nvim_create_augroup("nvim_zen", { clear = true })
-local LARGE_FILE_BYTES = 1.5 * 1024 * 1024
+local LARGE_FILE_BYTES = 500 * 1024
 
 vim.api.nvim_create_autocmd("TextYankPost", {
 	group = group,

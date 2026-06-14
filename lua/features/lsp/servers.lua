@@ -46,9 +46,6 @@ function M.enable_server(name, s_spec, bufnr)
 end
 
 function M.start(filetype, bufnr)
-	-- Ensure global LSP state is initialized (commands, diagnostics, etc.)
-	require("features.lsp").setup()
-
 	for name, s_spec in pairs(languages.lsp_servers) do
 		if s_spec.filetypes and vim.tbl_contains(s_spec.filetypes, filetype) then
 			M.enable_server(name, s_spec, bufnr)

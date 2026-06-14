@@ -85,14 +85,6 @@ function M.run_doctor()
 	iterate(tools.linters)
 end
 
-function M.register_command()
-	vim.api.nvim_create_user_command("ToolDoctor", function()
-		M.run_doctor()
-	end, {
-		desc = "Show environment tooling health",
-	})
-end
-
 function M.run()
 	local lines = {
 		"# PackValidate: Runtime & Configuration Health",
