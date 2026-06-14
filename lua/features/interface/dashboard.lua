@@ -94,11 +94,11 @@ function M.setup()
 		lines[#lines + 1] = ""
 	end
 
-	local logo_paddings = {}
+	local _ = {}
 	for i, text in ipairs(logo) do
 		local w = vim.fn.strdisplaywidth(text)
 		local pad = padding_for(w, win_width)
-		logo_paddings[i] = pad
+		_[i] = pad
 		lines[#lines + 1] = string.rep(" ", pad) .. text
 	end
 

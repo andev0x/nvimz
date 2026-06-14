@@ -1,21 +1,16 @@
 local M = {}
 
--- ============================================================================
--- HIGHLIGHTS
--- Premium, flat minimalist design. High contrast reserved for active blocks.
--- ============================================================================
-
+-- Define highlight groups for the statusline using Tokyonight colors.
 local function setup_highlights()
 	local set_hl = vim.api.nvim_set_hl
 	local colors = require("tokyonight.colors").setup({ style = "moon" })
 
-	-- Uniform flat background across the entire statusline
+	-- Base background for the statusline.
 	local base_bg = colors.bg_statusline
-
-	-- Subtle, professional dark block for the rightmost anchor pill
+	-- Background for the rightmost anchor pill.
 	local right_pill_bg = colors.bg_highlight
 
-	-- ── Mode pills (High focus, rectangle block on the left) ────────────────
+	-- Mode indicators.
 	set_hl(0, "MiniStatuslineModeNormal", { fg = colors.bg_dark, bg = colors.blue, bold = true })
 	set_hl(0, "MiniStatuslineModeInsert", { fg = colors.bg_dark, bg = colors.green, bold = true })
 	set_hl(0, "MiniStatuslineModeVisual", { fg = colors.bg_dark, bg = "#9d7cd8", bold = true })
@@ -23,36 +18,32 @@ local function setup_highlights()
 	set_hl(0, "MiniStatuslineModeCommand", { fg = colors.bg_dark, bg = colors.orange, bold = true })
 	set_hl(0, "MiniStatuslineModeTerminal", { fg = colors.bg_dark, bg = colors.teal, bold = true })
 
-	-- ── Primary Content (Left Side - Flat) ──────────────────────────────────
+	-- Primary content.
 	set_hl(0, "MiniStatuslineFilename", { fg = colors.fg, bg = base_bg, bold = true })
 	set_hl(0, "MiniStatuslineFilenameModified", { fg = colors.yellow, bg = base_bg, bold = true })
 	set_hl(0, "MiniStatuslinePath", { fg = colors.dark3, bg = base_bg })
 	set_hl(0, "MiniStatuslineWelcome", { fg = colors.blue, bg = base_bg, bold = true })
 	set_hl(0, "MiniStatuslineGit", { fg = colors.dark5, bg = base_bg })
 
-	-- ── Diagnostics (Semantic flat alerts) ──────────────────────────────────
+	-- Diagnostics.
 	set_hl(0, "MiniStatuslineError", { fg = colors.error, bg = base_bg, bold = true })
 	set_hl(0, "MiniStatuslineWarning", { fg = colors.warning, bg = base_bg, bold = true })
 
-	-- ── Telemetry Metadata (Recessed, low cognitive load text) ──────────────
+	-- Metadata.
 	set_hl(0, "MiniStatuslineLSP", { fg = colors.fg_dark, bg = base_bg })
 	set_hl(0, "MiniStatuslineFileinfo", { fg = colors.dark5, bg = base_bg })
 
-	-- ── Premium Right Anchor Pill (Rectangular, seamlessly integrated) ──────
+	-- Right anchor pill.
 	set_hl(0, "MiniStatuslineRightPill", { fg = colors.purple, bg = right_pill_bg, bold = true })
 	set_hl(0, "MiniStatuslineLocation", { fg = colors.fg, bg = right_pill_bg, bold = true })
 	set_hl(0, "MiniStatuslineProgress", { fg = colors.dark5, bg = right_pill_bg })
 
-	-- ── Spacers ─────────────────────────────────────────────────────────────
+	-- Spacers.
 	set_hl(0, "MiniStatuslineSecondary", { fg = base_bg, bg = base_bg })
 	set_hl(0, "MiniStatuslineInactive", { fg = colors.dark3, bg = base_bg })
 end
 
--- ============================================================================
--- MODES CONFIGURATION
--- Typography-focused indicator map
--- ============================================================================
-
+-- Map Vim modes to label and highlight group.
 local mode_map = {
 	n = { label = " ● ", hl = "MiniStatuslineModeNormal" },
 	no = { label = " ● ", hl = "MiniStatuslineModeNormal" },
@@ -74,10 +65,7 @@ local function get_mode()
 	return mode_map[raw] or mode_map[vim.fn.mode()] or mode_map.n
 end
 
--- ============================================================================
--- BIOLOGICAL CLOCK ENGINE
--- ============================================================================
-
+-- Cache time icon for one minute to avoid repeated computation.
 local _time = { icon = "󰭎", ts = 0 }
 local TIME_SLOTS = {
 	{ from = 5, to = 7, icon = "󰖚 " },
@@ -107,10 +95,7 @@ local function get_time_icon()
 	return _time.icon
 end
 
--- ============================================================================
--- CORE COMPONENTS
--- ============================================================================
-
+-- Determine filename, greeting, and modification state.
 local function get_filename()
 	local name = vim.fn.expand("%:t")
 	local ft = vim.bo.filetype
@@ -120,21 +105,16 @@ local function get_filename()
 		if not modified then
 			local username = vim.env.USER or vim.env.USERNAME or "User"
 			local h = tonumber(os.date("%H"))
-			local greeting = ""
-			local icon = ""
+			local greeting, icon = "", ""
 
 			if h >= 5 and h < 12 then
-				greeting = "Good morning"
-				icon = "󰖨"
+				greeting, icon = "Good morning", "󰖨"
 			elseif h >= 12 and h < 18 then
-				greeting = "Good afternoon"
-				icon = "󰖚"
+				greeting, icon = "Good afternoon", "󰖚"
 			elseif h >= 18 and h < 22 then
-				greeting = "Good evening"
-				icon = "󰅶"
+				greeting, icon = "Good evening", "󰅶"
 			else
-				greeting = "Good night"
-				icon = "󰖔"
+				greeting, icon = "Good night", "󰖔"
 			end
 
 			return icon .. " " .. greeting .. ", @" .. username, "", false, true
@@ -149,6 +129,7 @@ local function get_filename()
 	return name, suffix, modified, false
 end
 
+-- Shorten long paths for display.
 local function get_filepath()
 	local path = vim.fn.expand("%:~:.:h")
 	if path == "." or path == "" then
@@ -165,6 +146,7 @@ local function get_filepath()
 	return path
 end
 
+-- Cache file sizes per buffer; updated on read/write/enter events.
 local _sizes = {}
 vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost", "BufEnter" }, {
 	group = vim.api.nvim_create_augroup("slc_filesize", { clear = true }),
@@ -192,6 +174,7 @@ local function get_filesize()
 	return _sizes[b] or ""
 end
 
+-- Cache LSP client list for 1.5 s to reduce UI latency.
 local _lsp = { val = "", ts = 0 }
 local function get_lsp()
 	local now = vim.uv.now()
@@ -211,7 +194,6 @@ local function get_lsp()
 		if #parts > 0 then
 			local server_names = table.concat(parts, ",")
 			local ft = vim.bo.filetype
-
 			local has_mini_icons, MiniIcons = pcall(require, "mini.icons")
 			if has_mini_icons then
 				local icon, hl = MiniIcons.get("filetype", ft)
@@ -227,6 +209,7 @@ local function get_lsp()
 	return _lsp.val
 end
 
+-- Cache diagnostic counts for 150 ms to avoid excessive redraws.
 local _diag = { val = "", ts = 0 }
 local function get_diagnostics()
 	local now = vim.uv.now()
@@ -248,6 +231,7 @@ local function get_diagnostics()
 	return _diag.val
 end
 
+-- Cache git status for 2 s; uses MiniStatusline's built‑in git section.
 local _git = { val = "", ts = 0 }
 local function get_git(MiniStatusline)
 	local now = vim.uv.now()
@@ -260,10 +244,7 @@ local function get_git(MiniStatusline)
 	return _git.val
 end
 
--- ============================================================================
--- RENDER CONTROL
--- ============================================================================
-
+-- Assemble active statusline.
 local function build_active(MiniStatusline)
 	local mode = get_mode()
 	local fname, fsuffix, modified, is_welcome = get_filename()
@@ -276,7 +257,7 @@ local function build_active(MiniStatusline)
 
 	local s = ""
 
-	-- ── LEFT SIDE: Core Identity Focus ───────────────────────────────────────
+	-- Left side: mode indicator and file information.
 	s = s .. "%#" .. mode.hl .. "#" .. mode.label
 	s = s .. "%#MiniStatuslineSecondary# "
 
@@ -285,20 +266,18 @@ local function build_active(MiniStatusline)
 	else
 		local fname_hl = modified and "MiniStatuslineFilenameModified" or "MiniStatuslineFilename"
 		s = s .. "%#" .. fname_hl .. "#" .. fname .. (fsuffix or "")
-
 		if fpath ~= "" then
 			s = s .. " %#MiniStatuslinePath# " .. fpath
 		end
-
 		if git ~= "" then
 			s = s .. " %#MiniStatuslineGit# " .. git
 		end
 	end
 
-	-- ── SPRING CENTER SPACER ────────────────────────────────────────────────
+	-- Center spacer.
 	s = s .. "%#MiniStatuslineSecondary#%<%="
 
-	-- ── RIGHT SIDE: Seamless Flat Telemetry ──────────────────────────────────
+	-- Right side: diagnostics, LSP, filesize, and anchor pill.
 	if not is_welcome then
 		if diag ~= "" then
 			s = s .. diag .. "  "
@@ -311,8 +290,6 @@ local function build_active(MiniStatusline)
 		end
 	end
 
-	-- ── PREMIUM RIGHT ANCHOR PILL (Solid rectangular widget) ────────────────
-	-- Tweaked spaces to prevent the clock icon from choking the line number
 	s = s .. "%#MiniStatuslineRightPill# " .. time_icon .. "  "
 	s = s .. "%#MiniStatuslineLocation#%l:%c  "
 	s = s .. "%#MiniStatuslineProgress#%p%% "
@@ -320,12 +297,12 @@ local function build_active(MiniStatusline)
 	return s
 end
 
+-- Assemble inactive statusline.
 local function build_inactive()
 	local fname, fsuffix, _, is_welcome = get_filename()
 	if is_welcome then
 		return "%#MiniStatuslineInactive# %="
 	end
-
 	local suffix_str = (type(fsuffix) == "string") and fsuffix or ""
 	return "%#MiniStatuslineInactive#  " .. fname .. suffix_str .. " %="
 end
@@ -340,6 +317,7 @@ function M.setup()
 
 	setup_highlights()
 
+	-- Redraw statusline when LSP clients attach/detach.
 	vim.api.nvim_create_autocmd({ "LspAttach", "LspDetach" }, {
 		group = vim.api.nvim_create_augroup("slc_lsp_icon", { clear = true }),
 		callback = function()
@@ -347,6 +325,7 @@ function M.setup()
 		end,
 	})
 
+	-- Reapply highlights on colorscheme change.
 	vim.api.nvim_create_autocmd("ColorScheme", {
 		group = vim.api.nvim_create_augroup("slc_recolor", { clear = true }),
 		callback = setup_highlights,
@@ -358,6 +337,7 @@ function M.setup()
 	statusline.config.content.inactive = function()
 		return build_inactive()
 	end
+	-- Ensure location section matches the anchor pill layout.
 	statusline.section_location = function()
 		return "%l:%c"
 	end
