@@ -1,7 +1,11 @@
+-- lua/runtime/init.lua
 require("runtime.bootstrap")
 require("runtime.loader")
 require("core")
 require("runtime.phases").setup()
+
+-- Register custom commands (e.g., :License)
+require("runtime.events").setup()
 
 vim.api.nvim_create_autocmd("VimEnter", {
 	once = true,
