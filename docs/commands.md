@@ -42,7 +42,8 @@ The leader key in **nvimz** is configured to **`<Space>`**.
 | `<C-h/j/k/l>` | Navigate window splits |
 | `<C-d/u>` | Scroll down / up and center |
 | `<leader>z` | Toggle code fold |
-| `<A-j>` / `<A-k>` | Move line or selection down / up |
+| `<leader>mj` / `<leader>mk` | Move current line down / up |
+| `J` / `K` (Visual) | Move selected lines down / up |
 | `<leader>tt` | Toggle floating scratch terminal |
 | `<leader>tb` | Toggle bottom terminal |
 | `<Esc><Esc>` | Exit terminal mode (Terminal only) |
