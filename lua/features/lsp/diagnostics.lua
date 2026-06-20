@@ -40,10 +40,10 @@ local annotations = {
 	FIX = { icon = "󰁨 ", hl = "DiagnosticError" },
 	BUG = { icon = "󰨰 ", hl = "DiagnosticError" },
 
-	WARN = { icon = "󰀦 ", hl = "DiagnosticWarn" },
+	WARN = { icon = " ", hl = "DiagnosticWarn" },
 	HACK = { icon = "󰡶 ", hl = "DiagnosticWarn" },
 
-	NOTE = { icon = "󰋼 ", hl = "DiagnosticInfo" },
+	NOTE = { icon = " ", hl = "DiagnosticInfo" },
 	TEST = { icon = "󰙨 ", hl = "DiagnosticInfo" },
 
 	TODO = { icon = "󰗡 ", hl = "DiagnosticHint" },
