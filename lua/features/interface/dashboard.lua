@@ -134,11 +134,11 @@ function M.setup()
 	local map_opts = { buffer = bufnr, nowait = true, silent = true }
 
 	vim.keymap.set("n", "f", function()
-		require("mini.pick").builtin.files()
+		require("features.search.pick").files()
 	end, map_opts)
 
 	vim.keymap.set("n", "g", function()
-		require("mini.pick").builtin.grep_live()
+		require("features.search.pick").grep()
 	end, map_opts)
 
 	vim.keymap.set("n", "e", function()

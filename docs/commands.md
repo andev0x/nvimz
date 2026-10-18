@@ -58,7 +58,7 @@ The leader key in **nvimz** is configured to **`<Space>`**.
 | `<leader>rh` / `rl` | Resize window width (Left / Right) |
 | `<leader>rj` / `rk` | Resize window height (Down / Up) |
 
-### Files & Searching (`mini.pick` & `oil.nvim`)
+### Files & Searching (`native` & `oil.nvim`)
 
 | Key | Action |
 | --- | --- |
@@ -69,8 +69,6 @@ The leader key in **nvimz** is configured to **`<Space>`**.
 | `<leader>fg` | Live project grep search |
 | `<leader>fr` | Live grep including gitignored |
 | `<leader>fb` | List active buffers |
-| `<leader>fh` | Query documentation help tags |
-| `<leader>fd` | Search buffer diagnostics |
 | `<leader>cp` | Copy relative path to clipboard |
 | `<leader>cP` | Copy absolute path to clipboard |
 | `<leader>cn` | Copy filename to clipboard |
@@ -88,12 +86,6 @@ The leader key in **nvimz** is configured to **`<Space>`**.
 | `<leader>fm` | Format buffer manually |
 | `<leader>uh` | Toggle global inlay hints |
 | `gl` | Show line diagnostics float |
-| `<leader>lr` | Locate references (Picker) |
-| `<leader>ld` | Locate definition (Picker) |
-| `<leader>ly` | Locate type definition (Picker) |
-| `<leader>li` | Locate interface implementation (Picker) |
-| `<leader>cs` | Document symbols outline |
-| `<leader>cS` | Workspace symbols search |
 
 ### Git & AI
 
@@ -102,8 +94,6 @@ The leader key in **nvimz** is configured to **`<Space>`**.
 | `<leader>gs` | Open interactive Git status |
 | `<leader>gb` | Trigger inline Git blame |
 | `<leader>gd` | Toggle side-by-side diff overlay |
-| `<leader>gc` | Browse commits history (Picker) |
-| `<leader>gh` | Browse changed Git hunks (Picker) |
 | `<leader>aa` | Open AI chat window (Ollama) |
 | `<leader>aq` | Toggle AI chat visibility |
 | `<leader>at` | Toggle GitHub Copilot engine |
