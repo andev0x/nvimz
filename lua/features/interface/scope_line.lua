@@ -23,7 +23,7 @@ local function is_normal_buffer(bufnr)
 end
 
 local function get_scope_node(bufnr, winid)
-local ft = vim.bo[bufnr].filetype
+	local ft = vim.bo[bufnr].filetype
 	local ok, parser = pcall(vim.treesitter.get_parser, bufnr, ft)
 	if not ok or not parser then
 		return nil
@@ -52,70 +52,28 @@ local function clear(bufnr)
 	end
 end
 
-local function get_byte_col_from_visual_col(line_str, target_visual_col, tabstop)
-	local current_visual_col = 0
-	local current_byte_idx = 0
+-- Walk a string accumulating its display width. When `target_col` is given the
+-- scan stops as soon as that visual column is reached, which is what the guide
+-- placement needs; pass `nil` to measure the whole string (used for indents).
+--
+-- Returns `width` and, when `target_col` is reachable, the 0-based byte index
+-- whose visual column equals it (-1 otherwise, e.g. a tab overshoots the
+-- column). ASCII and tabs are handled inline so the common case avoids a
+-- `vim.fn.strdisplaywidth` FFI call per character, which made this O(chars)
+-- hot path the slowest part of cursor movement.
+local function scan_line(line_str, target_col, tabstop)
+	local width = 0
+	local i = 1
 	local len = #line_str
 
-	while current_byte_idx < len and current_visual_col < target_visual_col do
-		local byte = string.byte(line_str, current_byte_idx + 1)
-		if not byte then
-			break
-		end
+	while i <= len and (target_col == nil or width < target_col) do
+		local byte = string.byte(line_str, i)
 
-		local char_len = 1
-		if byte >= 0xc0 and byte <= 0xdf then
-			char_len = 2
-		elseif byte >= 0xe0 and byte <= 0xef then
-			char_len = 3
-		elseif byte >= 0xf0 and byte <= 0xf7 then
-			char_len = 4
-		end
-
-		local char = string.sub(line_str, current_byte_idx + 1, current_byte_idx + char_len)
-		if char == "\t" then
-			current_visual_col = current_visual_col + tabstop - (current_visual_col % tabstop)
-		else
-			current_visual_col = current_visual_col + vim.fn.strdisplaywidth(char)
-		end
-
-		current_byte_idx = current_byte_idx + char_len
-	end
-
-	if current_visual_col == target_visual_col then
-		return current_byte_idx
-	end
-
-	return -1
-end
-
-local function draw_scope_line(bufnr, winid)
-	if not is_normal_buffer(bufnr) then
-		clear(bufnr)
-		return
-	end
-
-	local node = get_scope_node(bufnr, winid)
-	if not node then
-		clear(bufnr)
-		return
-	end
-
-	local start_row, _, end_row, _ = node:range()
-	local tabstop = vim.bo[bufnr].tabstop
-	if not tabstop or tabstop <= 0 then
-		tabstop = 8
-	end
-
-	-- Calculate exact visual indentation column based on the scope's start line
-	local start_line_str = vim.api.nvim_buf_get_lines(bufnr, start_row, start_row + 1, false)[1] or ""
-	local indent_str = start_line_str:match("^%s*") or ""
-	local visual_col = 0
-	local i = 1
-	while i <= #indent_str do
-		local byte = string.byte(indent_str, i)
 		if byte == 9 then
-			visual_col = visual_col + tabstop - (visual_col % tabstop)
+			width = width + tabstop - (width % tabstop)
+			i = i + 1
+		elseif byte < 0x80 then
+			width = width + 1
 			i = i + 1
 		else
 			local char_len = 1
@@ -126,83 +84,136 @@ local function draw_scope_line(bufnr, winid)
 			elseif byte >= 0xf0 and byte <= 0xf7 then
 				char_len = 4
 			end
-			local char = string.sub(indent_str, i, i + char_len - 1)
-			visual_col = visual_col + vim.fn.strdisplaywidth(char)
+			width = width + vim.fn.strdisplaywidth(string.sub(line_str, i, i + char_len - 1))
 			i = i + char_len
 		end
 	end
 
+	if target_col ~= nil and width == target_col then
+		return width, i - 1
+	end
+
+	return width, -1
+end
+
+local function draw_scope_line(bufnr, start_row, end_row, visual_col, tabstop)
 	clear(bufnr)
 
 	-- Draw vertical line from the line below declaration up to the closing boundary row
 	for row = start_row + 1, end_row do
-		if vim.api.nvim_buf_is_valid(bufnr) then
-			local line_str = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false)[1] or ""
+		if not vim.api.nvim_buf_is_valid(bufnr) then
+			return
+		end
 
-			-- Calculate visual display width of the line to compare with visual_col
-			local line_display_width = 0
-			local j = 1
-			while j <= #line_str do
-				local byte = string.byte(line_str, j)
-				if not byte then
-					break
-				end
-				if byte == 9 then
-					line_display_width = line_display_width + tabstop - (line_display_width % tabstop)
-					j = j + 1
-				else
-					local char_len = 1
-					if byte >= 0xc0 and byte <= 0xdf then
-						char_len = 2
-					elseif byte >= 0xe0 and byte <= 0xef then
-						char_len = 3
-					elseif byte >= 0xf0 and byte <= 0xf7 then
-						char_len = 4
-					end
-					local char = string.sub(line_str, j, j + char_len - 1)
-					line_display_width = line_display_width + vim.fn.strdisplaywidth(char)
-					j = j + char_len
-				end
-			end
+		local line_str = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false)[1] or ""
 
-			-- Only process non-empty lines
-			if #line_str:gsub("%s", "") > 0 then
-				if line_display_width < visual_col then
-					-- Handle short lines (e.g., closing braces or short segments)
-					-- Pad with spaces up to visual_col to keep the line vertically straight
-					local padding = string.rep(" ", visual_col - line_display_width)
-					vim.api.nvim_buf_set_extmark(bufnr, ns, row, #line_str, {
-						virt_text = { { padding .. "│", "ScopeLine" } },
-						virt_text_pos = "eol",
+		-- Only process non-empty lines
+		if #line_str:gsub("%s", "") > 0 then
+			-- `width` equals the full line width when the line is shorter than
+			-- the guide column, otherwise it is capped at `visual_col`:
+			-- either way it is only used for the short-line test below.
+			local width, byte = scan_line(line_str, visual_col, tabstop)
+
+			if width < visual_col then
+				-- Handle short lines (e.g., closing braces) by padding up to
+				-- visual_col so the guide stays vertically straight.
+				local padding = string.rep(" ", visual_col - width)
+				vim.api.nvim_buf_set_extmark(bufnr, ns, row, #line_str, {
+					virt_text = { { padding .. "│", "ScopeLine" } },
+					virt_text_pos = "eol",
+					priority = 10,
+				})
+			elseif byte >= 0 and byte < #line_str then
+				-- Safely convert visual column alignment into a byte index
+				local char = string.sub(line_str, byte + 1, byte + 1)
+				if char == " " then
+					vim.api.nvim_buf_set_extmark(bufnr, ns, row, byte, {
+						virt_text = { { "│", "ScopeLine" } },
+						virt_text_pos = "overlay", -- Replaces exactly 1 whitespace character seamlessly
 						priority = 10,
 					})
-				else
-					-- Fix: Safely convert visual column alignment into a precise byte index
-					local safe_byte_col = get_byte_col_from_visual_col(line_str, visual_col, tabstop)
-
-					-- Ensure byte calculation didn't overflow or hit text characters
-					if safe_byte_col >= 0 and safe_byte_col < #line_str then
-						local char = string.sub(line_str, safe_byte_col + 1, safe_byte_col + 1)
-						if char == " " then
-							vim.api.nvim_buf_set_extmark(bufnr, ns, row, safe_byte_col, {
-								virt_text = { { "│", "ScopeLine" } },
-								virt_text_pos = "overlay", -- Replaces exactly 1 whitespace character seamlessly
-								priority = 10,
-							})
-						elseif char == "\t" then
-							-- Replace the tab character with a guide line and padding spaces to prevent shifting
-							local tab_width = tabstop - (visual_col % tabstop)
-							vim.api.nvim_buf_set_extmark(bufnr, ns, row, safe_byte_col, {
-								virt_text = { { "│" .. string.rep(" ", tab_width - 1), "ScopeLine" } },
-								virt_text_pos = "overlay", -- Replaces the tab character seamlessly
-								priority = 10,
-							})
-						end
-					end
+				elseif char == "\t" then
+					-- Replace the tab character with a guide line and padding spaces to prevent shifting
+					local tab_width = tabstop - (visual_col % tabstop)
+					vim.api.nvim_buf_set_extmark(bufnr, ns, row, byte, {
+						virt_text = { { "│" .. string.rep(" ", tab_width - 1), "ScopeLine" } },
+						virt_text_pos = "overlay", -- Replaces the tab character seamlessly
+						priority = 10,
+					})
 				end
 			end
 		end
 	end
+end
+
+-- The last rendered scope. Re-rendering is skipped while this signature is
+-- unchanged, so moving the cursor *within* a scope costs a single treesitter
+-- node lookup instead of a full buffer-block rescan.
+local last_render = nil
+local redraw_pending = false
+
+local function invalidate()
+	last_render = nil
+end
+
+local function render(bufnr, winid)
+	if not vim.api.nvim_buf_is_valid(bufnr) or not vim.api.nvim_win_is_valid(winid) then
+		invalidate()
+		return
+	end
+
+	if not is_normal_buffer(bufnr) then
+		if last_render and last_render.bufnr == bufnr then
+			clear(bufnr)
+			invalidate()
+		end
+		return
+	end
+
+	local node = get_scope_node(bufnr, winid)
+	if not node then
+		if last_render and last_render.bufnr == bufnr then
+			clear(bufnr)
+			invalidate()
+		end
+		return
+	end
+
+	local start_row, _, end_row, _ = node:range()
+
+	local tabstop = vim.bo[bufnr].tabstop
+	if not tabstop or tabstop <= 0 then
+		tabstop = 8
+	end
+
+	local signature =
+		string.format("%d:%d:%d:%d:%d", winid, start_row, end_row, tabstop, vim.api.nvim_buf_get_changedtick(bufnr))
+
+	if last_render and last_render.bufnr == bufnr and last_render.signature == signature then
+		return
+	end
+
+	-- Calculate exact visual indentation column based on the scope's start line
+	local start_line_str = vim.api.nvim_buf_get_lines(bufnr, start_row, start_row + 1, false)[1] or ""
+	local indent_str = start_line_str:match("^%s*") or ""
+	local visual_col = scan_line(indent_str, nil, tabstop)
+
+	draw_scope_line(bufnr, start_row, end_row, visual_col, tabstop)
+	last_render = { bufnr = bufnr, signature = signature }
+end
+
+-- Coalesce the frequent CursorMoved/CursorMovedI bursts into one redraw per
+-- event-loop tick so keystrokes are never blocked by scope rendering.
+local function schedule_render()
+	if redraw_pending then
+		return
+	end
+	redraw_pending = true
+	vim.schedule(function()
+		redraw_pending = false
+		local winid = vim.api.nvim_get_current_win()
+		render(vim.api.nvim_win_get_buf(winid), winid)
+	end)
 end
 
 function M.setup()
@@ -212,10 +223,7 @@ function M.setup()
 	vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "WinEnter", "BufEnter" }, {
 		group = group,
 		desc = "Render Treesitter scope line dynamically",
-		callback = function(args)
-			local winid = vim.api.nvim_get_current_win()
-			draw_scope_line(args.buf, winid)
-		end,
+		callback = schedule_render,
 	})
 
 	vim.api.nvim_create_autocmd({ "BufLeave", "WinLeave" }, {
@@ -223,6 +231,7 @@ function M.setup()
 		desc = "Clear active Treesitter scope line on context exit",
 		callback = function(args)
 			clear(args.buf)
+			invalidate()
 		end,
 	})
 end
