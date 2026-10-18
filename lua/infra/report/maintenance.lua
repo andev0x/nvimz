@@ -66,7 +66,7 @@ function M.run()
 		end
 	end
 	vim.fn.delete(tempfile)
-	table.insert(lines, "Total startup time: **" .. (startup_time or "unknown") .. "ms** (Target: <20ms)")
+	table.insert(lines, "Total startup time: **" .. (startup_time or "unknown") .. "ms** (Target: <10ms)")
 	table.insert(lines, "")
 
 	table.insert(lines, "## 4. Parser Validation")

@@ -28,15 +28,28 @@ vim.api.nvim_create_autocmd("VimEnter", {
 			end
 		end)
 
-		if elapsed_ms > 20 then
+		vim.defer_fn(function()
+			-- Re-enable filetype detection now that startup is complete.
+			vim.g.did_load_filetypes = nil
+			pcall(vim.cmd, "source $VIMRUNTIME/filetype.lua")
+			pcall(vim.cmd, "doautocmd filetypedetect BufRead")
+			-- Defer non-essential runtime plugins and shada I/O to the background.
+			pcall(vim.cmd, "runtime! plugin/**/*.vim")
+			vim.o.shada = "!,'100,<50,s10,h"
+			pcall(vim.cmd, "rshada!")
+		end, 0)
+
+		if elapsed_ms > 10 then
 			vim.schedule(function()
-				vim.notify(("nvimz startup %.2fms exceeded 20ms target"):format(elapsed_ms), vim.log.levels.WARN)
+				vim.notify(("nvimz startup %.2fms exceeded 10ms target"):format(elapsed_ms), vim.log.levels.WARN)
 			end)
 		end
 
 		if interactive_session then
-			pcall(function()
-				require("features.interface.dashboard").setup()
+			vim.schedule(function()
+				pcall(function()
+					require("features.interface.dashboard").setup()
+				end)
 			end)
 		end
 	end,

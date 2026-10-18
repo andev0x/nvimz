@@ -38,7 +38,7 @@ vim.opt.listchars = {
 }
 
 vim.opt.lazyredraw = true
-vim.opt.shada = "!,'100,<50,s10,h"
+-- shada is configured lazily after startup to avoid blocking boot
 vim.opt.synmaxcol = 240
 vim.opt.redrawtime = 1500
 

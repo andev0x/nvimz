@@ -84,8 +84,10 @@ vim.api.nvim_create_autocmd("FileType", {
 			return
 		end
 
-		pcall(function()
-			require("features.lsp").start(filetype, args.buf)
-		end)
+		vim.defer_fn(function()
+			pcall(function()
+				require("features.lsp").start(filetype, args.buf)
+			end)
+		end, 0)
 	end,
 })

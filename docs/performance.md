@@ -1,6 +1,6 @@
 # Performance
 
-This document details the optimizations and performance-focused design of **nvimz**, targeting a sub-20ms startup time and ultra-low runtime latency.
+This document details the optimizations and performance-focused design of **nvimz**, targeting a sub-10ms startup time and ultra-low runtime latency.
 
 ## Key Performance Vectors
 

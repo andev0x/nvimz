@@ -79,10 +79,17 @@ function M.add(specs)
 end
 
 function M.setup()
-	vim.schedule(function()
-		local registry = require("infra.registry")
-		load_phase(1, registry.plugins.phase1, setup_phase_1)
-	end)
+	-- Defer phase 1 (theme, treesitter, LSP, editing core) to the background
+	-- so the initial startup phase stays under 10ms.
+	vim.api.nvim_create_autocmd("VimEnter", {
+		once = true,
+		callback = function()
+			vim.defer_fn(function()
+			local registry = require("infra.registry")
+			load_phase(1, registry.plugins.phase1, setup_phase_1)
+		end, 0)
+		end,
+	})
 
 	-- Load markdown UI only when needed.
 	vim.api.nvim_create_autocmd("FileType", {
@@ -96,12 +103,14 @@ function M.setup()
 		end,
 	})
 
-	vim.api.nvim_create_autocmd({ "BufReadPre", "BufNewFile" }, {
-		group = vim.api.nvim_create_augroup("PackPhase2", { clear = true }),
+	-- Defer phase 2 (formatting, debugging) to the background as well.
+	vim.api.nvim_create_autocmd("VimEnter", {
 		once = true,
 		callback = function()
-			local registry = require("infra.registry")
-			load_phase(2, registry.plugins.phase2, setup_phase_2)
+			vim.defer_fn(function()
+				local registry = require("infra.registry")
+				load_phase(2, registry.plugins.phase2, setup_phase_2)
+			end, 0)
 		end,
 	})
 

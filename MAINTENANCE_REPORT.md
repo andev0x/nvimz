@@ -1,5 +1,5 @@
 # nvimz Maintenance Report
-Date: 2026-06-19 17:11:03
+Date: 2026-10-19 01:17:35
 
 ## 1. Lockfile Validation
 ✅ Lockfile (`nvim-pack-lock.json`) is valid JSON.
@@ -9,28 +9,28 @@ Date: 2026-06-19 17:11:03
 ────────────────────────────────────────────────────────────
  Core
 ────────────────────────────────────────────────────────────
- git                    OK         git version 2.54.0
- rg                     OK         ripgrep 15.1.0features:+pcre2simd(compile):+NEONsimd(runtime):+NEONPCRE2 10.45 is available (JIT is available)
- fd                     OK         fd 10.4.2
+ git                    OK         git version 2.55.0
+ rg                     OK         ripgrep 15.2.0features:+pcre2simd(compile):+NEONsimd(runtime):+NEONPCRE2 10.45 is available (JIT is available)
+ fd                     OK         fd 10.5.0
 ────────────────────────────────────────────────────────────
  LSP
 ────────────────────────────────────────────────────────────
- gopls                  OK         golang.org/x/tools/gopls v0.22.0
- lua_ls                 OK         3.18.2-dev
+ gopls                  OK         golang.org/x/tools/gopls v0.23.0
+ lua_ls                 OK         3.19.1
 ────────────────────────────────────────────────────────────
  Formatters
 ────────────────────────────────────────────────────────────
  stylua                 OK         stylua 2.5.2
- shfmt                  OK         3.13.1
- prettier               OK         3.8.4
+ shfmt                  OK         3.14.1
+ prettier               OK         3.9.9
 ────────────────────────────────────────────────────────────
  Linters
 ────────────────────────────────────────────────────────────
- golangci-lint          OK         golangci-lint has version 2.12.2 built with go1.26.2 from c0d3ddc on 2026-05-06T11:01:25Z
+ golangci-lint          OK         golangci-lint has version 2.14.0 built with go1.27.1 from 114493f on 2026-09-24T10:54:53Z
 ```
 
 ## 3. Startup Benchmark
-Total startup time: **011.349ms** (Target: <20ms)
+Total startup time: **006.919ms** (Target: <10ms)
 
 ## 4. Parser Validation
 ```
