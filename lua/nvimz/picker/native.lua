@@ -518,9 +518,22 @@ function M.open(title, mode, hidden, on_select)
 		results_h = 5
 	end
 	local input_h = 1
+	-- `total_width` is the budget for the whole modal. Each float's `width`
+	-- is content-only, so each contributes 2 border columns to the outer
+	-- footprint: left_width + 2 + right_width + 2 = left + right + 4.
+	-- Reserving exactly those 4 columns keeps the preview inside the
+	-- container while leaving each window its own dedicated border.
+	local border_cols = 4
 	local total_width = math.min(vim.o.columns - 4, math.floor(vim.o.columns * 0.86))
 	local left_width = math.floor(total_width * 0.50)
-	local right_width = total_width - left_width - 1
+	local right_width = total_width - left_width - border_cols
+	if right_width < 10 then
+		-- Very narrow editors: give the preview a usable minimum (bounded by
+		-- the space actually left over) and take the difference from the
+		-- results pane rather than letting the floats overlap.
+		right_width = math.max(1, math.min(10, total_width - border_cols - 1))
+		left_width = math.max(1, total_width - right_width - border_cols)
+	end
 	-- outer heights: each float adds 2 for the border
 	local combined_h = (input_h + 2) + (results_h + 2)
 	local start_row = math.floor((vim.o.lines - combined_h) / 2)
@@ -528,7 +541,11 @@ function M.open(title, mode, hidden, on_select)
 		start_row = 0
 	end
 	local left_col = math.floor((vim.o.columns - total_width) / 2)
-	local right_col = left_col + left_width + 1
+	-- `col` addresses the content column; the preview's own left border
+	-- sits one column to its left. Stepping left_width + 2 therefore lands
+	-- the preview content past both the left pane's content and its right
+	-- border, so the two rounded borders stay distinct and never overlap.
+	local right_col = left_col + left_width + 2
 	local input_row = start_row
 	local results_row = start_row + input_h + 2
 	-- preview spans input + results outer height
