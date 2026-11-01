@@ -1,5 +1,7 @@
 local M = {}
 
+local initialized = false
+
 local function safe_require(module)
 	local ok, result = pcall(require, module)
 	if ok then
@@ -67,6 +69,10 @@ local function setup_oil_git(oil_git)
 end
 
 function M.setup()
+	if initialized then
+		return
+	end
+
 	require("oil").setup({
 		default_file_explorer = true,
 		columns = { "icon" },
@@ -99,36 +105,26 @@ function M.setup()
 		},
 	})
 
-	vim.schedule(function()
-		local oil_git = safe_require("oil-git-status")
-		setup_oil_git(oil_git)
+	local oil_git = safe_require("oil-git-status")
+	setup_oil_git(oil_git)
 
-		if oil_git and type(oil_git.refresh_buffer) == "function" then
-			vim.api.nvim_create_autocmd("BufReadPost", {
-				pattern = "oil://*",
-				callback = function(args)
-					vim.schedule(function()
-						if vim.api.nvim_buf_is_valid(args.buf) then
-							oil_git.refresh_buffer(args.buf)
-						end
-					end)
-				end,
-			})
-		end
-	end)
+	if oil_git and type(oil_git.refresh_buffer) == "function" then
+		vim.api.nvim_create_autocmd("BufReadPost", {
+			pattern = "oil://*",
+			callback = function(args)
+				vim.schedule(function()
+					if vim.api.nvim_buf_is_valid(args.buf) then
+						oil_git.refresh_buffer(args.buf)
+					end
+				end)
+			end,
+		})
+	end
 
 	apply_highlights()
 	vim.api.nvim_create_autocmd("ColorScheme", { callback = apply_highlights })
 
-	local function toggle_oil_float()
-		if vim.bo.filetype == "oil" then
-			require("oil").close()
-			return
-		end
-		require("oil").open_float()
-	end
-
-	vim.keymap.set("n", "<leader>e", toggle_oil_float, { desc = "Toggle Oil (rounded left float)" })
+	initialized = true
 end
 
 return M

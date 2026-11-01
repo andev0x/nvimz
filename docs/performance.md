@@ -9,12 +9,24 @@ Unlike traditional Neovim setups that rely on the Mason plugin for runtime tool 
 * **Zero Boot Overhead:** Completely removes runtime shell executions and system calls that third-party managers run during Neovim initialization to check for missing binaries.
 * **Deterministic Native Resolution:** Resolves tools using highly optimized OS native lookup routines (the system path cache).
 
-### 2. Phase-Driven Event Loading (Sub-10ms Empty-Startup Target)
-By delaying the loading of resource-heavy features (like LSP, Tree-sitter, theme renderers, and debugging scopes) to specific post-boot stages, the editor's initial view renders almost instantaneously:
-* **Deferred UI and Core:** After `VimEnter`, `vim.defer_fn(..., 0)` loads Phase 1 (theme, icons, statusline, scope line, Tree-sitter, LSP setup, editing, picker, Git).
-* **Deferred Tooling:** Phase 2 loads formatting and DAP on the same deferred `VimEnter` path.
-* **Lazy AI:** Phase 3 (AI chat and Copilot) is not loaded until the first `InsertEnter`.
-* **FileType-Triggered Rendering:** Markdown rendering is loaded only for `FileType=markdown`.
+### 2. Progressive Loading (Tiered, Event-Driven)
+Initialization is split by what the first screen actually needs. There is no timer chain and no
+background scheduler:
+
+* **Tier 0 — core (synchronous):** options, keymaps, commands, and the event handlers. No plugin
+  setup or subprocess.
+* **Tier 1 — first render (synchronous at `VimEnter`):** tokyonight, mini.nvim, theme, icons,
+  statusline, first-buffer Treesitter, the dashboard when no file was given, and Markdown
+  rendering when the first buffer is Markdown. The native intro screen is never shown.
+* **Tier 2 — normal editing (event-driven):** pairs/completion on the first `InsertEnter`, scope
+  line and git signs on the first cursor movement, conform on the first write, LSP on the first
+  code `FileType` (or `:Lsp*`), and Oil from its key, `:Oil`, or a directory startup.
+* **Tier 3 — on demand:** DAP on the first `<leader>d*`/`:Dap*`, gp on the first AI key/`:Gp*`,
+  Copilot only on `<leader>at`/`:Copilot`, Markdown for later buffers, and the picker on its key.
+* **No Tier 4:** no idle queue, warm-up, periodic timer, or speculative preload.
+
+The former `InsertEnter` AI phase is gone: gp and Copilot are never loaded by inserting text.
+
 
 ### 3. No Telemetry Cache
 nvimz does not serialize session state. Startup timing is measured on demand, machine overrides are read directly from `lua/machine/local.lua`, and no file is written during startup. This removes a per-session JSON read/write and a second source of truth for configuration.
@@ -37,22 +49,42 @@ Replacing a fragmented ecosystem of individual plugins with the integrated, high
 Performance in **nvimz** is not assumed; it is measured and audited deterministically.
 
 ### Recorded Measurements
-Measured on the maintainer's machine (Neovim 0.12.6, macOS 27 / arm64). Acceptance re-measurement on 2026-11-01:
+Measured on the maintainer's machine (Neovim 0.12.6, macOS 27 / arm64). Gate B re-measurement
+(2026-11-02) uses the same boundaries as `docs/audit/progressive-performance-baseline.md`:
 
-| Metric | Value |
-| --- | --- |
-| First render (`init.lua` → `VimEnter`, headless, n=10) | median 6.64 ms (range 6.26 – 6.97) |
-| `--startuptime` `NVIM STARTED` (warm, n=10) | median 9.87 ms (range 8.98 – 13.29; first run 13.29) |
-| Cold bytecode cache `NVIM STARTED` (isolated, n=5) | median 10.99 ms (range 10.00 – 15.13; first run 15.13) |
-| Phase 1 complete (deferred UI + core, n=5) | median 22.2 ms (range 21.2 – 23.9) |
-| Phase 1 + phase 2 complete (format/DAP loaded, polled, n=5) | median 33.2 ms (range 30.9 – 34.5) |
-| Config load (`require("runtime")`) | ~1.7 ms |
+| Metric | Before (Gate A) | After (Gate B) |
+| --- | --- | --- |
+| Core init → start of `VimEnter` (n=3) | 6.23–8.18 ms | 6.67–8.15 ms |
+| Headless `VimEnter` complete (n=10) | 6.73 ms median | 7.75 ms median (includes headless Tier 1) |
+| `--startuptime` `NVIM STARTED` (warm, n=10) | 10.10 ms median (batch A) | 10.25 ms median |
+| Empty dashboard first paint (n=5) | 70.7 ms | **44.2 ms** |
+| Native intro shown before dashboard | 34.6 → 70.7 ms | **never** |
+| Lua file first content (n=5) | 43.8 ms | 44.6 ms |
+| Go file first content (n=5) | 41.4 ms | 50.2 ms |
+| Markdown first content (n=5) | 52.3 ms | 63.2 ms |
+| Empty session modules (idle, 600 ms) | 38 at `VimEnter`; 166 after phase 2 | **43** |
+| Lua session modules | 192 after phase 2 | **101** |
+| Go session modules | 191 after phase 2 | **100** |
+| Markdown session modules | 231 after phase 2 | **160** |
+| Empty process-tree RSS (1.2 s) | 30.1–30.3 MiB | **26.4–26.7 MiB** |
+| Lua session tree RSS | 108.6–109.7 MiB | 105.2–110.4 MiB |
+| Go session tree RSS | 156.7–251.6 MiB | 153.9–154.1 MiB |
+| Normal Lua editing (insert, no AI) | ~370 MiB (auto gp+Copilot + lua_ls) | **110.6–113.2 MiB** |
+| Explicit Copilot activation + insert | ~370 MiB tree | 408.1–415.8 MiB (opt-in only) |
 
-The two phase figures are different boundaries: the ~22 ms checkpoint is after phase 1 but before `features.format`/`features.dap` finish loading; ~33 ms is when both phase-2 modules are loaded. The deferred-timer probe that produced the old ~23 ms figure measured the phase-1 checkpoint, not phase 1 + phase 2 (verified: DAP is not yet loaded at that point). Do not compare any of these with the `NVIM STARTED` figure.
+The Go and Markdown first-content numbers are later by design: Treesitter must pick up the first
+Go buffer and render-markdown must render the first Markdown buffer before the first paint,
+otherwise the user would see a visible highlight/layout switch. Empty and Lua first paint improved
+or stayed flat. Tier 1 itself measures 9.0–9.6 ms (empty), 6.9 ms (Lua), 10.3–11.0 ms (Go), and
+16.1–17.7 ms (Markdown); the 10 ms objective is met for empty/Lua and intentionally exceeded for
+the two first-buffer correctness cases.
 
-These figures are for an empty startup. Opening a file adds native filetype detection, ftplugin, and syntax work before `VimEnter`: measured headless first-buffer times were ~13 ms for Lua and ~18 ms for Markdown. That is native editor work retained deliberately (see D11 in `docs/architecture/runtime-decisions.md`), not config loading.
+`NVIM STARTED` includes Neovim's native runtime plugin loading, filetype detection, and its own
+plugin scripts; it is not the same boundary as the config timings above. Do not compare it with a
+Lua-only measurement.
 
-The `NVIM STARTED` figure includes Neovim's native runtime plugin loading (matchit, editorconfig, `:Man`, OSC52), filetype detection, and its plugin script set. An earlier build reported ~5.4 ms by skipping those native steps; that number is not comparable. Full methodology and limitations: `docs/audit/runtime-baseline.md`.
+Full evidence, feature-activation costs, input-latency tables, and limitations:
+`docs/audit/progressive-performance-final-report.md`.
 
 ### Native Benchmark Command
 Run **`:NvimzBenchmark`** to measure three consecutive starts and list the ten slowest sourced modules. It does not delete the bytecode cache (`~/.cache/nvim/luac`) and does not keep history.

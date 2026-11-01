@@ -12,8 +12,16 @@ end
 
 local function declared_names()
 	local names = {}
-	for _, phase in ipairs({ plugins_config.phase1, plugins_config.phase2, plugins_config.phase3 }) do
-		for _, spec in ipairs(phase) do
+	for _, group in ipairs({
+		plugins_config.tier1,
+		plugins_config.markdown,
+		plugins_config.oil,
+		plugins_config.format,
+		plugins_config.dap,
+		plugins_config.gp,
+		plugins_config.copilot,
+	}) do
+		for _, spec in ipairs(group) do
 			names[spec.name or default_name(spec.src)] = true
 		end
 	end

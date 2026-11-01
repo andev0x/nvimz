@@ -174,9 +174,12 @@ local function get_filesize()
 	return _sizes[b] or ""
 end
 
--- Cache LSP client list for 1.5 s to reduce UI latency.
+-- Cache LSP client list for 1.5 s to reduce UI latency.
 local _lsp = { val = "", ts = 0 }
 local function get_lsp()
+	if package.loaded["vim.lsp"] == nil then
+		return ""
+	end
 	local now = vim.uv.now()
 	if now - _lsp.ts < 1500 then
 		return _lsp.val
@@ -212,6 +215,9 @@ end
 -- Cache diagnostic counts for 150 ms to avoid excessive redraws.
 local _diag = { val = "", ts = 0 }
 local function get_diagnostics()
+	if package.loaded["vim.diagnostic"] == nil then
+		return ""
+	end
 	local now = vim.uv.now()
 	if now - _diag.ts < 150 then
 		return _diag.val
@@ -317,11 +323,25 @@ function M.setup()
 
 	setup_highlights()
 
-	-- Redraw statusline when LSP clients attach/detach.
+	-- Redraw statusline when LSP clients attach/detach, and drop the cached
+	-- value so the new client is shown immediately.
 	vim.api.nvim_create_autocmd({ "LspAttach", "LspDetach" }, {
 		group = vim.api.nvim_create_augroup("slc_lsp_icon", { clear = true }),
 		callback = function()
+			_lsp.ts = 0
 			vim.cmd("redrawstatus")
+		end,
+	})
+
+	-- Same for diagnostics: the guarded getter skips vim.diagnostic until the
+	-- module exists; once it does, the first change refreshes the cache.
+	vim.api.nvim_create_autocmd("DiagnosticChanged", {
+		group = vim.api.nvim_create_augroup("slc_diagnostics", { clear = true }),
+		callback = function(args)
+			if args.buf == nil or args.buf == vim.api.nvim_get_current_buf() then
+				_diag.ts = 0
+				vim.cmd("redrawstatus")
+			end
 		end,
 	})
 

@@ -105,7 +105,7 @@ local function check_plugins(h)
 	h.info(("%d managed, %d active in this session"):format(#plugins, active))
 	if #pending > 0 then
 		table.sort(pending)
-		h.info("not active (lazy phase or undeclared): " .. table.concat(pending, ", "))
+		h.info("not active (on-demand or undeclared): " .. table.concat(pending, ", "))
 	end
 end
 
@@ -131,7 +131,7 @@ function M.check()
 
 	h.start("nvimz")
 	h.ok("Neovim " .. tostring(vim.version()))
-	h.info("startup target: < 10 ms")
+	h.info("core startup target: < 10 ms before first-render initialization")
 
 	check_core(h)
 	check_servers(h)

@@ -1,6 +1,13 @@
 local M = {}
 
+local initialized = false
+
 function M.setup()
+	if initialized then
+		return
+	end
+	initialized = true
+
 	require("mini.pairs").setup({
 		modes = { insert = true, command = false, terminal = false },
 		mappings = {

@@ -103,6 +103,7 @@ function M.setup()
 		"TextChanged",
 		"InsertLeave",
 	}, {
+		group = vim.api.nvim_create_augroup("LspCommentAnnotations", { clear = true }),
 		callback = function(args)
 			scan_annotations(args.buf)
 		end,

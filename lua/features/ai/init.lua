@@ -1,6 +1,10 @@
 local M = {}
 
--- Ensure Ollama is running before gp.nvim initializes.
+local gp_initialized = false
+local copilot_initialized = false
+
+-- Ensure Ollama is running before gp.nvim initializes. This runs only when AI
+-- is explicitly activated, never during startup or a plain insert.
 local ollama_started = false
 local function ensure_ollama_running()
 	if ollama_started or vim.fn.executable("ollama") ~= 1 then
@@ -31,12 +35,11 @@ local function ensure_ollama_running()
 	end)
 end
 
--- Helper to create keymaps.
-local function map(lhs, rhs, desc, mode)
-	vim.keymap.set(mode or "n", lhs, rhs, { desc = desc, silent = true })
-end
+function M.setup_gp()
+	if gp_initialized then
+		return
+	end
 
-function M.setup()
 	ensure_ollama_running()
 
 	require("gp").setup({
@@ -115,7 +118,14 @@ You are a senior code editor.
 		default_command_agent = "Editor",
 	})
 
-	-- Copilot configuration
+	gp_initialized = true
+end
+
+function M.setup_copilot()
+	if copilot_initialized then
+		return
+	end
+
 	require("copilot").setup({
 		suggestion = {
 			enabled = true,
@@ -131,25 +141,7 @@ You are a senior code editor.
 		panel = { enabled = false },
 	})
 
-	-- AI keymaps
-	map("<leader>aa", "<cmd>GpChatToggle<cr>", "AI Toggle Chat")
-	map("<leader>a1", function()
-		vim.cmd("GpAgent Scout")
-		vim.notify("AI → Scout")
-	end, "AI Scout")
-	map("<leader>a2", function()
-		vim.cmd("GpAgent Judge")
-		vim.notify("AI → Judge")
-	end, "AI Judge")
-	map("<leader>a3", function()
-		vim.cmd("GpAgent Editor")
-		vim.notify("AI → Editor")
-	end, "AI Editor")
-	map("<leader>at", "<cmd>Copilot toggle<cr>", "Copilot Toggle")
-	map("<A-CR>", "<cmd>GpChatRespond<cr>", "AI Respond")
-	map("<leader>ar", ":GpRewrite<space>", "AI Rewrite", "v")
-	map("<leader>ap", ":GpAppend<space>", "AI Append", "v")
-	map("<leader>ab", ":GpPrepend<space>", "AI Prepend", "v")
+	copilot_initialized = true
 end
 
 return M

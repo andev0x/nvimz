@@ -2,8 +2,15 @@ local M = {}
 
 local languages = require("nvimz.config.languages")
 
-local capabilities = vim.lsp.protocol.make_client_capabilities()
+local capabilities = nil
 local enabled_servers = {}
+
+local function client_capabilities()
+	if not capabilities then
+		capabilities = vim.lsp.protocol.make_client_capabilities()
+	end
+	return capabilities
+end
 
 function M.enable_server(name, s_spec, bufnr)
 	local cmd = s_spec.cmd or {}
@@ -37,7 +44,7 @@ function M.enable_server(name, s_spec, bufnr)
 		cmd = s_spec.cmd,
 		root_dir = root_dir,
 		settings = s_spec.settings,
-		capabilities = capabilities,
+		capabilities = client_capabilities(),
 	}, {
 		bufnr = bufnr,
 	})

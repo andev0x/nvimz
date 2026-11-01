@@ -1,10 +1,10 @@
 local M = {}
 
 local initialized = false
+local ui_overrides_done = false
 
 local function setup_commands()
 	local languages = require("nvimz.config.languages")
-	local servers = require("features.lsp.servers")
 
 	vim.api.nvim_create_user_command("LspInfo", function()
 		local clients = vim.lsp.get_clients()
@@ -34,7 +34,7 @@ local function setup_commands()
 			return
 		end
 		if languages.lsp_servers[name] then
-			servers.enable_server(name, languages.lsp_servers[name], 0)
+			require("features.lsp.servers").enable_server(name, languages.lsp_servers[name], 0)
 		else
 			vim.notify(string.format("LSP server '%s' not found in spec", name), vim.log.levels.ERROR)
 		end
@@ -64,12 +64,17 @@ local function setup_commands()
 		vim.defer_fn(function()
 			local bufnr = vim.api.nvim_get_current_buf()
 			local filetype = vim.bo[bufnr].filetype
-			servers.start(filetype, bufnr)
+			require("features.lsp.servers").start(filetype, bufnr)
 		end, 500)
 	end, { desc = "Restart LSP clients for current buffer" })
 end
 
 local function setup_ui_overrides()
+	if ui_overrides_done then
+		return
+	end
+	ui_overrides_done = true
+
 	local orig_open_floating_preview = vim.lsp.util.open_floating_preview
 	---@diagnostic disable-next-line: duplicate-set-field
 	function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
@@ -80,16 +85,39 @@ local function setup_ui_overrides()
 end
 
 function M.setup()
-	if initialized then return end
-	initialized = true
+	if initialized then
+		return
+	end
 
 	setup_commands()
 	setup_ui_overrides()
 	require("features.lsp.diagnostics").setup()
 	require("features.lsp.attach").setup()
+
+	initialized = true
+end
+
+local function configured_for(filetype)
+	local languages = require("nvimz.config.languages")
+	for _, spec in pairs(languages.lsp_servers) do
+		if spec.filetypes and vim.tbl_contains(spec.filetypes, filetype) then
+			return true
+		end
+	end
+	return false
 end
 
 function M.start(filetype, bufnr)
+	if vim.bo[bufnr].buftype ~= "" or not vim.bo[bufnr].buflisted then
+		return
+	end
+	if not configured_for(filetype) then
+		return
+	end
+
+	-- LspAttach handlers must exist before a server can attach. This is cheap
+	-- and idempotent; the server table itself is loaded on first start.
+	M.setup()
 	require("features.lsp.servers").start(filetype, bufnr)
 end
 

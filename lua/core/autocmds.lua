@@ -80,7 +80,15 @@ vim.api.nvim_create_autocmd("FileType", {
 	callback = function(args)
 		local filetype = args.match
 
-		if vim.bo[args.buf].buftype ~= "" or filetype == "" or vim.b[args.buf].large_file then
+		-- Language servers are for editing buffers. Unlisted buffers are
+		-- plugin-owned documents (for example an AI chat transcript), not
+		-- files the user is editing.
+		if
+			vim.bo[args.buf].buftype ~= ""
+			or not vim.bo[args.buf].buflisted
+			or filetype == ""
+			or vim.b[args.buf].large_file
+		then
 			return
 		end
 

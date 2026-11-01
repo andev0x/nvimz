@@ -1,9 +1,13 @@
 local M = {}
 
+local initialized = false
+
 function M.setup()
+	if initialized then
+		return
+	end
+
 	require("mini.git").setup()
-	vim.keymap.set({ "n", "x" }, "<leader>gs", "<cmd>Git<cr>", { desc = "Git status" })
-	vim.keymap.set({ "n", "x" }, "<leader>gb", "<cmd>lua MiniGit.show_at_cursor()<cr>", { desc = "Git blame" })
 
 	require("mini.diff").setup({
 		view = {
@@ -11,12 +15,8 @@ function M.setup()
 			signs = { add = "┃", change = "┊", delete = "-" },
 		},
 	})
-	vim.keymap.set("n", "<leader>gd", function()
-		if MiniDiff.get_buf_data() == nil then
-			MiniDiff.enable()
-		end
-		MiniDiff.toggle_overlay()
-	end, { desc = "Toggle diff overlay" })
+
+	initialized = true
 end
 
 return M

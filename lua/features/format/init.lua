@@ -1,8 +1,14 @@
 local M = {}
 
+local initialized = false
+
 local languages = require("nvimz.config.languages")
 
 function M.setup()
+	if initialized then
+		return
+	end
+
 	local conform = require("conform")
 
 	conform.setup({
@@ -15,9 +21,7 @@ function M.setup()
 		end,
 	})
 
-	vim.keymap.set("n", "<leader>fm", function()
-		conform.format({ async = false, lsp_format = "never", timeout_ms = 400 })
-	end, { desc = "Format buffer", silent = true })
+	initialized = true
 end
 
 return M

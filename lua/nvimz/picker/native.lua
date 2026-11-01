@@ -804,12 +804,4 @@ end
 
 M.close_picker = close_picker
 
-function M.setup()
-	vim.keymap.set("n", "<leader>ff", M.files, { desc = "Find files" })
-	vim.keymap.set("n", "<leader>fe", M.files_hidden, { desc = "Find files (hidden)" })
-	vim.keymap.set("n", "<leader>fg", M.grep, { desc = "Live grep" })
-	vim.keymap.set("n", "<leader>fr", M.grep_hidden, { desc = "Grep hidden (gitignored)" })
-	vim.keymap.set("n", "<leader>fb", M.buffers, { desc = "Buffers" })
-end
-
 return M

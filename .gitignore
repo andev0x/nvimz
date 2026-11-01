@@ -47,3 +47,5 @@ dist/
 .fastembed_cache/
 
 
+# ohgo runtime state
+.ohgo/

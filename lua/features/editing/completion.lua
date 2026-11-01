@@ -1,6 +1,13 @@
 local M = {}
 
+local initialized = false
+
 function M.setup()
+	if initialized then
+		return
+	end
+	initialized = true
+
 	require("mini.completion").setup({
 		lsp_completion = {
 			source_func = "completefunc",

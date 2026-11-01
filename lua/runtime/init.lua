@@ -15,10 +15,6 @@ require("runtime.phases").setup()
 vim.api.nvim_create_autocmd("VimEnter", {
 	once = true,
 	callback = function()
-		local interactive = #vim.api.nvim_list_uis() > 0
-		local elapsed_ms = (vim.uv.hrtime() - _G.nvimz_start_time) / 1e6
-
-		-- Load viminfo after the first render (deferred above).
 		vim.defer_fn(function()
 			vim.o.shada = shada
 			local ok, err = pcall(vim.cmd, "rshada!")
@@ -32,22 +28,5 @@ vim.api.nvim_create_autocmd("VimEnter", {
 				end
 			end
 		end, 0)
-
-		if interactive and elapsed_ms > 10 then
-			vim.schedule(function()
-				vim.notify(("nvimz startup %.2fms exceeded the 10ms target"):format(elapsed_ms), vim.log.levels.WARN)
-			end)
-		end
-
-		if interactive then
-			vim.schedule(function()
-				local ok, err = pcall(function()
-					require("features.interface.dashboard").setup()
-				end)
-				if not ok then
-					vim.notify("[nvimz] dashboard failed:\n" .. tostring(err), vim.log.levels.ERROR)
-				end
-			end)
-		end
 	end,
 })

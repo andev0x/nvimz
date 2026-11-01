@@ -1,20 +1,5 @@
 local M = {}
 
-function M.track(start_ns)
-	vim.api.nvim_create_autocmd("VimEnter", {
-		once = true,
-		callback = function()
-			local elapsed_ms = (vim.uv.hrtime() - start_ns) / 1e6
-
-			if elapsed_ms > 20 then
-				vim.schedule(function()
-					vim.notify(("nvimz startup %.2fms exceeded 20ms target"):format(elapsed_ms), vim.log.levels.WARN)
-				end)
-			end
-		end,
-	})
-end
-
 local dashboard_ns = vim.api.nvim_create_namespace("nvimz_dashboard")
 local _hl_defined = false
 
@@ -134,17 +119,16 @@ function M.setup()
 	local map_opts = { buffer = bufnr, nowait = true, silent = true }
 
 	vim.keymap.set("n", "f", function()
-		require("features.search.pick").files()
+		require("nvimz.picker.native").files()
 	end, map_opts)
 
 	vim.keymap.set("n", "g", function()
-		require("features.search.pick").grep()
+		require("nvimz.picker.native").grep()
 	end, map_opts)
 
 	vim.keymap.set("n", "e", function()
-		vim.cmd("packadd oil.nvim")
-		if not package.loaded["oil"] then
-			require("oil").setup()
+		if not require("runtime.phases").ensure_files() then
+			return
 		end
 		require("oil").open()
 	end, map_opts)
