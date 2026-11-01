@@ -1,126 +1,125 @@
 local M = {}
 
-local function normalize(spec)
-	local source = type(spec) == "string" and spec or spec.source
+local plugins = require("nvimz.config.plugins")
 
-	if not (source:find("http", 1, true) or source:find("git@", 1, true)) then
-		source = "https://github.com/" .. source
-	end
+local UI_MODULES = {
+	"features.interface.theme",
+	"features.interface.icons",
+	"features.interface.statusline",
+	"features.interface.scope_line",
+}
 
-	local final = type(spec) == "table" and vim.tbl_extend("force", {}, spec) or {}
+local CORE_MODULES = {
+	"nvimz.treesitter",
+	"features.lsp",
+	"features.editing.files",
+	"features.editing.pairs",
+	"features.editing.completion",
+	"features.search.pick",
+	"features.git",
+}
 
-	final.src = source
-	final.source = nil
+local FORMAT_DEBUG_MODULES = {
+	"features.format",
+	"features.dap",
+}
 
-	return final
-end
-
-local function add_plugins(plugin_specs)
-	vim.pack.add(vim.tbl_map(normalize, plugin_specs))
-end
+local AI_MODULES = {
+	"features.ai",
+}
 
 local function has_ui()
 	return #vim.api.nvim_list_uis() > 0
 end
 
-local function cached_phase_state()
-	local cache = require("infra.cache")
-	return cache.get("plugin_state") or { phases = {} }
+local function report(scope, err)
+	vim.notify(("[nvimz] %s failed:\n%s"):format(scope, tostring(err)), vim.log.levels.ERROR)
 end
 
-local function remember_phase(phase_number)
-	local state = cached_phase_state()
-	state.phases[phase_number] = true
-	local cache = require("infra.cache")
-	cache.set("plugin_state", state)
+local function add_plugins(specs)
+	local ok, err = pcall(vim.pack.add, specs)
+	if not ok then
+		report("plugin installation", err)
+	end
 end
 
-local function phase_has_loaded(phase_number)
-	return cached_phase_state().phases[phase_number]
+local function setup_module(module)
+	local ok, err = pcall(function()
+		require(module).setup()
+	end)
+	if not ok then
+		report(module, err)
+	end
 end
 
-local function setup_phase_1()
+local function setup_modules(modules)
+	for _, module in ipairs(modules) do
+		setup_module(module)
+	end
+end
+
+local function has_markdown_buffer()
+	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+		if vim.api.nvim_buf_is_loaded(bufnr) and vim.bo[bufnr].filetype == "markdown" then
+			return true
+		end
+	end
+	return false
+end
+
+local markdown_ready = false
+
+local function setup_markdown()
+	if markdown_ready then
+		return
+	end
+	markdown_ready = true
+	setup_module("features.interface.markdown")
+end
+
+local function load_phase1()
+	add_plugins(plugins.phase1)
 	if has_ui() then
-		require("features.interface.theme").setup()
-		require("features.interface.icons").setup()
-		require("features.interface.statusline").setup()
-		require("features.interface.scope_line").setup()
+		setup_modules(UI_MODULES)
 	end
+	setup_modules(CORE_MODULES)
 
-	require("infra.treesitter").setup()
-	require("features.lsp").setup()
-	require("features.editing.files").setup()
-	require("features.editing.pairs").setup()
-	require("features.editing.completion").setup()
-	require("features.search.pick").setup()
-	require("features.git").setup()
-end
-
-local function setup_phase_2()
-	require("features.format").setup()
-	require("features.dap").setup()
-end
-
-local function setup_phase_3()
-	require("features.ai").setup()
-end
-
-local function load_phase(phase_number, plugin_specs, setup)
-	add_plugins(plugin_specs)
-	pcall(setup)
-
-	if not phase_has_loaded(phase_number) then
-		remember_phase(phase_number)
+	-- The markdown plugin is only available after phase 1. Handle a Markdown
+	-- file that was opened on the command line before registering the trigger.
+	if has_markdown_buffer() then
+		setup_markdown()
 	end
+	vim.api.nvim_create_autocmd("FileType", {
+		pattern = "markdown",
+		once = true,
+		callback = setup_markdown,
+	})
 end
 
-function M.add(specs)
-	add_plugins(specs)
+local function load_phase2()
+	add_plugins(plugins.phase2)
+	setup_modules(FORMAT_DEBUG_MODULES)
+end
+
+local function load_phase3()
+	add_plugins(plugins.phase3)
+	setup_modules(AI_MODULES)
 end
 
 function M.setup()
-	-- Defer phase 1 (theme, treesitter, LSP, editing core) to the background
-	-- so the initial startup phase stays under 10ms.
 	vim.api.nvim_create_autocmd("VimEnter", {
 		once = true,
 		callback = function()
 			vim.defer_fn(function()
-			local registry = require("infra.registry")
-			load_phase(1, registry.plugins.phase1, setup_phase_1)
-		end, 0)
-		end,
-	})
-
-	-- Load markdown UI only when needed.
-	vim.api.nvim_create_autocmd("FileType", {
-		group = vim.api.nvim_create_augroup("NvimzMarkdown", { clear = true }),
-		pattern = "markdown",
-		once = true,
-		callback = function()
-			pcall(function()
-				require("features.interface.markdown").setup()
-			end)
-		end,
-	})
-
-	-- Defer phase 2 (formatting, debugging) to the background as well.
-	vim.api.nvim_create_autocmd("VimEnter", {
-		once = true,
-		callback = function()
-			vim.defer_fn(function()
-				local registry = require("infra.registry")
-				load_phase(2, registry.plugins.phase2, setup_phase_2)
+				load_phase1()
+				vim.defer_fn(load_phase2, 0)
 			end, 0)
 		end,
 	})
 
 	vim.api.nvim_create_autocmd("InsertEnter", {
-		group = vim.api.nvim_create_augroup("PackPhase3", { clear = true }),
 		once = true,
-		callback = function()
-			local registry = require("infra.registry")
-			load_phase(3, registry.plugins.phase3, setup_phase_3)
-		end,
+		callback = load_phase3,
 	})
 end
 

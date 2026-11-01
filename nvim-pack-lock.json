@@ -1,1 +1,52 @@
-{"plugins":{"nvim-dap-go":{"src":"https://github.com/leoluz/nvim-dap-go","rev":"b4421153ead5d726603b02743ea40cf26a51ed5f"},"nvim-lspconfig":{"src":"https://github.com/neovim/nvim-lspconfig","rev":"45a3a444b710511c39abca3b60bb6e23a21e3de5"},"oil.nvim":{"src":"https://github.com/stevearc/oil.nvim","rev":"d3733d933833a0e59b813ecec99341527adf0c28"},"conform.nvim":{"src":"https://github.com/stevearc/conform.nvim","rev":"016802de402556da54c36bd7359b441266b01cdd"},"nvim-dap-ui":{"src":"https://github.com/rcarriga/nvim-dap-ui","rev":"cc9dd33aade7f20bae414d0cba163bc60d4d4b43"},"oil-git-status.nvim":{"src":"https://github.com/refractalize/oil-git-status.nvim","rev":"a3e2ccb00cb8822115e28a9a1791eda051d940c9"},"render-markdown.nvim":{"src":"https://github.com/MeanderingProgrammer/render-markdown.nvim","rev":"8e8795368391036643b622875a6da6a51bcd33f4"},"tokyonight":{"src":"https://github.com/folke/tokyonight.nvim","rev":"cdc07ac78467a233fd62c493de29a17e0cf2b2b6"},"copilot.lua":{"src":"https://github.com/zbirenbaum/copilot.lua","rev":"3f1f8cc30783ca905224eadebaa6ddfd73c28828"},"nvim-nio":{"src":"https://github.com/nvim-neotest/nvim-nio","rev":"edcc181a875301dd21840189aa2f2f9ad69fc172"},"nvim-dap":{"src":"https://github.com/mfussenegger/nvim-dap","rev":"cfa2d58f4537aca6ca83e2de1a0d9f1491121264"},"mini.nvim":{"src":"https://github.com/echasnovski/mini.nvim","rev":"66b9e643b6dabe15079be7197ee4b4d59ff98c61"},"gp.nvim":{"src":"https://github.com/Robitx/gp.nvim","rev":"c37f154b97690c4925fef4e35ffdbf2c844b5f4e"}}}
+{
+  "plugins": {
+    "conform.nvim": {
+      "rev": "016802de402556da54c36bd7359b441266b01cdd",
+      "src": "https://github.com/stevearc/conform.nvim"
+    },
+    "copilot.lua": {
+      "rev": "3f1f8cc30783ca905224eadebaa6ddfd73c28828",
+      "src": "https://github.com/zbirenbaum/copilot.lua"
+    },
+    "gp.nvim": {
+      "rev": "c37f154b97690c4925fef4e35ffdbf2c844b5f4e",
+      "src": "https://github.com/Robitx/gp.nvim"
+    },
+    "mini.nvim": {
+      "rev": "66b9e643b6dabe15079be7197ee4b4d59ff98c61",
+      "src": "https://github.com/echasnovski/mini.nvim"
+    },
+    "nvim-dap": {
+      "rev": "cfa2d58f4537aca6ca83e2de1a0d9f1491121264",
+      "src": "https://github.com/mfussenegger/nvim-dap"
+    },
+    "nvim-dap-go": {
+      "rev": "b4421153ead5d726603b02743ea40cf26a51ed5f",
+      "src": "https://github.com/leoluz/nvim-dap-go"
+    },
+    "nvim-dap-ui": {
+      "rev": "cc9dd33aade7f20bae414d0cba163bc60d4d4b43",
+      "src": "https://github.com/rcarriga/nvim-dap-ui"
+    },
+    "nvim-nio": {
+      "rev": "edcc181a875301dd21840189aa2f2f9ad69fc172",
+      "src": "https://github.com/nvim-neotest/nvim-nio"
+    },
+    "oil-git-status.nvim": {
+      "rev": "a3e2ccb00cb8822115e28a9a1791eda051d940c9",
+      "src": "https://github.com/refractalize/oil-git-status.nvim"
+    },
+    "oil.nvim": {
+      "rev": "d3733d933833a0e59b813ecec99341527adf0c28",
+      "src": "https://github.com/stevearc/oil.nvim"
+    },
+    "render-markdown.nvim": {
+      "rev": "8e8795368391036643b622875a6da6a51bcd33f4",
+      "src": "https://github.com/MeanderingProgrammer/render-markdown.nvim"
+    },
+    "tokyonight": {
+      "rev": "cdc07ac78467a233fd62c493de29a17e0cf2b2b6",
+      "src": "https://github.com/folke/tokyonight.nvim"
+    }
+  }
+}

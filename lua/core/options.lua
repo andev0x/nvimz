@@ -13,9 +13,7 @@ vim.opt.smartcase = true
 vim.opt.incsearch = true
 vim.opt.hlsearch = true
 
-vim.schedule(function()
-	vim.opt.clipboard = "unnamedplus"
-end)
+vim.opt.clipboard = "unnamedplus"
 vim.opt.termguicolors = true
 vim.opt.mouse = "a"
 vim.opt.scrolloff = 4
@@ -38,7 +36,6 @@ vim.opt.listchars = {
 }
 
 vim.opt.lazyredraw = true
--- shada is configured lazily after startup to avoid blocking boot
 vim.opt.synmaxcol = 240
 vim.opt.redrawtime = 1500
 
@@ -53,19 +50,16 @@ vim.opt.backup = false
 vim.opt.foldmethod = "indent"
 vim.opt.foldlevel = 99
 
-vim.schedule(function()
-	local cache = require("infra.cache")
-	local machine_state = cache.get("machine_state")
-
-	if not machine_state then
-		local ok, local_machine = pcall(require, "machine.local")
-		if ok and type(local_machine) == "table" then
-			machine_state = local_machine
-			cache.set("machine_state", machine_state)
-		end
+-- Host-local overrides are optional and loaded directly; there is no cache to
+-- invalidate when machine/local.lua changes.
+local local_config = vim.fn.stdpath("config") .. "/lua/machine/local.lua"
+if vim.fn.filereadable(local_config) == 1 then
+	local ok, machine = pcall(require, "machine.local")
+	if not ok then
+		vim.schedule(function()
+			vim.notify("[nvimz] machine/local.lua failed to load:\n" .. tostring(machine), vim.log.levels.ERROR)
+		end)
+	elseif type(machine) == "table" and type(machine.python_path) == "string" then
+		vim.g.python3_host_prog = machine.python_path
 	end
-
-	if machine_state and type(machine_state.python_path) == "string" then
-		vim.g.python3_host_prog = machine_state.python_path
-	end
-end)
+end

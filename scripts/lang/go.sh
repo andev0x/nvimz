@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Language provisioning for Go
-# Data derived from lua/infra/registry/languages.lua
+# Mirrors lua/nvimz/config/languages.lua
 
 install_go_deps() {
     log_info "Installing Go ecosystem dependencies..."
