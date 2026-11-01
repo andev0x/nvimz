@@ -45,7 +45,7 @@ Options:
 Examples:
   ./scripts/setup --minimal
   ./scripts/setup --full
-  ./scripts/setup --langs=go,lua,rust
+  ./scripts/setup --langs=go,rust,python
 EOF
 }
 
@@ -126,13 +126,10 @@ run_minimal_mode() {
 
   local available=(
     go
-    lua
     python
     rust
     java
-    terraform
-    markdown
-    typescript
+    node
   )
 
   echo

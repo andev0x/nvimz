@@ -21,6 +21,9 @@ snapshots/
 # Local plugin installs
 .local/share/nvim/site/pack/
 
+# Host-local overrides (copy lua/machine/example.lua)
+lua/machine/local.lua
+
 # Environment
 .env
 .env*.local

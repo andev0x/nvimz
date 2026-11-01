@@ -1,6 +1,8 @@
 local M = {}
 
-function M.show_in_buffer(title, lines)
+-- Render Markdown-shaped report lines in a scratch buffer.
+-- Falls back to plain stdout when Neovim runs without a UI.
+function M.show(title, lines)
 	if #vim.api.nvim_list_uis() == 0 then
 		print(table.concat(lines, "\n"))
 		return

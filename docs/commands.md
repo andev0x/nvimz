@@ -6,22 +6,34 @@ This document serves as a comprehensive reference manual for all custom native c
 
 ## Native Commands
 
-**nvimz** provides a centralized package management and health diagnostics layer with the following user commands:
+**nvimz** exposes a small command surface over native Neovim mechanisms:
 
 | Command | Description |
 | --- | --- |
-| `:PackSync` | Fetch and check plugin updates without applying them. |
-| `:PackUpdate` | Apply updates, relock, validate, and regenerate reports. |
-| `:PackValidate` | Comprehensive runtime integrity and config health check. |
-| `:PackDoctor` | Run system-wide health diagnostics. |
-| `:PackBenchmark`| Measure startup and module performance history. |
-| `:PackRollback` | Restore plugins from `nvim-pack-lock.json` state. |
-| `:PackStatus` | Quick overview of package and environment health. |
-| `:PackClean` | Remove unused plugins and stale cache files. |
-| `:PackSnapshot` | Generate a system and state snapshot in `snapshots/`. |
-| `:PackReport` | Manually regenerate the `MAINTENANCE_REPORT.md`. |
-| `:ParsersUpdate`| Update, compile, and sync Tree-sitter parsers/queries. |
-| `:ToolDoctor` | Show environment tooling health (LSP, formatters, etc.). |
+| `:PackUpdate` | Download plugin updates and open the native `vim.pack` review buffer. |
+| `:PackRollback` | Open the native review buffer to revert plugins to the revisions in `nvim-pack-lock.json` (`:write` applies, `:quit` discards). |
+| `:PackStatus` | Quick summary of managed/active plugins, lockfile, and core tools. |
+| `:PackClean` | Remove undeclared plugins and broken parser binaries. |
+| `:NvimzBenchmark` | Measure startup over three runs and list the slowest sourced modules. |
+| `:ParsersUpdate` | Rebuild Treesitter parsers and sync queries. |
+| `:License` | Open the project `LICENSE`. |
+
+### Health
+
+| Command | Description |
+| --- | --- |
+| `:checkhealth nvimz` | Core tools, language servers, formatters, parsers, plugins, machine config. |
+| `:checkhealth vim.pack` | Native packaging and lockfile diagnostics. |
+
+### LSP Commands
+
+| Command | Description |
+| --- | --- |
+| `:LspInfo` | List active LSP clients and attached buffers. |
+| `:LspLog` | Open the LSP log file. |
+| `:LspStart <server>` | Start a server configured in `lua/nvimz/config/languages.lua`. |
+| `:LspStop [server]` | Stop the current buffer's server, or a named server. |
+| `:LspRestart` | Restart LSP clients for the current buffer. |
 
 ---
 
@@ -93,14 +105,28 @@ The leader key in **nvimz** is configured to **`<Space>`**.
 | --- | --- |
 | `<leader>gs` | Open interactive Git status |
 | `<leader>gb` | Trigger inline Git blame |
-| `<leader>gd` | Toggle side-by-side diff overlay |
-| `<leader>aa` | Open AI chat window (Ollama) |
-| `<leader>aq` | Toggle AI chat visibility |
-| `<leader>at` | Toggle GitHub Copilot engine |
-| `<leader>a3` | Hot-swap to Qwen 2.5 Coder 3B |
-| `<leader>a7` | Hot-swap to Qwen 2.5 Coder 7B |
-| `<M-S-right>`| Accept Copilot suggestion |
-| `<M-]>` / `<M-[>` | Next / Previous Copilot suggestion |
+| `<leader>gd` | Toggle `mini.diff` overlay |
+| `<leader>aa` | Toggle AI chat window (Ollama via `gp.nvim`) |
+| `<leader>a1` | Switch to the `Scout` agent (`qwen2.5:7b`) |
+| `<leader>a2` | Switch to the `Judge` agent (`qwen3:8b`) |
+| `<leader>a3` | Switch to the `Editor` agent (`qwen2.5-coder:7b`) |
+| `<leader>at` | Toggle GitHub Copilot |
+| `<leader>ar` (Visual) | AI rewrite selection |
+| `<leader>ap` (Visual) | AI append to selection |
+| `<leader>ab` (Visual) | AI prepend to selection |
+| `<A-CR>` | Send the AI chat prompt |
+| `<M-S-right>` | Accept Copilot suggestion |
+| `<M-]>` / `<M-[>` | Next / previous Copilot suggestion |
+| `<C-]>` | Dismiss Copilot suggestion |
+
+### Dashboard
+
+| Key | Action |
+| --- | --- |
+| `f` | Find files |
+| `g` | Live grep |
+| `e` | Open file explorer |
+| `q` | Quit Neovim |
 
 ### Debugging (DAP)
 

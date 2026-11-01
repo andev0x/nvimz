@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Language provisioning for Rust
-# Data derived from lua/infra/registry/languages.lua
+# Mirrors lua/nvimz/config/languages.lua
 
 install_rust_deps() {
     log_info "Setting up Rust environment..."

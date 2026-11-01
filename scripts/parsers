@@ -36,6 +36,7 @@ LANGS=(
   "gitcommit:gbprod/tree-sitter-gitcommit:src:main"
   "git_rebase:the-mikedavis/tree-sitter-git-rebase:src:main"
   "diff:the-mikedavis/tree-sitter-diff:src:main"
+  "json:tree-sitter/tree-sitter-json:src:v0.24.8"
 
   "markdown:tree-sitter-grammars/tree-sitter-markdown:tree-sitter-markdown/src:split_parser"
   "markdown_inline:tree-sitter-grammars/tree-sitter-markdown:tree-sitter-markdown-inline/src:split_parser"

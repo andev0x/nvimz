@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Language provisioning for Java
-# Data derived from lua/infra/registry/languages.lua
+# Mirrors lua/nvimz/config/languages.lua
 
 install_java_deps() {
     log_info "Setting up Java environment..."
