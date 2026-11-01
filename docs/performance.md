@@ -1,6 +1,6 @@
 # Performance
 
-This document details the optimizations and performance-focused design of **nvimz**, targeting a sub-10ms empty-startup time and ultra-low runtime latency.
+This document details the optimizations and performance-focused design of **nvimz**, targeting a sub-10 ms cold core start (`init.lua` → `VimEnter`, empty session) and ultra-low runtime latency.
 
 ## Key Performance Vectors
 
@@ -19,10 +19,12 @@ background scheduler:
   statusline, first-buffer Treesitter, the dashboard when no file was given, and Markdown
   rendering when the first buffer is Markdown. The native intro screen is never shown.
 * **Tier 2 — normal editing (event-driven):** pairs/completion on the first `InsertEnter`, scope
-  line and git signs on the first cursor movement, conform on the first write, LSP on the first
-  code `FileType` (or `:Lsp*`), and Oil from its key, `:Oil`, or a directory startup.
+  line and git signs on the first cursor movement in a real editing buffer (the dashboard's
+  programmatic cursor placement is ignored), conform on the first write, LSP on the first code
+  `FileType` (or `:Lsp*`), and Oil from its key, `:Oil`, or a directory startup.
 * **Tier 3 — on demand:** DAP on the first `<leader>d*`/`:Dap*`, gp on the first AI key/`:Gp*`,
-  Copilot only on `<leader>at`/`:Copilot`, Markdown for later buffers, and the picker on its key.
+  Copilot only on `<leader>at`/`:Copilot`, Markdown for listed Markdown files (plugin-owned
+  `nofile` floats such as an LSP hover are excluded), and the picker on its key.
 * **No Tier 4:** no idle queue, warm-up, periodic timer, or speculative preload.
 
 The former `InsertEnter` AI phase is gone: gp and Copilot are never loaded by inserting text.
@@ -62,7 +64,7 @@ Measured on the maintainer's machine (Neovim 0.12.6, macOS 27 / arm64). Gate B r
 | Lua file first content (n=5) | 43.8 ms | 44.6 ms |
 | Go file first content (n=5) | 41.4 ms | 50.2 ms |
 | Markdown first content (n=5) | 52.3 ms | 63.2 ms |
-| Empty session modules (idle, 600 ms) | 38 at `VimEnter`; 166 after phase 2 | **43** |
+| Empty session modules (idle, 600 ms) | 38 at `VimEnter`; 166 after phase 2 | **43 headless / 65 live UI** |
 | Lua session modules | 192 after phase 2 | **101** |
 | Go session modules | 191 after phase 2 | **100** |
 | Markdown session modules | 231 after phase 2 | **160** |
@@ -83,11 +85,37 @@ the two first-buffer correctness cases.
 plugin scripts; it is not the same boundary as the config timings above. Do not compare it with a
 Lua-only measurement.
 
+The dashboard banner (`󱐋`) shows the same cold core boundary. `runtime/phases.lua` records
+`_G.nvimz_core_ms` when `VimEnter` fires, before Tier 1, and the value is frozen for the rest of
+the session. Native startup before `init.lua` is outside Lua's visibility, so the banner is lower
+than the PTY first-content figures above. Reopening the dashboard shows the frozen startup value,
+not session uptime.
+
+Gate C (2026-11-02) validated the result in real terminal sessions and found two startup
+activations that headless probes missed: the dashboard's cursor placement loaded the git/scope
+chunk, and an LSP hover loaded the whole Markdown renderer. Both are fixed. Spot checks after the
+fixes: empty dashboard **40.7 ms**, Lua **45.2 ms**, Go **47.8 ms**, Markdown **61.4 ms** first
+content (n=5), `NVIM STARTED` **10.44 ms**, and headless `VimEnter` **7.59 ms**. A live empty
+dashboard settles at **65 modules / 27.0 MiB** (the 43-module figure is headless). A 30-second
+editing soak stayed at 0% idle with no AI/DAP/Markdown/Oil/conform modules.
+
+The cold target uses the same core boundary with a fresh bytecode cache:
+`XDG_CACHE_HOME=$(mktemp -d) nvim --headless` with a `VimEnter` probe (n=10). The config does not
+enable `vim.loader`: a fresh cache made it compile the startup modules before the first buffer,
+costing **~3 ms**, and removing it made warm startup equal or slightly faster. Measured cold core
+init is **8.3 ms median** (7.8–9.0 ms) and cold `NVIM STARTED` is **9.7 ms median** (9.2–11.0 ms);
+with `vim.loader` enabled the same cold runs were **11.7 ms** (10.8–16.1 ms) for core init and
+**12.8 ms** (11.9–12.9 ms) for `NVIM STARTED`. Warm core init and warm first content are unchanged
+within noise. The first start on a machine with a cold OS page cache is outside this boundary.
+
 Full evidence, feature-activation costs, input-latency tables, and limitations:
-`docs/audit/progressive-performance-final-report.md`.
+`docs/audit/progressive-performance-final-report.md`. Gate C details:
+`docs/audit/progressive-performance-gate-c-report.md`.
 
 ### Native Benchmark Command
-Run **`:NvimzBenchmark`** to measure three consecutive starts and list the ten slowest sourced modules. It does not delete the bytecode cache (`~/.cache/nvim/luac`) and does not keep history.
+Run **`:NvimzBenchmark`** to measure three consecutive warm `NVIM STARTED` samples and list the
+ten slowest sourced modules. It does not keep history. The cold core target is verified with an
+isolated `XDG_CACHE_HOME` and a `VimEnter` probe, as above.
 
 ### Health Checks
 * `:checkhealth nvimz` — tools, servers, formatters, parsers, plugins, machine config.

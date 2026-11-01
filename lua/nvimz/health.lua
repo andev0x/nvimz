@@ -131,7 +131,7 @@ function M.check()
 
 	h.start("nvimz")
 	h.ok("Neovim " .. tostring(vim.version()))
-	h.info("core startup target: < 10 ms before first-render initialization")
+	h.info("cold startup target: < 10 ms from init.lua to VimEnter (empty session, fresh bytecode cache)")
 
 	check_core(h)
 	check_servers(h)

@@ -34,7 +34,7 @@ init.lua                         # 5 lines: start clock + require("runtime")
 
 lua/
   runtime/
-    init.lua                     # version guard, vim.loader, require core, phase triggers,
+    init.lua                     # version guard, require core, phase triggers,
                                  # VimEnter dashboard + startup warning  (~45 lines)
     phases.lua                   # plugin declarations + ordered phase runner (~90 lines)
 
@@ -89,7 +89,6 @@ init.lua
 │  _G.nvimz_start = vim.uv.hrtime()
 └─ require("runtime")                       lua/runtime/init.lua
    ├─ assert: vim.fn.has("nvim-0.12") == 1
-   ├─ vim.loader.enable()
    ├─ require("core")                       ← the only synchronous feature-free work
    │   ├─ globals → options → filetypes → keymaps → autocmds → commands
    └─ require("runtime.phases")

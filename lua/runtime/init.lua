@@ -7,7 +7,9 @@ end
 local shada = vim.o.shada
 vim.o.shada = ""
 
-vim.loader.enable()
+-- vim.loader is deliberately not enabled: on a fresh bytecode cache it compiles
+-- the startup modules before the first buffer (~3 ms), while warm startup is
+-- unchanged.
 
 require("core")
 require("runtime.phases").setup()

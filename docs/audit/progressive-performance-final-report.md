@@ -3,7 +3,8 @@
 **Phase:** Gate B implementation + before/after measurement
 **Date:** 2026-11-02
 **Repository:** `/Users/anvndev/.config/nvim` @ `main`
-**Status:** Implemented and measured. No commit, tag, or publish was made.
+**Status:** Implemented and measured. Gate C completed; see
+`docs/audit/progressive-performance-gate-c-report.md`. No commit, tag, or publish was made.
 **Baseline:** `docs/audit/progressive-performance-baseline.md` (Gate A)
 **Plan:** `docs/architecture/progressive-loading-plan.md` (Gate B implementation record)
 
@@ -180,11 +181,21 @@ Modules after each scenario (state probe; idle empty measured separately at 600 
 
 | Scenario | Gate A modules | Gate B modules |
 | --- | --- | --- |
-| Empty, idle | 166 after phase 2 | **43** |
+| Empty, idle (headless) | 166 after phase 2 | **43** |
+| Empty, live UI (Gate C, after fix) | — | **65** |
 | Empty, after probe-induced cursor activity | 166 | 62 |
 | Lua | 192 | **101** |
 | Go | 191 | **100** |
 | Markdown | 231 | **160** |
+
+**Gate C correction.** The 43-module idle figure is headless, with no theme, icons, statusline, or
+dashboard. A live UI adds those modules and their `mini`/`tokyonight` submodules; after the Gate C
+dashboard guard it settles at 65 modules (27.0 MiB). Before that guard it was 69 because the
+dashboard's programmatic cursor placement raised `CursorMoved` and loaded `features.git`,
+`features.interface.scope_line`, `mini.git`, and `mini.diff` during startup. Those modules are now
+absent from an idle dashboard. A real file still raises `CursorMoved` when it opens, so the
+1.6–1.8 ms cursor chunk remains part of file first paint rather than appearing after a later
+movement. See `docs/audit/progressive-performance-gate-c-report.md` §3.1.
 
 Plugin runtime state:
 
@@ -242,6 +253,13 @@ also checked: no Copilot language server is spawned until insert after activatio
 The last row is a measured benefit of the LSP boundary: gp chat transcripts are unlisted
 plugin-owned buffers, so they no longer start `marksman`. Normal Markdown files still do.
 
+Gate C re-sampled the same trees after `lua_ls` had indexed the project: normal Lua was
+89.8–137.7 MiB before Copilot and 133.8–288.7 MiB during editing, with `lua_ls` itself varying
+from ~58 to ~242 MiB. The gp chat tree was 273.6 MiB with 242.3 MiB of that in `lua_ls`; the
+gp/render-markdown addition is small. The Gate B rows above therefore describe the same loading
+boundary at a different LSP indexing state, not a different configuration. Copilot's server was
+342–425 MiB in Gate C, consistent with the Gate B 408–416 MiB total once `lua_ls` is included.
+
 ### 4.9 CPU and background overhead
 
 - No background worker, timer queue, or idle warm-up exists. The only deferred calls are existing
@@ -263,7 +281,7 @@ plugin-owned buffers, so they no longer start `marksman`. Normal Markdown files 
 | 2 | Direct Lua file | `ft=lua`; Treesitter active; `lua_ls` attaches; no DAP/AI/format/Oil modules |
 | 3 | Direct Go project | `ft=go`; Treesitter active; `gopls` attaches; no DAP/AI modules |
 | 4 | Direct Markdown file | `ft=markdown`; render-markdown loaded before first paint; marksman attaches |
-| 5 | Normal editing without AI | Insert loads pairs/completion only; no gp/Copilot; no Copilot server; tree RSS ~111 MiB |
+| 5 | Normal editing without AI | Insert loads pairs/completion only; no gp/Copilot; no Copilot server; tree RSS ~111 MiB (Gate C: 90–138 MiB as `lua_ls` indexes) |
 | 6 | Explicit Copilot activation | `<leader>at` loads Copilot once; no server until insert; no gp; repeat press toggles without re-setup |
 | 7 | Normal session without DAP | No `dap`/`dapui`/`dap-go` modules; no DAP plugins active |
 | 8 | Explicit DAP activation | `<leader>db` loads DAP and sets a breakpoint; `:DapShowLog` resolves via `CmdUndefined`; second call does not duplicate setup |
@@ -308,7 +326,7 @@ Command/UX checks:
 | Design expectation | Measured outcome |
 | --- | --- |
 | Dashboard before first paint, no intro | **Met**: 44.2 ms first paint, no native intro |
-| Empty session does not load optional features | **Met**: 43 modules, 26.5 MiB, no LSP/diagnostics/markdown/AI/DAP |
+| Empty session does not load optional features | **Met**: 43 modules headless / 65 live UI, 26.5–27.0 MiB, no LSP/diagnostics/markdown/AI/DAP; Gate C also removed startup git/scope loading |
 | Insert never starts AI | **Met**: no gp/Copilot, no server, 0.1 ms idle input |
 | Copilot opt-in | **Met**: no server until explicit activation + insert |
 | DAP demand-driven | **Met**: no DAP modules/plugins in normal sessions |
@@ -316,7 +334,7 @@ Command/UX checks:
 | No post-startup phase stalls | **Met**: editing chunk 1.3–2.6 ms; cursor chunk 1.6–1.8 ms |
 | Tier 1 ≤ 10 ms | **Met for empty/Lua**; Go 10.3–11.0 ms and Markdown 16.1–17.7 ms are deliberate first-buffer correctness costs |
 | First file paint not worse | **Lua flat (44.6 vs 43.8)**; Go +8.8 ms; Markdown +10.9 ms |
-| Memory not worse | **Empty −3.7 MiB**; Lua/Go unchanged within range; normal editing −~260 MiB without AI |
+| Memory not worse | **Empty −3.7 MiB**; Lua/Go unchanged within range; normal editing −~260 MiB without AI. Gate C: empty 27.0 MiB; Copilot server 342–425 MiB (opt-in) |
 
 The plan's numeric targets for first activation were optimistic because they excluded native
 package activation; the measured values are in §4.7 and are reported as the real cost.
@@ -325,7 +343,9 @@ package activation; the measured values are in §4.7 and are reported as the rea
 
 ## 8. Remaining limitations
 
-1. **Single host.** macOS 27 / arm64, Neovim 0.12.6. Linux and other terminals are unverified.
+1. **Single host.** macOS 27 / arm64, Neovim 0.12.6. Gate C confirmed no Linux host/VM was
+   available (`colima status` not running, `limactl list` empty, no Docker socket), so Linux and
+   other terminals remain unverified.
 2. **Host variance.** Development runs produced a 60.9 ms dashboard and a 101 ms Markdown outlier
    on a loaded host; one later dashboard run hit 101 ms while `go build` and `xprotectd` were
    active. The n=5 final batches are 44.2 ms (dashboard) and 63.2 ms (Markdown). First-activation
@@ -345,6 +365,21 @@ package activation; the measured values are in §4.7 and are reported as the rea
    interactive confirmation is Gate C.
 8. **Markdown first paint depends on project size.** `render-markdown` setup is constant, but
    parser/query work and terminal response time vary; the 60.7–67.3 ms range is for a 6-line file.
+9. **Live UI module counts differ from headless.** The 43-module idle figure excludes theme, icons,
+   statusline, and dashboard. Gate C measured **65** modules and 27.0 MiB in a live empty session
+   after the dashboard guard. Use the appropriate boundary when comparing.
+10. **The file-open `CursorMoved` is part of file first paint.** Opening a file raises
+    `CursorMoved`, so the git/scope chunk (1.6–1.8 ms) runs during file startup. It was removed
+    only for the dashboard and other non-editing buffers, where it had no purpose. Deferring it
+    for files would make diff signs/scope lines appear after the first user movement.
+11. **Delve could not launch a debuggee on the Gate C host.** `dlv dap` answers `initialize` but
+    never answers `launch` (30 s with nvim-dap, 90 s with a minimal DAP client); `dlv exec` also
+    hangs. Demand loading, breakpoints, and listeners pass, but a real stopped-state session is
+    unverified. This is a Delve 1.27.2 / Go 1.27.3 / macOS 27 environment issue.
+12. **Two configured Ollama models are not installed.** Scout uses `qwen2.5:7b` and Judge uses
+    `qwen3:8b`; neither is present, so chat through those agents fails at model lookup. The
+    Editor agent (`qwen2.5-coder:7b`) was validated with a real rewrite. Gate C did not change the
+    model configuration.
 
 ---
 
@@ -397,34 +432,39 @@ The approved loading boundaries are implemented and measured. The first screen i
 the first buffer keeps its highlighting, normal editing is responsive, and specialized features
 are paid only when invoked. The only deliberate regressions are the later Go/Markdown first
 paint, which buys stable highlighting and Markdown layout, and the one-time native package cost
-on first feature activation. Gate C should validate these results interactively on the real
-terminal and, if available, on a second host.
+on first feature activation.
+
+Gate C validated this interactively and found two startup activations that headless probes could
+not see: the dashboard's cursor placement loaded the git/scope chunk, and an LSP hover activated
+the whole Markdown renderer. Both are fixed in `lua/runtime/phases.lua` (uncommitted). Empty
+dashboard first paint improved from 44.2 to 40.7 ms, and a 30-second editing soak stayed at 0% idle
+with no optional modules. The remaining blockers are external: Delve hangs at process launch on
+this host, `qwen2.5:7b`/`qwen3:8b` are not installed, and no Linux host was available.
 
 ---
 
-## 11. Gate C handoff
+## 11. Gate C outcome
 
-Recommended real-world checks, in this order:
+Gate C is complete. Full evidence and per-scenario checks are in
+`docs/audit/progressive-performance-gate-c-report.md`. Summary:
 
-1. **Visual first screen** in the user's terminal: empty startup shows only the dashboard, no
-   native intro, and no statusline/menu flash; Lua/Go/Markdown files show theme, statusline,
-   Treesitter highlighting, and (Markdown) rendered layout at first paint.
-2. **Normal editing session:** type for several minutes without invoking AI or DAP; confirm no
-   `copilot-language-server`, `dap`, `gp`, `render-markdown`, `oil`, or `conform` process/module
-   appears, and idle CPU stays at ~0%.
-3. **Copilot:** press `<leader>at`, confirm the "Copilot enabled" notice, then insert and confirm
-   one language-server process, suggestions, and no duplicate server on repeated presses.
-4. **DAP:** use `<leader>db` and a real Go debug session; confirm adapters/configurations are
-   available, dap-ui opens, and a second session does not duplicate listeners.
-5. **AI chat/rewrite:** `<leader>aa` and a visual `<leader>ar`; confirm gp commands, Ollama
-   reachability, and that a failed Ollama start is reported once.
-6. **Markdown:** open a Markdown file from an empty session; confirm the first render is already
-   decorated and opening a second Markdown buffer does not re-run setup.
-7. **LSP:** open a real Lua/Go project; confirm diagnostics, `gd`/`K`, inlay hints, and the
-   statusline update after attach.
-8. **Missing tools:** run with `gopls` and `ollama` absent; confirm one named warning each, no
-   crash, and unrelated features still work.
-9. **Memory:** sample the process tree before and after Copilot activation; confirm non-AI
-   sessions stay near the measured ~110 MiB for Lua and ~154 MiB for Go.
-10. **Second host:** repeat `--startuptime`, PTY first paint, and memory on Linux if available;
-    do not assume the macOS ranges transfer.
+| Handoff item | Outcome |
+| --- | --- |
+| Visual first screen | Pass: dashboard/file content, theme, statusline, Treesitter, Markdown decoration; no native intro |
+| Normal editing | Pass: 30 s soak, 132 actions, 0% idle, no AI/DAP/Markdown/Oil/conform |
+| Copilot | Pass: opt-in, one server, repeat presses keep one server |
+| DAP | Partial: demand loading, breakpoint, one listener pass; real session blocked by Delve launch hang |
+| AI chat/rewrite | Partial: chat and Editor rewrite pass; Scout/Judge models missing |
+| Markdown repeated buffers | Pass: first and second decorated, one renderer |
+| LSP | Pass: diagnostics, `K`, `gd`, inlay hints, statusline for gopls and lua_ls |
+| Missing tools | Pass: one gopls warning, no crash, gp opens without Ollama |
+| Memory | Pass with breakdown: empty 27 MiB; Copilot server 342–425 MiB; lua_ls variance documented |
+| Second host | Not performed: no Linux host/VM available |
+
+Two Gate C fixes are in `lua/runtime/phases.lua` and remain uncommitted:
+
+1. The dashboard's programmatic cursor placement no longer triggers the git/scope chunk.
+2. Unlisted `nofile` Markdown floats (LSP hover) no longer activate `render-markdown`.
+
+The Gate C spot checks after the fixes are 40.7 ms empty dashboard, 45.2 ms Lua, 47.8 ms Go,
+61.4 ms Markdown (n=5 each), 10.44 ms `NVIM STARTED`, and 7.59 ms headless `VimEnter`.

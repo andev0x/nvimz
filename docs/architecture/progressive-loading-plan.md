@@ -63,7 +63,6 @@ init.lua
 └─ runtime/init.lua
    ├─ version guard
    ├─ capture + blank 'shada'
-   ├─ vim.loader.enable()
    ├─ require("core")                         Tier 0, ~2.1 ms
    └─ runtime.phases.setup()                  registers triggers only
 
@@ -549,7 +548,7 @@ authoritative description of the current loading boundaries.
 ```
 init.lua
 └─ runtime/init.lua                         Tier 0
-   ├─ version guard, shada deferral, vim.loader
+   ├─ version guard, shada deferral
    ├─ require("core")                       keymaps/commands exist synchronously
    └─ runtime.phases.setup()                registers triggers only
 
@@ -562,9 +561,9 @@ VimEnter (synchronous, once)
 └─ Oil setup only when the first buffer is a directory
 
 InsertEnter              → pairs, completion          (idempotent, retryable)
-CursorMoved              → scope_line, git signs       (idempotent, retryable)
+CursorMoved              → scope_line, git signs       (real editing buffers only; idempotent)
 BufWritePre              → conform setup + first format
-FileType=markdown        → render-markdown plugin
+FileType=markdown        → render-markdown plugin      (listed, normal buffers only)
 FileType with a server   → LSP setup, then vim.lsp.start
 <leader>e / :Oil / dir   → Oil setup
 <leader>f*               → native picker
@@ -582,7 +581,7 @@ No `InsertEnter` phase, no post-`VimEnter` timer chain, no idle/warm-up queue, a
 
 | Proposal | Shipped | Reason |
 | --- | --- | --- |
-| Chunk A scheduled after `VimEnter` | pairs/completion on `InsertEnter`; scope line + git on `CursorMoved` | Removes startup work entirely and ties it to real interaction |
+| Chunk A scheduled after `VimEnter` | pairs/completion on `InsertEnter`; scope line + git on `CursorMoved` | Removes startup work for the dashboard and ties the chunk to editing. A real file raises `CursorMoved` when it opens, so its 1.6–1.8 ms chunk is part of file first paint; deferring it would make diff signs/scope lines appear after the first movement. |
 | Chunk C loads git, formatting, Oil together | git on first cursor move; format on first write; Oil on its key/command/directory | Avoids loading the file explorer for users who never open it |
 | Markdown module retained for configuration | deleted; plugin auto-setup owns it | The wrapper passed no configuration |
 | DAP `CmdlineLeave` trigger | `CmdUndefined` + argument-preserving stubs | Native, only fires when an undefined `:Dap*` command is used |
@@ -596,7 +595,9 @@ description. No other Git behavior changed.
 ### 13.4 Verified repeatedly
 
 - Empty session: only `tokyonight`, `mini.nvim`, and Treesitter are loaded; no `vim.lsp`,
-  `vim.diagnostic`, markdown, git, format, oil, DAP, gp, or Copilot modules.
+  `vim.diagnostic`, markdown, git, format, oil, DAP, gp, or Copilot modules. Gate C clarified that
+  the 43-module figure is headless; a live UI also loads theme/icons/statusline/dashboard and
+  settles at 65 modules (27.0 MiB) after the dashboard cursor guard.
 - Lua/Go startup: LSP attaches and keymaps/inlay are present; no DAP/AI/format/Oil modules.
 - Markdown startup: render-markdown is loaded at first paint; non-Markdown sessions never add it.
 - Insert: pairs/completion load; gp and Copilot do not.
@@ -619,3 +620,45 @@ description. No other Git behavior changed.
 - LSP skips unlisted buffers. This intentionally excludes plugin-owned documents such as the gp
   chat transcript; a user who deliberately opens an unlisted code buffer will not get a server.
 - Only macOS/arm64 and Neovim 0.12.6 were measured.
+- Delve could not launch a debuggee on the Gate C host (`dlv dap` answers `initialize`, never
+  `launch`; `dlv exec` also hangs). DAP demand loading, breakpoints, and listeners are verified;
+  a real stopped-state session is not.
+- Scout (`qwen2.5:7b`) and Judge (`qwen3:8b`) are configured but not installed on the Gate C host.
+  The Editor agent (`qwen2.5-coder:7b`) was validated with a real Ollama rewrite.
+
+### 13.6 Gate C corrections (2026-11-02)
+
+Gate C drove the code through real PTY sessions and found two activations that the headless
+module probes could not see. Both fixes are in `runtime/phases.lua` and are intentionally small:
+
+1. **Dashboard cursor placement.** `dashboard.setup()` calls `nvim_win_set_cursor`, which raised
+   `CursorMoved` at ~32 ms and loaded `scope_line`, `features.git`, `mini.git`, and `mini.diff`
+   during startup (69 modules). `cursor_chunk_relevant()` now requires a normal, listed editing
+   buffer with a non-empty filetype other than `dashboard`. Empty dashboard: 69 → 65 modules, and
+   no git/scope modules. A real file still triggers on open, keeping first-frame diff signs.
+2. **LSP hover Markdown.** A `K` hover creates an unlisted `nofile` Markdown float; the
+   `FileType=markdown` handler activated all 66 `render-markdown` modules (~20 ms first hover).
+   `is_markdown_buffer()` now requires `buftype == ""` and `buflisted`. Real Markdown files and
+   the listed gp chat still render; hover floats do not.
+
+Gate C also confirmed: 30-second editing soak at 0% idle with stable 109 modules; Copilot one
+server across repeated presses; Copilot server 342–425 MiB; DAP one listener and one breakpoint;
+real gp Editor rewrite; one gopls warning when missing; lazy keys for git/Oil/format/picker/
+terminal; empty dashboard first paint 40.7 ms and headless `NVIM STARTED` 10.44 ms. Full evidence:
+`docs/audit/progressive-performance-gate-c-report.md`.
+
+### 13.7 Cold startup target (2026-11-02)
+
+The 10 ms target now applies to the cold core boundary: `init.lua` → `VimEnter`, empty session,
+fresh `XDG_CACHE_HOME`. The only runtime change is that `runtime/init.lua` no longer calls
+`vim.loader.enable()`.
+
+On a fresh cache the loader compiled the startup modules before the first buffer. Measured cold
+core init was **11.7 ms median** (10.8–16.1, n=10) with the loader and **8.3 ms median**
+(7.8–9.0, n=10) without it; cold `NVIM STARTED` moved from **12.8 ms** (11.9–12.9) to **9.7 ms**
+(9.2–11.0). Warm core init (8.2–8.6 ms), warm `NVIM STARTED` (~9.6 vs ~10.2 ms), and warm first
+content (dashboard 40.6–43.6 ms) were unchanged or slightly better. The bytecode cache was not
+paying for itself on this codebase; every start is now the no-cache path, so there is no first-run
+compile spike. The first start with a cold OS page cache is outside this boundary.
+`:checkhealth nvimz` and `:NvimzBenchmark` now name the cold core target, and the dashboard banner
+displays the same value.

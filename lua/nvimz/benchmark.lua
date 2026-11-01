@@ -89,7 +89,7 @@ function M.run()
 		("- Median: **%.2f ms**"):format(median),
 		("- Min / max: %.2f / %.2f ms"):format(minimum, maximum),
 		"- Metric: process start → `NVIM STARTED` (includes native runtime plugins)",
-		"- Project target: < 10.00 ms from init.lua → VimEnter (different boundary)",
+		"- Project target: < 10.00 ms cold core init.lua → VimEnter (different boundary)",
 		"",
 		"## Slowest sourced modules (last run)",
 		"",

@@ -2,7 +2,7 @@
 
 > A blazing-fast, minimalist Neovim configuration for DevOps engineers and backend developers.
 
-**nvimz** is a high-performance Neovim setup optimized for **Neovim 0.12+** that prioritizes speed, structural simplicity, and developer experience. With a strict startup target under **10ms** (measured ~7–9 ms to first render on an empty startup on the maintainer's machine), it replaces heavy plugin ecosystems with native APIs, the lightweight `mini.nvim` suite, and the built-in `vim.pack` package manager.
+**nvimz** is a high-performance Neovim setup optimized for **Neovim 0.12+** that prioritizes speed, structural simplicity, and developer experience. With a strict cold-start target under **10 ms** from `init.lua` to `VimEnter` (measured ~7–9 ms on an empty startup on the maintainer's machine), it replaces heavy plugin ecosystems with native APIs, the lightweight `mini.nvim` suite, and the built-in `vim.pack` package manager.
 
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Neovim](https://img.shields.io/badge/Neovim-%3E=0.12.0-blueviolet?logo=neovim)
@@ -14,7 +14,7 @@
 
 | | |
 | --- | --- |
-| **Startup target** | `< 10ms` (warns above it) |
+| **Startup target** | `< 10 ms` cold core (`init.lua` → `VimEnter`) |
 | **Plugins** | 12, pinned in `nvim-pack-lock.json` |
 | **Plugin manager** | Built-in `vim.pack` |
 | **Leader key** | `<Space>` |
@@ -49,7 +49,7 @@ Unlike heavy configurations that rely on Mason for runtime isolation, **nvimz** 
 
 ## Highlights
 
-- **Ultra-Fast (~7–9 ms to first render on an empty startup):** `vim.loader` bytecode cache, deferred `VimEnter` phases, lazy `FileType`/`InsertEnter` triggers. Warns if startup exceeds 10ms. Verify with `:NvimzBenchmark`.
+- **Ultra-Fast (~7–9 ms cold core start on an empty startup):** no bytecode-cache compile on the cold path, tiered loading, deferred `VimEnter` phases, and lazy `FileType`/`InsertEnter` triggers. Target: <10 ms from `init.lua` to `VimEnter`. Profile with `:NvimzBenchmark`.
 - **12 Pinned Plugins via `vim.pack`:** `tokyonight`, `mini.nvim`, `render-markdown`, `oil.nvim` + `oil-git-status`, `conform.nvim`, `nvim-dap` + `nvim-dap-ui` + `nvim-nio` + `nvim-dap-go`, `gp.nvim`, `copilot.lua`. Locked in `nvim-pack-lock.json`.
 - **Power-user Workflows:** Native floating picker (files, hidden files, live grep, gitignored grep, buffers), `oil.nvim` directory explorer, floating/bottom terminals, `mini.git` status/blame + `mini.diff` overlay.
 - **Native Code Intelligence:** `vim.lsp` with inlay hints, auto diagnostics on `CursorHold`, `mini.completion`, Treesitter parsers compiled AOT from source via `scripts/parsers` (decoupled `queries/`).
@@ -196,7 +196,7 @@ The dashboard uses single keys: `f` find files, `g` live grep, `e` file explorer
 ```
 init.lua                 # records start time -> require("runtime")
 lua/
-  runtime/               # bootstrap (0.12 check), vim.loader, phase triggers, startup warning
+  runtime/               # version guard, core orchestration, phase triggers
   core/                  # options, keymaps (<Space> leader), autocmds, commands, filetypes
   features/              # interface/ (theme, statusline, dashboard, scope line), lsp/, editing/,
                          # search/pick, git, format, dap, ai
@@ -275,7 +275,7 @@ nvimz does **not** install language servers or formatters at runtime. If a featu
 
 From a shell, `./scripts/doctor` checks required tools and installed Treesitter parsers. Use `:ParsersUpdate` to rebuild parsers after upgrading Neovim or the parser pins.
 
-Startup slower than expected? Run `:NvimzBenchmark`; it measures three consecutive starts and lists the slowest sourced modules. It never deletes the bytecode cache (`~/.cache/nvim/luac`).
+Startup slower than expected? Run `:NvimzBenchmark`; it measures three consecutive starts and lists the slowest sourced modules.
 
 ---
 

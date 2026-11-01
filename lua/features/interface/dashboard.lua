@@ -2,6 +2,7 @@ local M = {}
 
 local dashboard_ns = vim.api.nvim_create_namespace("nvimz_dashboard")
 local _hl_defined = false
+local startup_ms
 
 local function define_highlights()
 	if _hl_defined then
@@ -50,14 +51,20 @@ function M.setup()
 	vim.api.nvim_set_option_value("swapfile", false, buf_opts)
 	vim.api.nvim_set_option_value("filetype", "dashboard", buf_opts)
 
-	local startup_time = _G.nvimz_start_time and ((vim.uv.hrtime() - _G.nvimz_start_time) / 1e6) or 0
+	-- The banner shows the cold core metric (`init.lua` → `VimEnter`), the same
+	-- boundary as the <10 ms target. `runtime/phases.lua` records it when the
+	-- event fires, before Tier 1; native startup before init.lua is outside
+	-- Lua's visibility.
+	if startup_ms == nil then
+		startup_ms = _G.nvimz_core_ms or (_G.nvimz_start_time and ((vim.uv.hrtime() - _G.nvimz_start_time) / 1e6)) or 0
+	end
 
 	local logo = {
 		[[ █▄░█ █░█ █ █▀▄▀█ ▀█░ ]],
 		[[ █░▀█ ▀▄▀ █ █░▀░█ █▄▀ ]],
 		"",
 		[[andev0x]],
-		string.format("󱐋 %.2fms", startup_time),
+		string.format("󱐋 %.2fms", startup_ms),
 	}
 
 	local menu = {

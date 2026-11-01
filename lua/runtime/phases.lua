@@ -30,9 +30,15 @@ local function setup_module(module)
 	return true
 end
 
+-- Markdown rendering is for documents the user edits or opens, not for
+-- plugin-owned Markdown floats (for example an LSP hover preview).
+local function is_markdown_buffer(bufnr)
+	return vim.bo[bufnr].filetype == "markdown" and vim.bo[bufnr].buftype == "" and vim.bo[bufnr].buflisted
+end
+
 local function has_markdown_buffer()
 	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-		if vim.api.nvim_buf_is_loaded(bufnr) and vim.bo[bufnr].filetype == "markdown" then
+		if vim.api.nvim_buf_is_loaded(bufnr) and is_markdown_buffer(bufnr) then
 			return true
 		end
 	end
@@ -229,6 +235,16 @@ local function ensure_normal_editing()
 	M.ensure_git()
 end
 
+-- The dashboard places the cursor when it builds its buffer, which raises
+-- CursorMoved during startup. Scope lines and diff signs are only meaningful in
+-- a real editing buffer, so ignore special buffers and let the first movement
+-- in an actual file trigger the chunk.
+local function cursor_chunk_relevant()
+	local bufnr = vim.api.nvim_get_current_buf()
+	local filetype = vim.bo[bufnr].filetype
+	return vim.bo[bufnr].buftype == "" and vim.bo[bufnr].buflisted and filetype ~= "" and filetype ~= "dashboard"
+end
+
 local function load_first_render()
 	add_plugins(plugins.tier1)
 
@@ -339,6 +355,9 @@ local function arm_deferred_triggers()
 			if scope_ready and git_ready then
 				return
 			end
+			if not cursor_chunk_relevant() then
+				return
+			end
 			ensure_scope_line()
 			ensure_normal_editing()
 		end,
@@ -364,8 +383,10 @@ local function arm_deferred_triggers()
 
 	vim.api.nvim_create_autocmd("FileType", {
 		pattern = "markdown",
-		callback = function()
-			M.ensure_markdown()
+		callback = function(args)
+			if is_markdown_buffer(args.buf) then
+				M.ensure_markdown()
+			end
 		end,
 	})
 end
@@ -376,6 +397,8 @@ function M.setup()
 	vim.api.nvim_create_autocmd("VimEnter", {
 		once = true,
 		callback = function()
+			-- Official cold core metric: init.lua -> VimEnter, before Tier 1.
+			_G.nvimz_core_ms = _G.nvimz_start_time and ((vim.uv.hrtime() - _G.nvimz_start_time) / 1e6)
 			load_first_render()
 			arm_deferred_triggers()
 		end,
